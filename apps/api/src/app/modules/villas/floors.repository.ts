@@ -1,0 +1,31 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../infra/prisma/prisma.service';
+import { Floor, Prisma } from '../../../generated/prisma/client';
+
+@Injectable()
+export class FloorsRepository {
+  constructor(private readonly prisma: PrismaService) {}
+
+  create(data: Prisma.FloorUncheckedCreateInput): Promise<Floor> {
+    return this.prisma.floor.create({ data });
+  }
+
+  findById(id: string): Promise<Floor | null> {
+    return this.prisma.floor.findFirst({ where: { id, deletedAt: null } });
+  }
+
+  findManyByVilla(villaId: string): Promise<Floor[]> {
+    return this.prisma.floor.findMany({
+      where: { villaId, deletedAt: null },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  update(id: string, data: Prisma.FloorUncheckedUpdateInput): Promise<Floor> {
+    return this.prisma.floor.update({ where: { id }, data });
+  }
+
+  softDelete(id: string): Promise<Floor> {
+    return this.prisma.floor.update({ where: { id }, data: { deletedAt: new Date() } });
+  }
+}
