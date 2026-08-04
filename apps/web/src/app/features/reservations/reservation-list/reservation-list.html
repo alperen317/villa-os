@@ -32,7 +32,11 @@
   </nz-select>
 
   <nz-segmented
-    [nzOptions]="[{ value: 'list', label: 'Liste' }, { value: 'calendar', label: 'Takvim' }]"
+    [nzOptions]="[
+      { value: 'list', label: 'Liste' },
+      { value: 'calendar', label: 'Takvim' },
+      { value: 'availability', label: 'Müsaitlik' },
+    ]"
     [ngModel]="viewMode()"
     (ngModelChange)="setViewMode($event)"
     class="view-toggle"
@@ -73,7 +77,7 @@
           <td><nz-tag [nzColor]="statusColors[reservation.status]">{{ statusLabels[reservation.status] }}</nz-tag></td>
           <td>
             @if (nextActions[reservation.status].length > 0) {
-              <button nz-button nzType="text" nz-dropdown [nzDropdownMenu]="menu">
+              <button nz-button nzType="text" aria-label="Rezervasyon aksiyonları" nz-dropdown [nzDropdownMenu]="menu">
                 <nz-icon nzType="more" />
               </button>
               <nz-dropdown-menu #menu="nzDropdownMenu">
@@ -91,22 +95,111 @@
       }
     </tbody>
   </nz-table>
-} @else {
+} @else if (viewMode() === 'calendar') {
   <nz-calendar [nzFullscreen]="true">
     <ng-template nzDateCell let-date>
       <div class="calendar-cell">
-        @for (reservation of reservationsForDate(date); track reservation.id) {
+        @for (reservation of checkInsForDate(date); track reservation.id) {
           <nz-tag
             class="calendar-tag"
-            [nzColor]="statusColors[reservation.status]"
+            nzColor="green"
+            nz-tooltip
+            role="button"
+            tabindex="0"
+            [attr.aria-label]="'Giriş: ' + reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
+            [nzTooltipTitle]="reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
             (click)="openDetail(reservation)"
+            (keydown.enter)="openDetail(reservation)"
           >
-            {{ reservation.floor.name }} · {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+            <nz-icon nzType="login" /> {{ reservation.villa.name }} / {{ reservation.floor.name }} · {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+          </nz-tag>
+        }
+        @for (reservation of checkOutsForDate(date); track reservation.id) {
+          <nz-tag
+            class="calendar-tag"
+            nzColor="volcano"
+            nz-tooltip
+            role="button"
+            tabindex="0"
+            [attr.aria-label]="'Çıkış: ' + reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
+            [nzTooltipTitle]="reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
+            (click)="openDetail(reservation)"
+            (keydown.enter)="openDetail(reservation)"
+          >
+            <nz-icon nzType="logout" /> {{ reservation.villa.name }} / {{ reservation.floor.name }} · {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
           </nz-tag>
         }
       </div>
     </ng-template>
   </nz-calendar>
+} @else {
+  <form nz-form [formGroup]="availabilityForm" class="availability-form" (ngSubmit)="searchAvailability()">
+    <nz-form-item>
+      <nz-form-label nzRequired>Tarih Aralığı</nz-form-label>
+      <nz-form-control>
+        <nz-range-picker formControlName="dateRange" style="width: 280px" />
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label>Villa</nz-form-label>
+      <nz-form-control>
+        <nz-select formControlName="villaId" nzAllowClear nzPlaceHolder="Tüm villalar" style="width: 200px">
+          @for (villa of villas(); track villa.id) {
+            <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+          }
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+
+    <button
+      nz-button
+      nzType="primary"
+      type="submit"
+      style="margin-top: 30px"
+      [nzLoading]="availabilitySearching()"
+      [disabled]="availabilityForm.invalid"
+    >
+      <nz-icon nzType="search" />
+      Ara
+    </button>
+  </form>
+
+  @if (availabilityResults(); as results) {
+    @if (results.length === 0) {
+      <p class="availability-empty">Bu tarih aralığında uygun boş yer bulunamadı.</p>
+    } @else {
+      <nz-table [nzData]="results" [nzShowPagination]="false">
+        <thead>
+          <tr>
+            <th>Villa</th>
+            <th>Kat</th>
+            <th>Kapasite</th>
+            <th>Günlük Fiyat</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (floor of results; track floor.id) {
+            <tr>
+              <td>{{ floor.villa.name }}</td>
+              <td>
+                {{ floor.name }}
+                @if (floor.isEntireVilla) {
+                  <nz-tag nzColor="blue">Tüm Villa</nz-tag>
+                }
+              </td>
+              <td>{{ floor.capacity }} kişi</td>
+              <td>{{ floor.dailyPrice }} ₺</td>
+              <td>
+                <button nz-button nzType="link" (click)="bookFromAvailability(floor)">Rezervasyon Oluştur</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </nz-table>
+    }
+  }
 }
 
 <nz-modal

@@ -2,6 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { Floor, Prisma } from '../../../generated/prisma/client';
 
+const FLOOR_WITH_VILLA_INCLUDE = {
+  villa: { select: { id: true, name: true } },
+} satisfies Prisma.FloorInclude;
+
+export type FloorWithVilla = Prisma.FloorGetPayload<{ include: typeof FLOOR_WITH_VILLA_INCLUDE }>;
+
 @Injectable()
 export class FloorsRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -18,6 +24,19 @@ export class FloorsRepository {
     return this.prisma.floor.findMany({
       where: { villaId, deletedAt: null },
       orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  findRentable(villaId?: string): Promise<FloorWithVilla[]> {
+    return this.prisma.floor.findMany({
+      where: {
+        deletedAt: null,
+        rentable: true,
+        villaId,
+        villa: { deletedAt: null, status: 'Active' },
+      },
+      include: FLOOR_WITH_VILLA_INCLUDE,
+      orderBy: [{ villaId: 'asc' }, { isEntireVilla: 'desc' }],
     });
   }
 

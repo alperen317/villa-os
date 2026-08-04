@@ -2,7 +2,9 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { randomBytes } from 'node:crypto';
 import { CustomersService } from '../customers/customers.service';
 import { FloorsService } from '../villas/floors.service';
+import { FloorWithVilla } from '../villas/floors.repository';
 import { VillasService } from '../villas/villas.service';
+import { AvailabilityQueryDto } from './dto/availability-query.dto';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { ListReservationsQueryDto } from './dto/list-reservations-query.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
@@ -129,6 +131,32 @@ export class ReservationsService {
     }
 
     return this.reservationsRepository.update(id, { status: target });
+  }
+
+  async findAvailableFloors(query: AvailabilityQueryDto): Promise<FloorWithVilla[]> {
+    const checkIn = new Date(query.checkIn);
+    const checkOut = new Date(query.checkOut);
+
+    if (checkOut <= checkIn) {
+      throw new BadRequestException('checkOut must be after checkIn');
+    }
+
+    const candidates = await this.floorsService.findRentableFloors(query.villaId);
+
+    const availability = await Promise.all(
+      candidates.map(async (floor) => {
+        const conflict = await this.reservationsRepository.findConflicting({
+          villaId: floor.villaId,
+          floorId: floor.id,
+          isEntireVillaFloor: floor.isEntireVilla,
+          checkIn,
+          checkOut,
+        });
+        return conflict ? null : floor;
+      }),
+    );
+
+    return availability.filter((floor): floor is FloorWithVilla => floor !== null);
   }
 
   private calculateNights(checkIn: Date, checkOut: Date): number {

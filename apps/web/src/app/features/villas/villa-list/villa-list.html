@@ -34,7 +34,7 @@
         </td>
         <td>{{ villa.address || '-' }}</td>
         <td class="actions">
-          <button nz-button nzType="text" (click)="openEditModal(villa)">
+          <button nz-button nzType="text" aria-label="Villayı düzenle" (click)="openEditModal(villa)">
             <nz-icon nzType="edit" />
           </button>
           <button nz-button nzType="text" (click)="toggleStatus(villa)">
@@ -44,6 +44,7 @@
             nz-button
             nzType="text"
             nzDanger
+            aria-label="Villayı sil"
             nz-popconfirm
             nzPopconfirmTitle="Bu villayı silmek istediğine emin misin?"
             (nzOnConfirm)="remove(villa)"

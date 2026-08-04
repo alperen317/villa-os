@@ -2,6 +2,8 @@ import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query, Res } 
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { FloorWithVilla } from '../villas/floors.repository';
+import { AvailabilityQueryDto } from './dto/availability-query.dto';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { ListReservationsQueryDto } from './dto/list-reservations-query.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
@@ -32,6 +34,14 @@ export class ReservationsController {
     const { data, total } = await this.reservationsService.findAll(query);
     res.setHeader('X-Total-Count', String(total));
     return data;
+  }
+
+  @Get('availability')
+  @ApiOperation({
+    summary: 'List rentable floors with no conflicting reservation for a date range',
+  })
+  findAvailability(@Query() query: AvailabilityQueryDto): Promise<FloorWithVilla[]> {
+    return this.reservationsService.findAvailableFloors(query);
   }
 
   @Get(':id')

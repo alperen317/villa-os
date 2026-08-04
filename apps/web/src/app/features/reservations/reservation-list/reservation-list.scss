@@ -33,6 +33,11 @@
   font-size: 12px;
 }
 
+.calendar-tag:focus-visible {
+  outline: 2px solid #1677ff;
+  outline-offset: 1px;
+}
+
 .detail-list {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -62,4 +67,15 @@
 
 .mb {
   margin-bottom: 8px;
+}
+
+.availability-form {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.availability-empty {
+  color: rgba(0, 0, 0, 0.45);
 }

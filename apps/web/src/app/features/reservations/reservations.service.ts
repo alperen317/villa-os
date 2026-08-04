@@ -8,6 +8,7 @@ import {
   Reservation,
   ReservationStatus,
 } from '../../core/models/reservation.model';
+import { FloorWithVilla } from '../../core/models/villa.model';
 
 export type ReservationAction = 'confirm' | 'check-in' | 'check-out' | 'complete' | 'cancel';
 
@@ -51,6 +52,21 @@ export class ReservationsService {
   transition(id: string, action: ReservationAction): Promise<Reservation> {
     return firstValueFrom(
       this.http.post<Reservation>(`${API_BASE_URL}/reservations/${id}/${action}`, {}),
+    );
+  }
+
+  checkAvailability(params: {
+    checkIn: string;
+    checkOut: string;
+    villaId?: string;
+  }): Promise<FloorWithVilla[]> {
+    let query = new HttpParams().set('checkIn', params.checkIn).set('checkOut', params.checkOut);
+    if (params.villaId) query = query.set('villaId', params.villaId);
+
+    return firstValueFrom(
+      this.http.get<FloorWithVilla[]>(`${API_BASE_URL}/reservations/availability`, {
+        params: query,
+      }),
     );
   }
 }

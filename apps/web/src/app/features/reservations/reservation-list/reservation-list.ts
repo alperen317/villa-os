@@ -15,6 +15,7 @@ import { NzSegmentedModule } from 'ng-zorro-antd/segmented';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTagModule } from 'ng-zorro-antd/tag';
+import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 import { Customer } from '../../../core/models/customer.model';
 import {
   RESERVATION_NEXT_ACTIONS,
@@ -22,7 +23,7 @@ import {
   Reservation,
   ReservationStatus,
 } from '../../../core/models/reservation.model';
-import { Floor, Villa } from '../../../core/models/villa.model';
+import { Floor, FloorWithVilla, Villa } from '../../../core/models/villa.model';
 import { CustomersService } from '../../customers/customers.service';
 import { VillasService } from '../../villas/villas.service';
 import { ReservationAction, ReservationsService } from '../reservations.service';
@@ -56,6 +57,7 @@ const STATUS_COLORS: Record<ReservationStatus, string> = {
     NzSelectModule,
     NzTableModule,
     NzTagModule,
+    NzTooltipModule,
   ],
   templateUrl: './reservation-list.html',
   styleUrl: './reservation-list.scss',
@@ -72,7 +74,7 @@ export class ReservationList implements OnInit {
   protected readonly statusColors = STATUS_COLORS;
   protected readonly statusKeys = Object.keys(RESERVATION_STATUS_LABELS) as ReservationStatus[];
 
-  protected readonly viewMode = signal<'list' | 'calendar'>('list');
+  protected readonly viewMode = signal<'list' | 'calendar' | 'availability'>('list');
 
   protected readonly reservations = signal<Reservation[]>([]);
   protected readonly total = signal(0);
@@ -96,6 +98,14 @@ export class ReservationList implements OnInit {
 
   protected readonly detailVisible = signal(false);
   protected readonly detailReservation = signal<Reservation | null>(null);
+
+  protected readonly availabilityResults = signal<FloorWithVilla[] | null>(null);
+  protected readonly availabilitySearching = signal(false);
+
+  protected readonly availabilityForm = this.formBuilder.nonNullable.group({
+    dateRange: [null as [Date, Date] | null, Validators.required],
+    villaId: [''],
+  });
 
   protected readonly form = this.formBuilder.nonNullable.group({
     villaId: ['', Validators.required],
@@ -154,11 +164,43 @@ export class ReservationList implements OnInit {
   }
 
   setViewMode(mode: string | number): void {
-    const nextMode = mode === 'calendar' ? 'calendar' : 'list';
+    const nextMode = mode === 'calendar' || mode === 'availability' ? mode : 'list';
     this.viewMode.set(nextMode);
     if (nextMode === 'calendar') {
       this.loadCalendarData();
     }
+  }
+
+  async searchAvailability(): Promise<void> {
+    if (this.availabilityForm.invalid) {
+      return;
+    }
+
+    const value = this.availabilityForm.getRawValue();
+    const [checkIn, checkOut] = value.dateRange!;
+
+    this.availabilitySearching.set(true);
+    try {
+      this.availabilityResults.set(
+        await this.reservationsService.checkAvailability({
+          checkIn: this.toIsoDate(checkIn),
+          checkOut: this.toIsoDate(checkOut),
+          villaId: value.villaId || undefined,
+        }),
+      );
+    } catch (error) {
+      this.message.error(this.extractErrorMessage(error));
+    } finally {
+      this.availabilitySearching.set(false);
+    }
+  }
+
+  async bookFromAvailability(floor: FloorWithVilla): Promise<void> {
+    const dateRange = this.availabilityForm.getRawValue().dateRange;
+    await this.openCreateModal();
+    this.form.patchValue({ villaId: floor.villaId, dateRange });
+    this.formFloors.set([floor]);
+    this.form.patchValue({ floorId: floor.id });
   }
 
   onPageIndexChange(index: number): void {
@@ -174,13 +216,18 @@ export class ReservationList implements OnInit {
     }
   }
 
-  reservationsForDate(date: Date): Reservation[] {
+  checkInsForDate(date: Date): Reservation[] {
     const day = this.stripTime(date);
-    return this.calendarReservations().filter((reservation) => {
-      const checkIn = this.stripTime(new Date(reservation.checkIn));
-      const checkOut = this.stripTime(new Date(reservation.checkOut));
-      return day >= checkIn && day < checkOut;
-    });
+    return this.calendarReservations().filter(
+      (reservation) => this.stripTime(new Date(reservation.checkIn)) === day,
+    );
+  }
+
+  checkOutsForDate(date: Date): Reservation[] {
+    const day = this.stripTime(date);
+    return this.calendarReservations().filter(
+      (reservation) => this.stripTime(new Date(reservation.checkOut)) === day,
+    );
   }
 
   openDetail(reservation: Reservation): void {

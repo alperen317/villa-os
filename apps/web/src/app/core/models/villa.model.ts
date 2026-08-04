@@ -47,3 +47,7 @@ export interface CreateFloorInput {
 }
 
 export type UpdateFloorInput = Partial<CreateFloorInput>;
+
+export interface FloorWithVilla extends Floor {
+  villa: { id: string; name: string };
+}

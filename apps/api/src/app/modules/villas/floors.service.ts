@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateFloorDto } from './dto/create-floor.dto';
 import { UpdateFloorDto } from './dto/update-floor.dto';
-import { FloorsRepository } from './floors.repository';
+import { FloorsRepository, FloorWithVilla } from './floors.repository';
 import { VillasService } from './villas.service';
 import { Floor } from '../../../generated/prisma/client';
 
@@ -25,6 +25,10 @@ export class FloorsService {
   async findAllByVilla(villaId: string): Promise<Floor[]> {
     await this.villasService.findOneOrThrow(villaId);
     return this.floorsRepository.findManyByVilla(villaId);
+  }
+
+  findRentableFloors(villaId?: string): Promise<FloorWithVilla[]> {
+    return this.floorsRepository.findRentable(villaId);
   }
 
   async findOneOrThrow(villaId: string, id: string): Promise<Floor> {

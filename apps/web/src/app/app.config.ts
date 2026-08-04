@@ -18,11 +18,13 @@ import {
   EyeOutline,
   HomeOutline,
   LockOutline,
+  LoginOutline,
   LogoutOutline,
   MenuFoldOutline,
   MenuUnfoldOutline,
   MoreOutline,
   PlusOutline,
+  SearchOutline,
   UserOutline,
 } from '@ant-design/icons-angular/icons';
 import { appRoutes } from './app.routes';
@@ -39,6 +41,7 @@ export const appConfig: ApplicationConfig = {
     provideNzIcons([
       UserOutline,
       LockOutline,
+      LoginOutline,
       LogoutOutline,
       CheckCircleOutline,
       CloseCircleOutline,
@@ -52,6 +55,7 @@ export const appConfig: ApplicationConfig = {
       MoreOutline,
       MenuFoldOutline,
       MenuUnfoldOutline,
+      SearchOutline,
     ]),
   ],
 };
