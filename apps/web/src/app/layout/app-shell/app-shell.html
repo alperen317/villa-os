@@ -1,0 +1,38 @@
+<nz-layout class="shell">
+  <nz-sider nzCollapsible [nzCollapsed]="collapsed()" (nzCollapsedChange)="collapsed.set($event)">
+    <div class="logo">{{ collapsed() ? 'VOS' : 'Villa OS' }}</div>
+    <ul nz-menu nzTheme="dark" nzMode="inline">
+      <li nz-menu-item routerLink="/dashboard" routerLinkActive="ant-menu-item-selected">
+        <nz-icon nzType="dashboard" />
+        <span>Dashboard</span>
+      </li>
+      <li nz-menu-item routerLink="/villas" routerLinkActive="ant-menu-item-selected">
+        <nz-icon nzType="home" />
+        <span>Villalar</span>
+      </li>
+      <li nz-menu-item routerLink="/reservations" routerLinkActive="ant-menu-item-selected">
+        <nz-icon nzType="calendar" />
+        <span>Rezervasyonlar</span>
+      </li>
+    </ul>
+  </nz-sider>
+
+  <nz-layout>
+    <nz-header class="header">
+      <span class="user-info">
+        @if (authService.currentUser(); as user) {
+          <nz-icon nzType="user" />
+          {{ user.username }} · {{ user.role }}
+        }
+      </span>
+      <button nz-button nzType="text" (click)="logout()">
+        <nz-icon nzType="logout" />
+        Çıkış
+      </button>
+    </nz-header>
+
+    <nz-content class="content">
+      <router-outlet></router-outlet>
+    </nz-content>
+  </nz-layout>
+</nz-layout>

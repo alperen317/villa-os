@@ -1,0 +1,91 @@
+<div class="page-header">
+  <h2>Villalar</h2>
+  <button nz-button nzType="primary" (click)="openCreateModal()">
+    <nz-icon nzType="plus" />
+    Yeni Villa
+  </button>
+</div>
+
+<nz-table
+  [nzData]="villas()"
+  [nzFrontPagination]="false"
+  [nzTotal]="total()"
+  [nzPageIndex]="pageIndex()"
+  [nzPageSize]="pageSize()"
+  [nzLoading]="loading()"
+  (nzPageIndexChange)="onPageIndexChange($event)"
+>
+  <thead>
+    <tr>
+      <th>Ad</th>
+      <th>Durum</th>
+      <th>Adres</th>
+      <th>Aksiyonlar</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (villa of villas(); track villa.id) {
+      <tr>
+        <td><a [routerLink]="['/villas', villa.id]">{{ villa.name }}</a></td>
+        <td>
+          <nz-tag [nzColor]="villa.status === 'Active' ? 'green' : 'default'">
+            {{ villa.status === 'Active' ? 'Aktif' : 'Pasif' }}
+          </nz-tag>
+        </td>
+        <td>{{ villa.address || '-' }}</td>
+        <td class="actions">
+          <button nz-button nzType="text" (click)="openEditModal(villa)">
+            <nz-icon nzType="edit" />
+          </button>
+          <button nz-button nzType="text" (click)="toggleStatus(villa)">
+            {{ villa.status === 'Active' ? 'Pasife Al' : 'Aktif Et' }}
+          </button>
+          <button
+            nz-button
+            nzType="text"
+            nzDanger
+            nz-popconfirm
+            nzPopconfirmTitle="Bu villayı silmek istediğine emin misin?"
+            (nzOnConfirm)="remove(villa)"
+          >
+            <nz-icon nzType="delete" />
+          </button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</nz-table>
+
+<nz-modal
+  [nzVisible]="modalVisible()"
+  [nzTitle]="editingVilla ? 'Villa Düzenle' : 'Yeni Villa'"
+  [nzOkLoading]="modalSaving()"
+  [nzOkDisabled]="form.invalid"
+  (nzOnCancel)="modalVisible.set(false)"
+  (nzOnOk)="save()"
+>
+  <ng-container *nzModalContent>
+    <form nz-form [formGroup]="form">
+      <nz-form-item>
+        <nz-form-label nzRequired>Ad</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="name" placeholder="Villa adı" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Açıklama</nz-form-label>
+        <nz-form-control>
+          <textarea nz-input formControlName="description" rows="3"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Adres</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="address" placeholder="Adres" />
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>

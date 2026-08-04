@@ -6,7 +6,8 @@ import { CreateReservationDto } from './dto/create-reservation.dto';
 import { ListReservationsQueryDto } from './dto/list-reservations-query.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { ReservationsService } from './reservations.service';
-import { Reservation, ReservationStatus, UserRole } from '../../../generated/prisma/client';
+import { ReservationStatus, UserRole } from '../../../generated/prisma/client';
+import { ReservationWithRelations } from './reservations.repository';
 
 const MUTATE_ROLES = [UserRole.Administrator, UserRole.Operations] as const;
 
@@ -18,7 +19,7 @@ export class ReservationsController {
   @Post()
   @Roles(...MUTATE_ROLES)
   @ApiOperation({ summary: 'Create a reservation (FR-301–FR-306, FR-401–FR-404)' })
-  create(@Body() dto: CreateReservationDto): Promise<Reservation> {
+  create(@Body() dto: CreateReservationDto): Promise<ReservationWithRelations> {
     return this.reservationsService.create(dto);
   }
 
@@ -27,7 +28,7 @@ export class ReservationsController {
   async findAll(
     @Query() query: ListReservationsQueryDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<Reservation[]> {
+  ): Promise<ReservationWithRelations[]> {
     const { data, total } = await this.reservationsService.findAll(query);
     res.setHeader('X-Total-Count', String(total));
     return data;
@@ -35,7 +36,7 @@ export class ReservationsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a single reservation' })
-  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Reservation> {
+  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<ReservationWithRelations> {
     return this.reservationsService.findOneOrThrow(id);
   }
 
@@ -45,42 +46,42 @@ export class ReservationsController {
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateReservationDto,
-  ): Promise<Reservation> {
+  ): Promise<ReservationWithRelations> {
     return this.reservationsService.update(id, dto);
   }
 
   @Post(':id/confirm')
   @Roles(...MUTATE_ROLES)
   @ApiOperation({ summary: 'Pending -> Confirmed' })
-  confirm(@Param('id', ParseUUIDPipe) id: string): Promise<Reservation> {
+  confirm(@Param('id', ParseUUIDPipe) id: string): Promise<ReservationWithRelations> {
     return this.reservationsService.transition(id, ReservationStatus.Confirmed);
   }
 
   @Post(':id/check-in')
   @Roles(...MUTATE_ROLES)
   @ApiOperation({ summary: 'Confirmed -> CheckedIn' })
-  checkIn(@Param('id', ParseUUIDPipe) id: string): Promise<Reservation> {
+  checkIn(@Param('id', ParseUUIDPipe) id: string): Promise<ReservationWithRelations> {
     return this.reservationsService.transition(id, ReservationStatus.CheckedIn);
   }
 
   @Post(':id/check-out')
   @Roles(...MUTATE_ROLES)
   @ApiOperation({ summary: 'CheckedIn -> CheckedOut' })
-  checkOut(@Param('id', ParseUUIDPipe) id: string): Promise<Reservation> {
+  checkOut(@Param('id', ParseUUIDPipe) id: string): Promise<ReservationWithRelations> {
     return this.reservationsService.transition(id, ReservationStatus.CheckedOut);
   }
 
   @Post(':id/complete')
   @Roles(...MUTATE_ROLES)
   @ApiOperation({ summary: 'CheckedOut -> Completed' })
-  complete(@Param('id', ParseUUIDPipe) id: string): Promise<Reservation> {
+  complete(@Param('id', ParseUUIDPipe) id: string): Promise<ReservationWithRelations> {
     return this.reservationsService.transition(id, ReservationStatus.Completed);
   }
 
   @Post(':id/cancel')
   @Roles(...MUTATE_ROLES)
   @ApiOperation({ summary: 'Pending/Confirmed -> Cancelled' })
-  cancel(@Param('id', ParseUUIDPipe) id: string): Promise<Reservation> {
+  cancel(@Param('id', ParseUUIDPipe) id: string): Promise<ReservationWithRelations> {
     return this.reservationsService.transition(id, ReservationStatus.Cancelled);
   }
 }

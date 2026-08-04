@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infra/prisma/prisma.service';
-import { Prisma, Reservation, ReservationStatus } from '../../../generated/prisma/client';
+import { Prisma, ReservationStatus } from '../../../generated/prisma/client';
 
 export interface ConflictCheckParams {
   villaId: string;
@@ -11,16 +11,29 @@ export interface ConflictCheckParams {
   excludeReservationId?: string;
 }
 
+const RESERVATION_INCLUDE = {
+  villa: { select: { id: true, name: true } },
+  floor: { select: { id: true, name: true, isEntireVilla: true } },
+  customer: { select: { id: true, firstName: true, lastName: true } },
+} satisfies Prisma.ReservationInclude;
+
+export type ReservationWithRelations = Prisma.ReservationGetPayload<{
+  include: typeof RESERVATION_INCLUDE;
+}>;
+
 @Injectable()
 export class ReservationsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(data: Prisma.ReservationUncheckedCreateInput): Promise<Reservation> {
-    return this.prisma.reservation.create({ data });
+  create(data: Prisma.ReservationUncheckedCreateInput): Promise<ReservationWithRelations> {
+    return this.prisma.reservation.create({ data, include: RESERVATION_INCLUDE });
   }
 
-  findById(id: string): Promise<Reservation | null> {
-    return this.prisma.reservation.findFirst({ where: { id, deletedAt: null } });
+  findById(id: string): Promise<ReservationWithRelations | null> {
+    return this.prisma.reservation.findFirst({
+      where: { id, deletedAt: null },
+      include: RESERVATION_INCLUDE,
+    });
   }
 
   findMany(params: {
@@ -29,7 +42,7 @@ export class ReservationsRepository {
     villaId?: string;
     customerId?: string;
     status?: ReservationStatus;
-  }): Promise<Reservation[]> {
+  }): Promise<ReservationWithRelations[]> {
     return this.prisma.reservation.findMany({
       where: {
         deletedAt: null,
@@ -37,6 +50,7 @@ export class ReservationsRepository {
         customerId: params.customerId,
         status: params.status,
       },
+      include: RESERVATION_INCLUDE,
       skip: params.skip,
       take: params.take,
       orderBy: { checkIn: 'desc' },
@@ -54,8 +68,8 @@ export class ReservationsRepository {
     });
   }
 
-  update(id: string, data: Prisma.ReservationUncheckedUpdateInput): Promise<Reservation> {
-    return this.prisma.reservation.update({ where: { id }, data });
+  update(id: string, data: Prisma.ReservationUncheckedUpdateInput): Promise<ReservationWithRelations> {
+    return this.prisma.reservation.update({ where: { id }, data, include: RESERVATION_INCLUDE });
   }
 
   /**
@@ -63,7 +77,7 @@ export class ReservationsRepository {
    * Regular floor: conflicts with reservations on the same floor, and with the
    * villa's entire-villa floor (FR-401/FR-402) — but not with other regular floors.
    */
-  findConflicting(params: ConflictCheckParams): Promise<Reservation | null> {
+  findConflicting(params: ConflictCheckParams): Promise<ReservationWithRelations | null> {
     const unitFilter: Prisma.ReservationWhereInput = params.isEntireVillaFloor
       ? { floor: { villaId: params.villaId } }
       : {
@@ -82,6 +96,7 @@ export class ReservationsRepository {
         checkOut: { gt: params.checkIn },
         ...(params.excludeReservationId ? { id: { not: params.excludeReservationId } } : {}),
       },
+      include: RESERVATION_INCLUDE,
     });
   }
 }

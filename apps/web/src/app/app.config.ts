@@ -7,7 +7,24 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideNzI18n, tr_TR } from 'ng-zorro-antd/i18n';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
-import { CheckCircleOutline, CloseCircleOutline, LockOutline, LogoutOutline, UserOutline } from '@ant-design/icons-angular/icons';
+import { provideNzNativeDateAdapter } from 'ng-zorro-antd/core/time';
+import {
+  CalendarOutline,
+  CheckCircleOutline,
+  CloseCircleOutline,
+  DashboardOutline,
+  DeleteOutline,
+  EditOutline,
+  EyeOutline,
+  HomeOutline,
+  LockOutline,
+  LogoutOutline,
+  MenuFoldOutline,
+  MenuUnfoldOutline,
+  MoreOutline,
+  PlusOutline,
+  UserOutline,
+} from '@ant-design/icons-angular/icons';
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
 
@@ -18,6 +35,23 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimationsAsync(),
     provideNzI18n(tr_TR),
-    provideNzIcons([UserOutline, LockOutline, LogoutOutline, CheckCircleOutline, CloseCircleOutline]),
+    provideNzNativeDateAdapter(),
+    provideNzIcons([
+      UserOutline,
+      LockOutline,
+      LogoutOutline,
+      CheckCircleOutline,
+      CloseCircleOutline,
+      DashboardOutline,
+      HomeOutline,
+      CalendarOutline,
+      PlusOutline,
+      EditOutline,
+      DeleteOutline,
+      EyeOutline,
+      MoreOutline,
+      MenuFoldOutline,
+      MenuUnfoldOutline,
+    ]),
   ],
 };

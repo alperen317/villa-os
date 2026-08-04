@@ -8,8 +8,8 @@ import { ListReservationsQueryDto } from './dto/list-reservations-query.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { InvalidReservationTransitionException } from './exceptions/invalid-reservation-transition.exception';
 import { ReservationConflictException } from './exceptions/reservation-conflict.exception';
-import { ReservationsRepository } from './reservations.repository';
-import { Reservation, ReservationStatus } from '../../../generated/prisma/client';
+import { ReservationsRepository, ReservationWithRelations } from './reservations.repository';
+import { ReservationStatus } from '../../../generated/prisma/client';
 
 const ALLOWED_TRANSITIONS: Record<ReservationStatus, ReservationStatus[]> = {
   Pending: ['Confirmed', 'Cancelled'],
@@ -29,7 +29,7 @@ export class ReservationsService {
     private readonly customersService: CustomersService,
   ) {}
 
-  async create(dto: CreateReservationDto): Promise<Reservation> {
+  async create(dto: CreateReservationDto): Promise<ReservationWithRelations> {
     await this.villasService.findOneOrThrow(dto.villaId);
     await this.customersService.findOneOrThrow(dto.customerId);
     const floor = await this.floorsService.findOneOrThrow(dto.villaId, dto.floorId);
@@ -81,7 +81,7 @@ export class ReservationsService {
 
   async findAll(
     query: ListReservationsQueryDto,
-  ): Promise<{ data: Reservation[]; total: number }> {
+  ): Promise<{ data: ReservationWithRelations[]; total: number }> {
     const params = {
       villaId: query.villaId,
       customerId: query.customerId,
@@ -96,7 +96,7 @@ export class ReservationsService {
     return { data, total };
   }
 
-  async findOneOrThrow(id: string): Promise<Reservation> {
+  async findOneOrThrow(id: string): Promise<ReservationWithRelations> {
     const reservation = await this.reservationsRepository.findById(id);
     if (!reservation) {
       throw new NotFoundException(`Reservation ${id} not found`);
@@ -105,7 +105,7 @@ export class ReservationsService {
     return reservation;
   }
 
-  async update(id: string, dto: UpdateReservationDto): Promise<Reservation> {
+  async update(id: string, dto: UpdateReservationDto): Promise<ReservationWithRelations> {
     const reservation = await this.findOneOrThrow(id);
 
     if (dto.guestCount !== undefined) {
@@ -120,7 +120,7 @@ export class ReservationsService {
     return this.reservationsRepository.update(id, dto);
   }
 
-  async transition(id: string, target: ReservationStatus): Promise<Reservation> {
+  async transition(id: string, target: ReservationStatus): Promise<ReservationWithRelations> {
     const reservation = await this.findOneOrThrow(id);
     const allowed = ALLOWED_TRANSITIONS[reservation.status];
 

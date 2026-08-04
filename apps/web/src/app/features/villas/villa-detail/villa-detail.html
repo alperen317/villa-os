@@ -1,0 +1,135 @@
+@if (villa(); as v) {
+  <div class="page-header">
+    <div>
+      <a routerLink="/villas">← Villalar</a>
+      <h2>{{ v.name }}</h2>
+      <nz-tag [nzColor]="v.status === 'Active' ? 'green' : 'default'">
+        {{ v.status === 'Active' ? 'Aktif' : 'Pasif' }}
+      </nz-tag>
+    </div>
+    <button nz-button (click)="toggleVillaStatus()">
+      {{ v.status === 'Active' ? 'Pasife Al' : 'Aktif Et' }}
+    </button>
+  </div>
+
+  <nz-card [nzTitle]="'Villa Bilgileri'" class="info-card">
+    <p><strong>Adres:</strong> {{ v.address || '-' }}</p>
+    <p><strong>Açıklama:</strong> {{ v.description || '-' }}</p>
+  </nz-card>
+}
+
+<div class="page-header">
+  <h3>Katlar</h3>
+  <button nz-button nzType="primary" (click)="openCreateModal()">
+    <nz-icon nzType="plus" />
+    Yeni Kat
+  </button>
+</div>
+
+<nz-table [nzData]="floors()" [nzLoading]="loading()" [nzShowPagination]="false">
+  <thead>
+    <tr>
+      <th>Ad</th>
+      <th>Kapasite</th>
+      <th>Yatak/Banyo</th>
+      <th>Günlük Fiyat</th>
+      <th>Durum</th>
+      <th>Aksiyonlar</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (floor of floors(); track floor.id) {
+      <tr>
+        <td>
+          {{ floor.name }}
+          @if (floor.isEntireVilla) {
+            <nz-tag nzColor="blue">Tüm Villa</nz-tag>
+          }
+        </td>
+        <td>{{ floor.capacity }} kişi</td>
+        <td>{{ floor.bedrooms }} yatak / {{ floor.bathrooms }} banyo</td>
+        <td>{{ floor.dailyPrice }} ₺</td>
+        <td>
+          <nz-tag [nzColor]="floor.rentable ? 'green' : 'default'">
+            {{ floor.rentable ? 'Kiralanabilir' : 'Pasif' }}
+          </nz-tag>
+        </td>
+        <td class="actions">
+          <button nz-button nzType="text" (click)="openEditModal(floor)">
+            <nz-icon nzType="edit" />
+          </button>
+          <button
+            nz-button
+            nzType="text"
+            nzDanger
+            nz-popconfirm
+            nzPopconfirmTitle="Bu katı silmek istediğine emin misin?"
+            (nzOnConfirm)="removeFloor(floor)"
+          >
+            <nz-icon nzType="delete" />
+          </button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</nz-table>
+
+<nz-modal
+  [nzVisible]="modalVisible()"
+  [nzTitle]="editingFloor ? 'Kat Düzenle' : 'Yeni Kat'"
+  [nzOkLoading]="modalSaving()"
+  [nzOkDisabled]="form.invalid"
+  (nzOnCancel)="modalVisible.set(false)"
+  (nzOnOk)="save()"
+>
+  <ng-container *nzModalContent>
+    <form nz-form [formGroup]="form">
+      <nz-form-item>
+        <nz-form-label nzRequired>Ad</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="name" placeholder="ör. Zemin Kat, Tüm Villa" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Kapasite</nz-form-label>
+        <nz-form-control>
+          <nz-input-number formControlName="capacity" [nzMin]="1" style="width: 100%" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Yatak Odası</nz-form-label>
+        <nz-form-control>
+          <nz-input-number formControlName="bedrooms" [nzMin]="0" style="width: 100%" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Banyo</nz-form-label>
+        <nz-form-control>
+          <nz-input-number formControlName="bathrooms" [nzMin]="0" style="width: 100%" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Günlük Fiyat (₺)</nz-form-label>
+        <nz-form-control>
+          <nz-input-number formControlName="dailyPrice" [nzMin]="0" style="width: 100%" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-control>
+          <label nz-checkbox formControlName="rentable">Kiralanabilir</label>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-control>
+          <label nz-checkbox formControlName="isEntireVilla">Tüm Villa (bu kat villanın tamamını temsil eder)</label>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>

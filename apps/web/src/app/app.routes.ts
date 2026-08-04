@@ -9,9 +9,32 @@ export const appRoutes: Route[] = [
     canActivate: [guestGuard],
   },
   {
-    path: 'dashboard',
-    loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
+    path: '',
+    loadComponent: () => import('./layout/app-shell/app-shell').then((m) => m.AppShell),
     canActivate: [authGuard],
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
+      },
+      {
+        path: 'villas',
+        loadComponent: () =>
+          import('./features/villas/villa-list/villa-list').then((m) => m.VillaList),
+      },
+      {
+        path: 'villas/:id',
+        loadComponent: () =>
+          import('./features/villas/villa-detail/villa-detail').then((m) => m.VillaDetail),
+      },
+      {
+        path: 'reservations',
+        loadComponent: () =>
+          import('./features/reservations/reservation-list/reservation-list').then(
+            (m) => m.ReservationList,
+          ),
+      },
+    ],
   },
   { path: '**', redirectTo: 'dashboard' },
 ];

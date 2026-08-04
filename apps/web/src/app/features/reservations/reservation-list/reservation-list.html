@@ -1,0 +1,184 @@
+<div class="page-header">
+  <h2>Rezervasyonlar</h2>
+  <button nz-button nzType="primary" (click)="openCreateModal()">
+    <nz-icon nzType="plus" />
+    Yeni Rezervasyon
+  </button>
+</div>
+
+<div class="filters">
+  <nz-select
+    [ngModel]="filterVillaId()"
+    (ngModelChange)="filterVillaId.set($event); onFilterChange()"
+    nzAllowClear
+    nzPlaceHolder="Villa"
+    class="filter-select"
+  >
+    @for (villa of villas(); track villa.id) {
+      <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+    }
+  </nz-select>
+
+  <nz-select
+    [ngModel]="filterStatus()"
+    (ngModelChange)="filterStatus.set($event); onFilterChange()"
+    nzAllowClear
+    nzPlaceHolder="Durum"
+    class="filter-select"
+  >
+    @for (status of statusKeys; track status) {
+      <nz-option [nzValue]="status" [nzLabel]="statusLabels[status]" />
+    }
+  </nz-select>
+</div>
+
+<nz-table
+  [nzData]="reservations()"
+  [nzFrontPagination]="false"
+  [nzTotal]="total()"
+  [nzPageIndex]="pageIndex()"
+  [nzPageSize]="pageSize()"
+  [nzLoading]="loading()"
+  (nzPageIndexChange)="onPageIndexChange($event)"
+>
+  <thead>
+    <tr>
+      <th>Rez. No</th>
+      <th>Villa / Kat</th>
+      <th>Müşteri</th>
+      <th>Giriş - Çıkış</th>
+      <th>Misafir</th>
+      <th>Tutar</th>
+      <th>Durum</th>
+      <th>Aksiyonlar</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (reservation of reservations(); track reservation.id) {
+      <tr>
+        <td>{{ reservation.reservationNumber }}</td>
+        <td>{{ reservation.villa.name }} / {{ reservation.floor.name }}</td>
+        <td>{{ reservation.customer.firstName }} {{ reservation.customer.lastName }}</td>
+        <td>{{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}</td>
+        <td>{{ reservation.guestCount }}</td>
+        <td>{{ reservation.totalPrice }} ₺</td>
+        <td><nz-tag>{{ statusLabels[reservation.status] }}</nz-tag></td>
+        <td>
+          @if (nextActions[reservation.status].length > 0) {
+            <button nz-button nzType="text" nz-dropdown [nzDropdownMenu]="menu">
+              <nz-icon nzType="more" />
+            </button>
+            <nz-dropdown-menu #menu="nzDropdownMenu">
+              <ul nz-menu>
+                @for (next of nextActions[reservation.status]; track next.action) {
+                  <li nz-menu-item (click)="runAction(reservation, next.action)">
+                    {{ next.label }}
+                  </li>
+                }
+              </ul>
+            </nz-dropdown-menu>
+          }
+        </td>
+      </tr>
+    }
+  </tbody>
+</nz-table>
+
+<nz-modal
+  [nzVisible]="modalVisible()"
+  nzTitle="Yeni Rezervasyon"
+  nzWidth="600px"
+  [nzOkLoading]="modalSaving()"
+  [nzOkDisabled]="form.invalid"
+  (nzOnCancel)="modalVisible.set(false)"
+  (nzOnOk)="save()"
+>
+  <ng-container *nzModalContent>
+    <form nz-form [formGroup]="form">
+      <nz-form-item>
+        <nz-form-label nzRequired>Villa</nz-form-label>
+        <nz-form-control>
+          <nz-select formControlName="villaId" nzPlaceHolder="Villa seçin">
+            @for (villa of villas(); track villa.id) {
+              <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Kat</nz-form-label>
+        <nz-form-control>
+          <nz-select formControlName="floorId" nzPlaceHolder="Kat seçin">
+            @for (floor of formFloors(); track floor.id) {
+              <nz-option [nzValue]="floor.id" [nzLabel]="floor.name + ' (' + floor.dailyPrice + ' ₺/gece)'" />
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Tarih Aralığı</nz-form-label>
+        <nz-form-control>
+          <nz-range-picker formControlName="dateRange" style="width: 100%" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Misafir Sayısı</nz-form-label>
+        <nz-form-control>
+          <nz-input-number formControlName="guestCount" [nzMin]="1" style="width: 100%" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Müşteri</nz-form-label>
+        <nz-form-control>
+          <nz-select
+            formControlName="customerId"
+            nzShowSearch
+            nzPlaceHolder="İsim, telefon veya e-posta ile ara"
+            (nzOnSearch)="onCustomerSearch($event)"
+          >
+            @for (customer of customerOptions(); track customer.id) {
+              <nz-option
+                [nzValue]="customer.id"
+                [nzLabel]="customer.firstName + ' ' + customer.lastName + (customer.phone ? ' · ' + customer.phone : '')"
+              />
+            }
+          </nz-select>
+          <button nz-button nzType="link" type="button" (click)="toggleNewCustomerForm()">
+            Bulamadım, yeni müşteri oluştur
+          </button>
+
+          @if (showNewCustomerForm()) {
+            <div class="inline-customer-form">
+              <form nz-form [formGroup]="newCustomerForm">
+                <input nz-input formControlName="firstName" placeholder="Ad" class="mb" />
+                <input nz-input formControlName="lastName" placeholder="Soyad" class="mb" />
+                <input nz-input formControlName="phone" placeholder="Telefon (opsiyonel)" class="mb" />
+                <button
+                  nz-button
+                  nzType="dashed"
+                  type="button"
+                  [nzLoading]="creatingCustomer()"
+                  [disabled]="newCustomerForm.invalid"
+                  (click)="createCustomerInline()"
+                >
+                  Müşteriyi Oluştur ve Seç
+                </button>
+              </form>
+            </div>
+          }
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Not</nz-form-label>
+        <nz-form-control>
+          <textarea nz-input formControlName="notes" rows="2"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>

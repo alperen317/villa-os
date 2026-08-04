@@ -1,0 +1,27 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.filter-select {
+  width: 200px;
+}
+
+.inline-customer-form {
+  margin-top: 12px;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 4px;
+}
+
+.mb {
+  margin-bottom: 8px;
+}

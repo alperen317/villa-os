@@ -1,0 +1,23 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 0;
+}
+
+.page-header h2,
+.page-header h3 {
+  margin: 4px 0;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.info-card {
+  margin-bottom: 24px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
