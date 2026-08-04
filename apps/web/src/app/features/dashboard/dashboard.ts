@@ -7,13 +7,11 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { AuthService } from '../../core/auth/auth.service';
-import { CustomersService } from '../customers/customers.service';
-import { ReservationsService } from '../reservations/reservations.service';
-import { VillasService } from '../villas/villas.service';
+import { DashboardService } from './dashboard.service';
 
 interface StatCard {
   label: string;
-  value: number;
+  value: string;
   icon: string;
   link: string;
 }
@@ -27,9 +25,7 @@ interface StatCard {
 })
 export class Dashboard implements OnInit {
   protected readonly authService = inject(AuthService);
-  private readonly villasService = inject(VillasService);
-  private readonly reservationsService = inject(ReservationsService);
-  private readonly customersService = inject(CustomersService);
+  private readonly dashboardService = inject(DashboardService);
 
   protected readonly loadingUser = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
@@ -63,18 +59,26 @@ export class Dashboard implements OnInit {
   private async loadStats(): Promise<void> {
     this.statsLoading.set(true);
     try {
-      const [villas, pendingReservations, activeReservations, customerCount] = await Promise.all([
-        this.villasService.list({ limit: 1 }),
-        this.reservationsService.list({ limit: 1, status: 'Pending' }),
-        this.reservationsService.list({ limit: 1, status: 'Confirmed' }),
-        this.customersService.count(),
-      ]);
+      const summary = await this.dashboardService.getSummary();
 
       this.stats.set([
-        { label: 'Toplam Villa', value: villas.total, icon: 'home', link: '/villas' },
-        { label: 'Bekleyen Rezervasyon', value: pendingReservations.total, icon: 'clock-circle', link: '/reservations' },
-        { label: 'Onaylanmış Rezervasyon', value: activeReservations.total, icon: 'check-circle', link: '/reservations' },
-        { label: 'Kayıtlı Müşteri', value: customerCount, icon: 'user', link: '/reservations' },
+        { label: 'Bugünkü Girişler', value: String(summary.todayArrivals), icon: 'login', link: '/reservations' },
+        { label: 'Bugünkü Çıkışlar', value: String(summary.todayDepartures), icon: 'logout', link: '/reservations' },
+        { label: 'Şu An Konaklayan', value: String(summary.currentGuests), icon: 'user', link: '/reservations' },
+        {
+          label: 'Doluluk Oranı',
+          value: `%${summary.occupancyRate} (${summary.occupiedVillas}/${summary.totalActiveVillas})`,
+          icon: 'home',
+          link: '/villas',
+        },
+        {
+          label: 'Bu Ay Gelir',
+          value: `${summary.revenueThisMonth.toLocaleString('tr-TR')} ₺`,
+          icon: 'dollar',
+          link: '/reservations',
+        },
+        { label: 'Bekleyen Temizlik', value: String(summary.openCleaningTasks), icon: 'clear', link: '/housekeeping' },
+        { label: 'Bekleyen Bakım', value: String(summary.openMaintenanceTasks), icon: 'tool', link: '/villas' },
       ]);
     } finally {
       this.statsLoading.set(false);
