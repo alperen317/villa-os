@@ -1,0 +1,224 @@
+// Prisma schema — mirrors docs/DATABASE.md
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum VillaStatus {
+  Active
+  Inactive
+}
+
+enum ReservationStatus {
+  Pending
+  Confirmed
+  CheckedIn
+  CheckedOut
+  Completed
+  Cancelled
+}
+
+enum PaymentMethod {
+  Cash
+  BankTransfer
+  CreditCard
+}
+
+enum HousekeepingStatus {
+  Pending
+  InProgress
+  Completed
+}
+
+enum MaintenancePriority {
+  Low
+  Medium
+  High
+  Urgent
+}
+
+enum MaintenanceStatus {
+  Open
+  InProgress
+  Completed
+}
+
+enum UserRole {
+  Administrator
+  Operations
+  Accounting
+  Housekeeping
+}
+
+model Villa {
+  id          String      @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  address     String?
+  latitude    Decimal?    @db.Decimal(9, 6)
+  longitude   Decimal?    @db.Decimal(9, 6)
+  status      VillaStatus @default(Active)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  deletedAt   DateTime?   @map("deleted_at")
+
+  floors             Floor[]
+  reservations       Reservation[]
+  maintenanceRecords MaintenanceRecord[]
+  housekeepingTasks  HousekeepingTask[]
+
+  @@index([status])
+  @@map("villas")
+}
+
+model Floor {
+  id         String    @id @default(uuid()) @db.Uuid
+  villaId    String    @map("villa_id") @db.Uuid
+  name       String
+  capacity   Int
+  bedrooms   Int
+  bathrooms  Int
+  dailyPrice Decimal   @map("daily_price") @db.Decimal(10, 2)
+  rentable   Boolean   @default(true)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  villa        Villa         @relation(fields: [villaId], references: [id])
+  reservations Reservation[]
+
+  @@index([villaId])
+  @@map("floors")
+}
+
+model Customer {
+  id             String    @id @default(uuid()) @db.Uuid
+  firstName      String    @map("first_name")
+  lastName       String    @map("last_name")
+  phone          String?
+  email          String?
+  identityNumber String?   @map("identity_number")
+  passportNumber String?   @map("passport_number")
+  notes          String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  reservations Reservation[]
+
+  @@map("customers")
+}
+
+model Reservation {
+  id                String            @id @default(uuid()) @db.Uuid
+  reservationNumber String            @unique @map("reservation_number")
+  villaId           String            @map("villa_id") @db.Uuid
+  floorId           String?           @map("floor_id") @db.Uuid
+  customerId        String            @map("customer_id") @db.Uuid
+  checkIn           DateTime          @map("check_in") @db.Date
+  checkOut          DateTime          @map("check_out") @db.Date
+  guestCount        Int               @map("guest_count")
+  totalPrice        Decimal           @map("total_price") @db.Decimal(10, 2)
+  status            ReservationStatus @default(Pending)
+  notes             String?
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  deletedAt         DateTime?         @map("deleted_at")
+
+  villa             Villa                 @relation(fields: [villaId], references: [id])
+  floor             Floor?                @relation(fields: [floorId], references: [id])
+  customer          Customer              @relation(fields: [customerId], references: [id])
+  payments          Payment[]
+  documents         ReservationDocument[]
+  housekeepingTasks HousekeepingTask[]
+
+  @@index([customerId])
+  @@index([villaId, checkIn])
+  @@index([floorId, checkIn])
+  @@index([villaId, status])
+  @@map("reservations")
+}
+
+model Payment {
+  id              String        @id @default(uuid()) @db.Uuid
+  reservationId   String        @map("reservation_id") @db.Uuid
+  amount          Decimal       @db.Decimal(10, 2)
+  paymentMethod   PaymentMethod @map("payment_method")
+  paymentDate     DateTime      @default(now()) @map("payment_date")
+  referenceNumber String?       @map("reference_number")
+  notes           String?
+
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+
+  @@index([reservationId])
+  @@index([paymentDate])
+  @@map("payments")
+}
+
+model HousekeepingTask {
+  id             String             @id @default(uuid()) @db.Uuid
+  reservationId  String             @map("reservation_id") @db.Uuid
+  villaId        String             @map("villa_id") @db.Uuid
+  assignedUserId String?            @map("assigned_user_id") @db.Uuid
+  status         HousekeepingStatus @default(Pending)
+  startedAt      DateTime?          @map("started_at")
+  completedAt    DateTime?          @map("completed_at")
+  notes          String?
+
+  reservation  Reservation @relation(fields: [reservationId], references: [id])
+  villa        Villa       @relation(fields: [villaId], references: [id])
+  assignedUser User?       @relation(fields: [assignedUserId], references: [id])
+
+  @@index([villaId])
+  @@index([status])
+  @@map("housekeeping_tasks")
+}
+
+model MaintenanceRecord {
+  id          String              @id @default(uuid()) @db.Uuid
+  villaId     String              @map("villa_id") @db.Uuid
+  title       String
+  description String?
+  priority    MaintenancePriority @default(Medium)
+  status      MaintenanceStatus   @default(Open)
+  openedAt    DateTime            @default(now()) @map("opened_at")
+  completedAt DateTime?           @map("completed_at")
+
+  villa Villa @relation(fields: [villaId], references: [id])
+
+  @@index([villaId])
+  @@map("maintenance_records")
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  housekeepingTasks HousekeepingTask[]
+
+  @@map("users")
+}
+
+model ReservationDocument {
+  id            String   @id @default(uuid()) @db.Uuid
+  reservationId String   @map("reservation_id") @db.Uuid
+  fileName      String   @map("file_name")
+  filePath      String   @map("file_path")
+  mimeType      String   @map("mime_type")
+  uploadedAt    DateTime @default(now()) @map("uploaded_at")
+
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+
+  @@index([reservationId])
+  @@map("reservation_documents")
+}
