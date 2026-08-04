@@ -29,4 +29,8 @@ export class CreateFloorDto {
   @IsOptional()
   @IsBoolean()
   rentable?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isEntireVilla?: boolean;
 }

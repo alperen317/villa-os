@@ -78,17 +78,18 @@ model Villa {
 }
 
 model Floor {
-  id         String    @id @default(uuid()) @db.Uuid
-  villaId    String    @map("villa_id") @db.Uuid
-  name       String
-  capacity   Int
-  bedrooms   Int
-  bathrooms  Int
-  dailyPrice Decimal   @map("daily_price") @db.Decimal(10, 2)
-  rentable   Boolean   @default(true)
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-  deletedAt  DateTime? @map("deleted_at")
+  id            String    @id @default(uuid()) @db.Uuid
+  villaId       String    @map("villa_id") @db.Uuid
+  name          String
+  capacity      Int
+  bedrooms      Int
+  bathrooms     Int
+  dailyPrice    Decimal   @map("daily_price") @db.Decimal(10, 2)
+  rentable      Boolean   @default(true)
+  isEntireVilla Boolean   @default(false) @map("is_entire_villa")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
 
   villa        Villa         @relation(fields: [villaId], references: [id])
   reservations Reservation[]
@@ -119,7 +120,7 @@ model Reservation {
   id                String            @id @default(uuid()) @db.Uuid
   reservationNumber String            @unique @map("reservation_number")
   villaId           String            @map("villa_id") @db.Uuid
-  floorId           String?           @map("floor_id") @db.Uuid
+  floorId           String            @map("floor_id") @db.Uuid
   customerId        String            @map("customer_id") @db.Uuid
   checkIn           DateTime          @map("check_in") @db.Date
   checkOut          DateTime          @map("check_out") @db.Date
@@ -132,7 +133,7 @@ model Reservation {
   deletedAt         DateTime?         @map("deleted_at")
 
   villa             Villa                 @relation(fields: [villaId], references: [id])
-  floor             Floor?                @relation(fields: [floorId], references: [id])
+  floor             Floor                 @relation(fields: [floorId], references: [id])
   customer          Customer              @relation(fields: [customerId], references: [id])
   payments          Payment[]
   documents         ReservationDocument[]

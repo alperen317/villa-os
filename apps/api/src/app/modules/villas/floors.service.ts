@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateFloorDto } from './dto/create-floor.dto';
 import { UpdateFloorDto } from './dto/update-floor.dto';
 import { FloorsRepository } from './floors.repository';
@@ -14,6 +14,11 @@ export class FloorsService {
 
   async create(villaId: string, dto: CreateFloorDto): Promise<Floor> {
     await this.villasService.findOneOrThrow(villaId);
+
+    if (dto.isEntireVilla) {
+      await this.assertNoExistingEntireVillaFloor(villaId);
+    }
+
     return this.floorsRepository.create({ ...dto, villaId });
   }
 
@@ -32,12 +37,24 @@ export class FloorsService {
   }
 
   async update(villaId: string, id: string, dto: UpdateFloorDto): Promise<Floor> {
-    await this.findOneOrThrow(villaId, id);
+    const floor = await this.findOneOrThrow(villaId, id);
+
+    if (dto.isEntireVilla && !floor.isEntireVilla) {
+      await this.assertNoExistingEntireVillaFloor(villaId);
+    }
+
     return this.floorsRepository.update(id, dto);
   }
 
   async remove(villaId: string, id: string): Promise<void> {
     await this.findOneOrThrow(villaId, id);
     await this.floorsRepository.softDelete(id);
+  }
+
+  private async assertNoExistingEntireVillaFloor(villaId: string): Promise<void> {
+    const existing = await this.floorsRepository.findEntireVillaFloor(villaId);
+    if (existing) {
+      throw new ConflictException(`Villa ${villaId} already has an entire-villa floor`);
+    }
   }
 }

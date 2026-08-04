@@ -6,6 +6,8 @@ import { PrismaModule } from './infra/prisma/prisma.module';
 import { RedisModule } from './infra/redis/redis.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { VillasModule } from './modules/villas/villas.module';
+import { CustomersModule } from './modules/customers/customers.module';
+import { ReservationsModule } from './modules/reservations/reservations.module';
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { VillasModule } from './modules/villas/villas.module';
     RedisModule,
     AuthModule,
     VillasModule,
+    CustomersModule,
+    ReservationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

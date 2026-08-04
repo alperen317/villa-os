@@ -9,6 +9,6 @@ import { VillasService } from './villas.service';
 @Module({
   controllers: [VillasController, FloorsController],
   providers: [VillasService, VillasRepository, FloorsService, FloorsRepository],
-  exports: [VillasService],
+  exports: [VillasService, FloorsService],
 })
 export class VillasModule {}

@@ -21,6 +21,12 @@ export class FloorsRepository {
     });
   }
 
+  findEntireVillaFloor(villaId: string): Promise<Floor | null> {
+    return this.prisma.floor.findFirst({
+      where: { villaId, isEntireVilla: true, deletedAt: null },
+    });
+  }
+
   update(id: string, data: Prisma.FloorUncheckedUpdateInput): Promise<Floor> {
     return this.prisma.floor.update({ where: { id }, data });
   }
