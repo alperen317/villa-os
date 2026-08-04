@@ -22,7 +22,13 @@ import {
   MaintenancePriority,
   MaintenanceRecord,
 } from '../../../core/models/maintenance.model';
+import {
+  RESERVATION_STATUS_COLORS,
+  RESERVATION_STATUS_LABELS,
+  Reservation,
+} from '../../../core/models/reservation.model';
 import { Floor, Villa } from '../../../core/models/villa.model';
+import { ReservationsService } from '../../reservations/reservations.service';
 import { MaintenanceService } from '../maintenance.service';
 import { VillasService } from '../villas.service';
 
@@ -67,6 +73,7 @@ export class VillaDetail implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly villasService = inject(VillasService);
   private readonly maintenanceService = inject(MaintenanceService);
+  private readonly reservationsService = inject(ReservationsService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly message = inject(NzMessageService);
 
@@ -89,6 +96,11 @@ export class VillaDetail implements OnInit {
   protected readonly maintenanceModalVisible = signal(false);
   protected readonly maintenanceSaving = signal(false);
   protected readonly maintenanceActingId = signal<string | null>(null);
+
+  protected readonly reservationStatusLabels = RESERVATION_STATUS_LABELS;
+  protected readonly reservationStatusColors = RESERVATION_STATUS_COLORS;
+  protected readonly reservations = signal<Reservation[]>([]);
+  protected readonly reservationsLoading = signal(false);
 
   protected readonly form = this.formBuilder.nonNullable.group({
     name: ['', Validators.required],
@@ -113,6 +125,7 @@ export class VillaDetail implements OnInit {
   ngOnInit(): void {
     this.load();
     this.loadMaintenanceRecords();
+    this.loadReservations();
   }
 
   async load(): Promise<void> {
@@ -137,6 +150,18 @@ export class VillaDetail implements OnInit {
       this.message.error('Bakım kayıtları alınamadı');
     } finally {
       this.maintenanceLoading.set(false);
+    }
+  }
+
+  async loadReservations(): Promise<void> {
+    this.reservationsLoading.set(true);
+    try {
+      const result = await this.reservationsService.list({ villaId: this.villaId, limit: 20 });
+      this.reservations.set(result.data);
+    } catch {
+      this.message.error('Rezervasyonlar alınamadı');
+    } finally {
+      this.reservationsLoading.set(false);
     }
   }
 

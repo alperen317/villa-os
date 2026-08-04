@@ -28,6 +28,7 @@ import {
 } from '../../../core/models/payment.model';
 import {
   RESERVATION_NEXT_ACTIONS,
+  RESERVATION_STATUS_COLORS,
   RESERVATION_STATUS_LABELS,
   Reservation,
   ReservationStatus,
@@ -39,15 +40,6 @@ import { PaymentsService } from '../payments.service';
 import { ReservationAction, ReservationsService } from '../reservations.service';
 
 const PAYMENT_MANAGER_ROLES = new Set(['Administrator', 'Accounting']);
-
-const STATUS_COLORS: Record<ReservationStatus, string> = {
-  Pending: 'gold',
-  Confirmed: 'blue',
-  CheckedIn: 'green',
-  CheckedOut: 'purple',
-  Completed: 'default',
-  Cancelled: 'red',
-};
 
 @Component({
   selector: 'app-reservation-list',
@@ -88,7 +80,7 @@ export class ReservationList implements OnInit {
 
   protected readonly statusLabels = RESERVATION_STATUS_LABELS;
   protected readonly nextActions = RESERVATION_NEXT_ACTIONS;
-  protected readonly statusColors = STATUS_COLORS;
+  protected readonly statusColors = RESERVATION_STATUS_COLORS;
   protected readonly statusKeys = Object.keys(RESERVATION_STATUS_LABELS) as ReservationStatus[];
 
   protected readonly viewMode = signal<'list' | 'calendar' | 'availability'>('list');

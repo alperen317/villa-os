@@ -107,6 +107,52 @@
 </ng-template>
 
 <div class="page-header">
+  <h3 class="section-title">Rezervasyonlar</h3>
+  <a routerLink="/reservations">Tümünü Gör</a>
+</div>
+
+<div class="page-surface surface-spaced">
+  <nz-table
+    [nzData]="reservations()"
+    [nzLoading]="reservationsLoading()"
+    [nzShowPagination]="false"
+    [nzNoResult]="emptyReservations"
+  >
+    <thead>
+      <tr>
+        <th>Rez. No</th>
+        <th>Müşteri</th>
+        <th>Giriş - Çıkış</th>
+        <th>Misafir</th>
+        <th>Durum</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (reservation of reservations(); track reservation.id) {
+        <tr>
+          <td>{{ reservation.reservationNumber }}</td>
+          <td>{{ reservation.customer.firstName }} {{ reservation.customer.lastName }}</td>
+          <td>{{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}</td>
+          <td>{{ reservation.guestCount }}</td>
+          <td>
+            <nz-tag [nzColor]="reservationStatusColors[reservation.status]">
+              {{ reservationStatusLabels[reservation.status] }}
+            </nz-tag>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<ng-template #emptyReservations>
+  <div class="empty-state">
+    <nz-icon nzType="calendar" class="empty-icon" />
+    <p>Bu villa için henüz rezervasyon yok.</p>
+  </div>
+</ng-template>
+
+<div class="page-header">
   <h3 class="section-title">Bakım Kayıtları</h3>
   <button nz-button nzType="primary" (click)="openCreateMaintenanceModal()">
     <nz-icon nzType="plus" />

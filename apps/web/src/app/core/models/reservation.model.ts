@@ -44,6 +44,15 @@ export const RESERVATION_STATUS_LABELS: Record<ReservationStatus, string> = {
   Cancelled: 'İptal Edildi',
 };
 
+export const RESERVATION_STATUS_COLORS: Record<ReservationStatus, string> = {
+  Pending: 'gold',
+  Confirmed: 'blue',
+  CheckedIn: 'green',
+  CheckedOut: 'purple',
+  Completed: 'default',
+  Cancelled: 'red',
+};
+
 export const RESERVATION_NEXT_ACTIONS: Record<
   ReservationStatus,
   { action: string; label: string }[]
