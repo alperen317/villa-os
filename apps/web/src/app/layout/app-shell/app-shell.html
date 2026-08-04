@@ -1,5 +1,5 @@
 <nz-layout class="shell">
-  <nz-sider nzCollapsible [nzCollapsed]="collapsed()" (nzCollapsedChange)="collapsed.set($event)">
+  <nz-sider class="sider" nzCollapsible [nzCollapsed]="collapsed()" (nzCollapsedChange)="collapsed.set($event)">
     <div class="logo">{{ collapsed() ? 'VOS' : 'Villa OS' }}</div>
     <ul nz-menu nzTheme="dark" nzMode="inline">
       <li nz-menu-item routerLink="/dashboard" routerLinkActive="ant-menu-item-selected">
@@ -23,7 +23,7 @@
     </ul>
   </nz-sider>
 
-  <nz-layout>
+  <nz-layout class="main-layout">
     <nz-header class="header">
       <span class="user-info">
         @if (authService.currentUser(); as user) {
