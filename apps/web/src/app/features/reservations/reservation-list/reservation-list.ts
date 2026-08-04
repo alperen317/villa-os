@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCalendarModule } from 'ng-zorro-antd/calendar';
@@ -14,10 +14,18 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzSegmentedModule } from 'ng-zorro-antd/segmented';
 import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
 import { NzTableModule } from 'ng-zorro-antd/table';
+import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
+import { AuthService } from '../../../core/auth/auth.service';
 import { Customer } from '../../../core/models/customer.model';
+import {
+  PAYMENT_METHOD_LABELS,
+  PaymentMethod,
+  PaymentsSummary,
+} from '../../../core/models/payment.model';
 import {
   RESERVATION_NEXT_ACTIONS,
   RESERVATION_STATUS_LABELS,
@@ -27,7 +35,10 @@ import {
 import { Floor, FloorWithVilla, Villa } from '../../../core/models/villa.model';
 import { CustomersService } from '../../customers/customers.service';
 import { VillasService } from '../../villas/villas.service';
+import { PaymentsService } from '../payments.service';
 import { ReservationAction, ReservationsService } from '../reservations.service';
+
+const PAYMENT_MANAGER_ROLES = new Set(['Administrator', 'Accounting']);
 
 const STATUS_COLORS: Record<ReservationStatus, string> = {
   Pending: 'gold',
@@ -57,7 +68,9 @@ const STATUS_COLORS: Record<ReservationStatus, string> = {
     NzModalModule,
     NzSegmentedModule,
     NzSelectModule,
+    NzSkeletonModule,
     NzTableModule,
+    NzTabsModule,
     NzTagModule,
     NzTooltipModule,
   ],
@@ -68,6 +81,8 @@ export class ReservationList implements OnInit {
   private readonly reservationsService = inject(ReservationsService);
   private readonly villasService = inject(VillasService);
   private readonly customersService = inject(CustomersService);
+  private readonly paymentsService = inject(PaymentsService);
+  private readonly authService = inject(AuthService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly message = inject(NzMessageService);
 
@@ -100,6 +115,27 @@ export class ReservationList implements OnInit {
 
   protected readonly detailVisible = signal(false);
   protected readonly detailReservation = signal<Reservation | null>(null);
+
+  protected readonly paymentsSummary = signal<PaymentsSummary | null>(null);
+  protected readonly paymentsLoading = signal(false);
+  protected readonly paymentModalVisible = signal(false);
+  protected readonly paymentSaving = signal(false);
+
+  protected readonly paymentMethodLabels = PAYMENT_METHOD_LABELS;
+  protected readonly paymentMethodKeys = Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[];
+
+  protected readonly canManagePayments = computed(() => {
+    const role = this.authService.currentUser()?.role;
+    return role ? PAYMENT_MANAGER_ROLES.has(role) : false;
+  });
+
+  protected readonly paymentForm = this.formBuilder.nonNullable.group({
+    amount: [0, [Validators.required, Validators.min(0.01)]],
+    paymentMethod: ['Cash' as PaymentMethod, Validators.required],
+    paymentDate: [null as Date | null],
+    referenceNumber: [''],
+    notes: [''],
+  });
 
   protected readonly availabilityResults = signal<FloorWithVilla[] | null>(null);
   protected readonly availabilitySearching = signal(false);
@@ -235,6 +271,58 @@ export class ReservationList implements OnInit {
   openDetail(reservation: Reservation): void {
     this.detailReservation.set(reservation);
     this.detailVisible.set(true);
+    this.paymentsSummary.set(null);
+    this.loadPaymentsSummary(reservation.id);
+  }
+
+  async loadPaymentsSummary(reservationId: string): Promise<void> {
+    this.paymentsLoading.set(true);
+    try {
+      this.paymentsSummary.set(await this.paymentsService.getSummary(reservationId));
+    } catch {
+      this.message.error('Ödeme bilgisi alınamadı');
+    } finally {
+      this.paymentsLoading.set(false);
+    }
+  }
+
+  openAddPaymentModal(): void {
+    this.paymentForm.reset({
+      amount: 0,
+      paymentMethod: 'Cash',
+      paymentDate: null,
+      referenceNumber: '',
+      notes: '',
+    });
+    this.paymentModalVisible.set(true);
+  }
+
+  async savePayment(): Promise<void> {
+    const reservation = this.detailReservation();
+    if (this.paymentForm.invalid || !reservation) {
+      return;
+    }
+
+    const value = this.paymentForm.getRawValue();
+
+    this.paymentSaving.set(true);
+    try {
+      await this.paymentsService.create(reservation.id, {
+        amount: value.amount,
+        paymentMethod: value.paymentMethod,
+        paymentDate: value.paymentDate ? this.toIsoDate(value.paymentDate) : undefined,
+        referenceNumber: value.referenceNumber || undefined,
+        notes: value.notes || undefined,
+      });
+
+      this.message.success('Ödeme kaydedildi');
+      this.paymentModalVisible.set(false);
+      await this.loadPaymentsSummary(reservation.id);
+    } catch (error) {
+      this.message.error(this.extractErrorMessage(error));
+    } finally {
+      this.paymentSaving.set(false);
+    }
   }
 
   async openCreateModal(): Promise<void> {

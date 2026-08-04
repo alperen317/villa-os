@@ -337,31 +337,149 @@
 >
   <ng-container *nzModalContent>
     @if (detailReservation(); as reservation) {
-      <nz-descriptions [nzColumn]="1" nzBordered [nzSize]="'small'" class="detail-descriptions">
-        <nz-descriptions-item nzTitle="Rez. No">{{ reservation.reservationNumber }}</nz-descriptions-item>
-        <nz-descriptions-item nzTitle="Villa / Kat">
-          {{ reservation.villa.name }} / {{ reservation.floor.name }}
-        </nz-descriptions-item>
-        <nz-descriptions-item nzTitle="Müşteri">
-          {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
-        </nz-descriptions-item>
-        <nz-descriptions-item nzTitle="Giriş - Çıkış">
-          {{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}
-        </nz-descriptions-item>
-        <nz-descriptions-item nzTitle="Misafir">{{ reservation.guestCount }}</nz-descriptions-item>
-        <nz-descriptions-item nzTitle="Tutar">{{ reservation.totalPrice }} ₺</nz-descriptions-item>
-        <nz-descriptions-item nzTitle="Durum">
-          <nz-tag [nzColor]="statusColors[reservation.status]">{{ statusLabels[reservation.status] }}</nz-tag>
-        </nz-descriptions-item>
-      </nz-descriptions>
+      <nz-tabs>
+        <nz-tab nzTitle="Detaylar">
+          <nz-descriptions [nzColumn]="1" nzBordered [nzSize]="'small'" class="detail-descriptions">
+            <nz-descriptions-item nzTitle="Rez. No">{{ reservation.reservationNumber }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Villa / Kat">
+              {{ reservation.villa.name }} / {{ reservation.floor.name }}
+            </nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Müşteri">
+              {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+            </nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Giriş - Çıkış">
+              {{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}
+            </nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Misafir">{{ reservation.guestCount }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Tutar">{{ reservation.totalPrice }} ₺</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Durum">
+              <nz-tag [nzColor]="statusColors[reservation.status]">{{ statusLabels[reservation.status] }}</nz-tag>
+            </nz-descriptions-item>
+          </nz-descriptions>
 
-      @if (nextActions[reservation.status].length > 0) {
-        <div class="detail-actions">
-          @for (next of nextActions[reservation.status]; track next.action) {
-            <button nz-button (click)="runAction(reservation, next.action)">{{ next.label }}</button>
+          @if (nextActions[reservation.status].length > 0) {
+            <div class="detail-actions">
+              @for (next of nextActions[reservation.status]; track next.action) {
+                <button nz-button (click)="runAction(reservation, next.action)">{{ next.label }}</button>
+              }
+            </div>
           }
-        </div>
-      }
+        </nz-tab>
+
+        <nz-tab nzTitle="Ödemeler">
+          @if (paymentsLoading()) {
+            <nz-skeleton [nzActive]="true" />
+          } @else if (paymentsSummary(); as summary) {
+            <div class="balance-summary">
+              <div class="balance-item">
+                <span class="balance-label">Toplam Tutar</span>
+                <span class="balance-value">{{ summary.totalPrice }} ₺</span>
+              </div>
+              <div class="balance-item">
+                <span class="balance-label">Ödenen</span>
+                <span class="balance-value">{{ summary.totalPaid }} ₺</span>
+              </div>
+              <div class="balance-item" [class.balance-overpaid]="summary.outstandingBalance < 0">
+                <span class="balance-label">
+                  {{ summary.outstandingBalance < 0 ? 'Fazla Ödeme' : 'Kalan Bakiye' }}
+                </span>
+                <span class="balance-value">
+                  {{ summary.outstandingBalance < 0 ? -summary.outstandingBalance : summary.outstandingBalance }} ₺
+                </span>
+              </div>
+            </div>
+
+            @if (canManagePayments()) {
+              <button nz-button nzType="dashed" class="add-payment-btn" (click)="openAddPaymentModal()">
+                <nz-icon nzType="plus" />
+                Ödeme Ekle
+              </button>
+            }
+
+            @if (summary.payments.length === 0) {
+              <div class="empty-state">
+                <nz-icon nzType="clock-circle" class="empty-icon" />
+                <p>Henüz ödeme kaydedilmedi.</p>
+              </div>
+            } @else {
+              <nz-table [nzData]="summary.payments" [nzShowPagination]="false" [nzSize]="'small'">
+                <thead>
+                  <tr>
+                    <th>Tarih</th>
+                    <th>Tutar</th>
+                    <th>Yöntem</th>
+                    <th>Referans</th>
+                    <th>Not</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (payment of summary.payments; track payment.id) {
+                    <tr>
+                      <td>{{ payment.paymentDate | date: 'dd.MM.yyyy' }}</td>
+                      <td>{{ payment.amount }} ₺</td>
+                      <td>{{ paymentMethodLabels[payment.paymentMethod] }}</td>
+                      <td>{{ payment.referenceNumber || '-' }}</td>
+                      <td>{{ payment.notes || '-' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </nz-table>
+            }
+          }
+        </nz-tab>
+      </nz-tabs>
     }
+  </ng-container>
+</nz-modal>
+
+<nz-modal
+  [nzVisible]="paymentModalVisible()"
+  nzTitle="Ödeme Ekle"
+  [nzOkLoading]="paymentSaving()"
+  [nzOkDisabled]="paymentForm.invalid"
+  (nzOnCancel)="paymentModalVisible.set(false)"
+  (nzOnOk)="savePayment()"
+>
+  <ng-container *nzModalContent>
+    <form nz-form [formGroup]="paymentForm">
+      <nz-form-item>
+        <nz-form-label nzRequired>Tutar</nz-form-label>
+        <nz-form-control>
+          <nz-input-number formControlName="amount" [nzMin]="0.01" [nzStep]="0.01" style="width: 100%" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Ödeme Yöntemi</nz-form-label>
+        <nz-form-control>
+          <nz-select formControlName="paymentMethod">
+            @for (method of paymentMethodKeys; track method) {
+              <nz-option [nzValue]="method" [nzLabel]="paymentMethodLabels[method]" />
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Tarih</nz-form-label>
+        <nz-form-control>
+          <nz-date-picker formControlName="paymentDate" style="width: 100%" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Referans No</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="referenceNumber" placeholder="Opsiyonel" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Not</nz-form-label>
+        <nz-form-control>
+          <textarea nz-input formControlName="notes" rows="2"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
   </ng-container>
 </nz-modal>
