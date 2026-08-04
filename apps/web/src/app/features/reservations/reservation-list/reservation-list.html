@@ -30,59 +30,84 @@
       <nz-option [nzValue]="status" [nzLabel]="statusLabels[status]" />
     }
   </nz-select>
+
+  <nz-segmented
+    [nzOptions]="[{ value: 'list', label: 'Liste' }, { value: 'calendar', label: 'Takvim' }]"
+    [ngModel]="viewMode()"
+    (ngModelChange)="setViewMode($event)"
+    class="view-toggle"
+  />
 </div>
 
-<nz-table
-  [nzData]="reservations()"
-  [nzFrontPagination]="false"
-  [nzTotal]="total()"
-  [nzPageIndex]="pageIndex()"
-  [nzPageSize]="pageSize()"
-  [nzLoading]="loading()"
-  (nzPageIndexChange)="onPageIndexChange($event)"
->
-  <thead>
-    <tr>
-      <th>Rez. No</th>
-      <th>Villa / Kat</th>
-      <th>Müşteri</th>
-      <th>Giriş - Çıkış</th>
-      <th>Misafir</th>
-      <th>Tutar</th>
-      <th>Durum</th>
-      <th>Aksiyonlar</th>
-    </tr>
-  </thead>
-  <tbody>
-    @for (reservation of reservations(); track reservation.id) {
+@if (viewMode() === 'list') {
+  <nz-table
+    [nzData]="reservations()"
+    [nzFrontPagination]="false"
+    [nzTotal]="total()"
+    [nzPageIndex]="pageIndex()"
+    [nzPageSize]="pageSize()"
+    [nzLoading]="loading()"
+    (nzPageIndexChange)="onPageIndexChange($event)"
+  >
+    <thead>
       <tr>
-        <td>{{ reservation.reservationNumber }}</td>
-        <td>{{ reservation.villa.name }} / {{ reservation.floor.name }}</td>
-        <td>{{ reservation.customer.firstName }} {{ reservation.customer.lastName }}</td>
-        <td>{{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}</td>
-        <td>{{ reservation.guestCount }}</td>
-        <td>{{ reservation.totalPrice }} ₺</td>
-        <td><nz-tag>{{ statusLabels[reservation.status] }}</nz-tag></td>
-        <td>
-          @if (nextActions[reservation.status].length > 0) {
-            <button nz-button nzType="text" nz-dropdown [nzDropdownMenu]="menu">
-              <nz-icon nzType="more" />
-            </button>
-            <nz-dropdown-menu #menu="nzDropdownMenu">
-              <ul nz-menu>
-                @for (next of nextActions[reservation.status]; track next.action) {
-                  <li nz-menu-item (click)="runAction(reservation, next.action)">
-                    {{ next.label }}
-                  </li>
-                }
-              </ul>
-            </nz-dropdown-menu>
-          }
-        </td>
+        <th>Rez. No</th>
+        <th>Villa / Kat</th>
+        <th>Müşteri</th>
+        <th>Giriş - Çıkış</th>
+        <th>Misafir</th>
+        <th>Tutar</th>
+        <th>Durum</th>
+        <th>Aksiyonlar</th>
       </tr>
-    }
-  </tbody>
-</nz-table>
+    </thead>
+    <tbody>
+      @for (reservation of reservations(); track reservation.id) {
+        <tr>
+          <td>{{ reservation.reservationNumber }}</td>
+          <td>{{ reservation.villa.name }} / {{ reservation.floor.name }}</td>
+          <td>{{ reservation.customer.firstName }} {{ reservation.customer.lastName }}</td>
+          <td>{{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}</td>
+          <td>{{ reservation.guestCount }}</td>
+          <td>{{ reservation.totalPrice }} ₺</td>
+          <td><nz-tag [nzColor]="statusColors[reservation.status]">{{ statusLabels[reservation.status] }}</nz-tag></td>
+          <td>
+            @if (nextActions[reservation.status].length > 0) {
+              <button nz-button nzType="text" nz-dropdown [nzDropdownMenu]="menu">
+                <nz-icon nzType="more" />
+              </button>
+              <nz-dropdown-menu #menu="nzDropdownMenu">
+                <ul nz-menu>
+                  @for (next of nextActions[reservation.status]; track next.action) {
+                    <li nz-menu-item (click)="runAction(reservation, next.action)">
+                      {{ next.label }}
+                    </li>
+                  }
+                </ul>
+              </nz-dropdown-menu>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+} @else {
+  <nz-calendar [nzFullscreen]="true">
+    <ng-template nzDateCell let-date>
+      <div class="calendar-cell">
+        @for (reservation of reservationsForDate(date); track reservation.id) {
+          <nz-tag
+            class="calendar-tag"
+            [nzColor]="statusColors[reservation.status]"
+            (click)="openDetail(reservation)"
+          >
+            {{ reservation.floor.name }} · {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+          </nz-tag>
+        }
+      </div>
+    </ng-template>
+  </nz-calendar>
+}
 
 <nz-modal
   [nzVisible]="modalVisible()"
@@ -180,5 +205,41 @@
         </nz-form-control>
       </nz-form-item>
     </form>
+  </ng-container>
+</nz-modal>
+
+<nz-modal
+  [nzVisible]="detailVisible()"
+  nzTitle="Rezervasyon Detayı"
+  (nzOnCancel)="detailVisible.set(false)"
+  [nzFooter]="null"
+>
+  <ng-container *nzModalContent>
+    @if (detailReservation(); as reservation) {
+      <dl class="detail-list">
+        <dt>Rez. No</dt>
+        <dd>{{ reservation.reservationNumber }}</dd>
+        <dt>Villa / Kat</dt>
+        <dd>{{ reservation.villa.name }} / {{ reservation.floor.name }}</dd>
+        <dt>Müşteri</dt>
+        <dd>{{ reservation.customer.firstName }} {{ reservation.customer.lastName }}</dd>
+        <dt>Giriş - Çıkış</dt>
+        <dd>{{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}</dd>
+        <dt>Misafir</dt>
+        <dd>{{ reservation.guestCount }}</dd>
+        <dt>Tutar</dt>
+        <dd>{{ reservation.totalPrice }} ₺</dd>
+        <dt>Durum</dt>
+        <dd><nz-tag [nzColor]="statusColors[reservation.status]">{{ statusLabels[reservation.status] }}</nz-tag></dd>
+      </dl>
+
+      @if (nextActions[reservation.status].length > 0) {
+        <div class="detail-actions">
+          @for (next of nextActions[reservation.status]; track next.action) {
+            <button nz-button (click)="runAction(reservation, next.action)">{{ next.label }}</button>
+          }
+        </div>
+      }
+    }
   </ng-container>
 </nz-modal>

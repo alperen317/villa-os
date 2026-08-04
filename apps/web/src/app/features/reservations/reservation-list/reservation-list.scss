@@ -15,6 +15,44 @@
   width: 200px;
 }
 
+.view-toggle {
+  margin-left: auto;
+}
+
+.calendar-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.calendar-tag {
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.detail-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  margin: 0 0 16px;
+}
+
+.detail-list dt {
+  font-weight: 600;
+}
+
+.detail-list dd {
+  margin: 0;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .inline-customer-form {
   margin-top: 12px;
   padding: 12px;

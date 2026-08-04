@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzCalendarModule } from 'ng-zorro-antd/calendar';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzDropdownModule } from 'ng-zorro-antd/dropdown';
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -10,6 +11,7 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzSegmentedModule } from 'ng-zorro-antd/segmented';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTagModule } from 'ng-zorro-antd/tag';
@@ -25,6 +27,15 @@ import { CustomersService } from '../../customers/customers.service';
 import { VillasService } from '../../villas/villas.service';
 import { ReservationAction, ReservationsService } from '../reservations.service';
 
+const STATUS_COLORS: Record<ReservationStatus, string> = {
+  Pending: 'gold',
+  Confirmed: 'blue',
+  CheckedIn: 'green',
+  CheckedOut: 'purple',
+  Completed: 'default',
+  Cancelled: 'red',
+};
+
 @Component({
   selector: 'app-reservation-list',
   standalone: true,
@@ -33,6 +44,7 @@ import { ReservationAction, ReservationsService } from '../reservations.service'
     FormsModule,
     ReactiveFormsModule,
     NzButtonModule,
+    NzCalendarModule,
     NzDatePickerModule,
     NzDropdownModule,
     NzFormModule,
@@ -40,6 +52,7 @@ import { ReservationAction, ReservationsService } from '../reservations.service'
     NzInputModule,
     NzInputNumberModule,
     NzModalModule,
+    NzSegmentedModule,
     NzSelectModule,
     NzTableModule,
     NzTagModule,
@@ -56,13 +69,19 @@ export class ReservationList implements OnInit {
 
   protected readonly statusLabels = RESERVATION_STATUS_LABELS;
   protected readonly nextActions = RESERVATION_NEXT_ACTIONS;
+  protected readonly statusColors = STATUS_COLORS;
   protected readonly statusKeys = Object.keys(RESERVATION_STATUS_LABELS) as ReservationStatus[];
+
+  protected readonly viewMode = signal<'list' | 'calendar'>('list');
 
   protected readonly reservations = signal<Reservation[]>([]);
   protected readonly total = signal(0);
   protected readonly loading = signal(false);
   protected readonly pageIndex = signal(1);
   protected readonly pageSize = signal(10);
+
+  protected readonly calendarReservations = signal<Reservation[]>([]);
+  protected readonly calendarLoading = signal(false);
 
   protected readonly villas = signal<Villa[]>([]);
   protected readonly filterVillaId = signal<string | null>(null);
@@ -74,6 +93,9 @@ export class ReservationList implements OnInit {
   protected readonly customerOptions = signal<Customer[]>([]);
   protected readonly showNewCustomerForm = signal(false);
   protected readonly creatingCustomer = signal(false);
+
+  protected readonly detailVisible = signal(false);
+  protected readonly detailReservation = signal<Reservation | null>(null);
 
   protected readonly form = this.formBuilder.nonNullable.group({
     villaId: ['', Validators.required],
@@ -116,6 +138,29 @@ export class ReservationList implements OnInit {
     }
   }
 
+  async loadCalendarData(): Promise<void> {
+    this.calendarLoading.set(true);
+    try {
+      const result = await this.reservationsService.list({
+        page: 1,
+        limit: 100,
+        villaId: this.filterVillaId() ?? undefined,
+        status: this.filterStatus() ?? undefined,
+      });
+      this.calendarReservations.set(result.data);
+    } finally {
+      this.calendarLoading.set(false);
+    }
+  }
+
+  setViewMode(mode: string | number): void {
+    const nextMode = mode === 'calendar' ? 'calendar' : 'list';
+    this.viewMode.set(nextMode);
+    if (nextMode === 'calendar') {
+      this.loadCalendarData();
+    }
+  }
+
   onPageIndexChange(index: number): void {
     this.pageIndex.set(index);
     this.loadPage();
@@ -124,6 +169,23 @@ export class ReservationList implements OnInit {
   onFilterChange(): void {
     this.pageIndex.set(1);
     this.loadPage();
+    if (this.viewMode() === 'calendar') {
+      this.loadCalendarData();
+    }
+  }
+
+  reservationsForDate(date: Date): Reservation[] {
+    const day = this.stripTime(date);
+    return this.calendarReservations().filter((reservation) => {
+      const checkIn = this.stripTime(new Date(reservation.checkIn));
+      const checkOut = this.stripTime(new Date(reservation.checkOut));
+      return day >= checkIn && day < checkOut;
+    });
+  }
+
+  openDetail(reservation: Reservation): void {
+    this.detailReservation.set(reservation);
+    this.detailVisible.set(true);
   }
 
   async openCreateModal(): Promise<void> {
@@ -208,6 +270,9 @@ export class ReservationList implements OnInit {
       this.message.success('Rezervasyon oluşturuldu');
       this.modalVisible.set(false);
       await this.loadPage();
+      if (this.viewMode() === 'calendar') {
+        await this.loadCalendarData();
+      }
     } catch (error) {
       this.message.error(this.extractErrorMessage(error));
     } finally {
@@ -219,10 +284,18 @@ export class ReservationList implements OnInit {
     try {
       await this.reservationsService.transition(reservation.id, action as ReservationAction);
       this.message.success('Durum güncellendi');
+      this.detailVisible.set(false);
       await this.loadPage();
+      if (this.viewMode() === 'calendar') {
+        await this.loadCalendarData();
+      }
     } catch (error) {
       this.message.error(this.extractErrorMessage(error));
     }
+  }
+
+  private stripTime(date: Date): number {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
   }
 
   private toIsoDate(date: Date): string {
