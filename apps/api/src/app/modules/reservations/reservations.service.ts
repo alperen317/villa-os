@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
 import { CustomersService } from '../customers/customers.service';
+import { HousekeepingService } from '../housekeeping/housekeeping.service';
 import { FloorsService } from '../villas/floors.service';
 import { FloorWithVilla } from '../villas/floors.repository';
 import { VillasService } from '../villas/villas.service';
@@ -29,6 +30,7 @@ export class ReservationsService {
     private readonly villasService: VillasService,
     private readonly floorsService: FloorsService,
     private readonly customersService: CustomersService,
+    private readonly housekeepingService: HousekeepingService,
   ) {}
 
   async create(dto: CreateReservationDto): Promise<ReservationWithRelations> {
@@ -130,7 +132,13 @@ export class ReservationsService {
       throw new InvalidReservationTransitionException(reservation.status, target);
     }
 
-    return this.reservationsRepository.update(id, { status: target });
+    const updated = await this.reservationsRepository.update(id, { status: target });
+
+    if (target === ReservationStatus.CheckedOut) {
+      await this.housekeepingService.createForReservation(updated.id, updated.villaId);
+    }
+
+    return updated;
   }
 
   async findAvailableFloors(query: AvailabilityQueryDto): Promise<FloorWithVilla[]> {

@@ -12,6 +12,7 @@ import {
   AppstoreOutline,
   CalendarOutline,
   CheckCircleOutline,
+  ClearOutline,
   ClockCircleOutline,
   CloseCircleOutline,
   DashboardOutline,
@@ -62,6 +63,7 @@ export const appConfig: ApplicationConfig = {
       AppstoreOutline,
       LeftOutline,
       ClockCircleOutline,
+      ClearOutline,
     ]),
   ],
 };

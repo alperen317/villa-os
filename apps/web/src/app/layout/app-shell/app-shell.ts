@@ -1,10 +1,12 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { AuthService } from '../../core/auth/auth.service';
+
+const HOUSEKEEPING_NAV_ROLES = new Set(['Administrator', 'Operations', 'Housekeeping']);
 
 @Component({
   selector: 'app-shell',
@@ -18,6 +20,11 @@ export class AppShell implements OnInit {
   private readonly router = inject(Router);
 
   protected readonly collapsed = signal(false);
+
+  protected readonly showHousekeepingNav = computed(() => {
+    const role = this.authService.currentUser()?.role;
+    return role ? HOUSEKEEPING_NAV_ROLES.has(role) : false;
+  });
 
   async ngOnInit(): Promise<void> {
     if (!this.authService.currentUser()) {

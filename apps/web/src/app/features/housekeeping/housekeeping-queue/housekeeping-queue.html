@@ -1,0 +1,72 @@
+<div class="page-header">
+  <h2>Temizlik Kuyruğu</h2>
+  <nz-select
+    [ngModel]="filterVillaId()"
+    (ngModelChange)="filterVillaId.set($event); onFilterChange()"
+    nzAllowClear
+    nzPlaceHolder="Villa"
+    class="filter-select"
+  >
+    @for (villa of villas(); track villa.id) {
+      <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+    }
+  </nz-select>
+</div>
+
+@if (loading()) {
+  <nz-skeleton [nzActive]="true" />
+} @else {
+  <div class="board">
+    @for (column of columns; track column.status) {
+      <div class="board-column">
+        <div class="board-column-header">
+          <span>{{ column.title }}</span>
+          <span class="board-column-count">{{ tasksForStatus(column.status).length }}</span>
+        </div>
+
+        @if (tasksForStatus(column.status).length === 0) {
+          <nz-empty nzNotFoundContent="Görev yok" />
+        }
+
+        @for (task of tasksForStatus(column.status); track task.id) {
+          <nz-card class="task-card" [nzTitle]="task.villa.name">
+            <p class="task-reservation">{{ task.reservation.reservationNumber }}</p>
+
+            @if (task.assignedUser) {
+              <p class="task-meta"><nz-icon nzType="user" /> {{ task.assignedUser.username }}</p>
+            }
+            @if (task.startedAt) {
+              <p class="task-meta">Başladı: {{ task.startedAt | date: 'short' }}</p>
+            }
+            @if (task.completedAt) {
+              <p class="task-meta">Bitti: {{ task.completedAt | date: 'short' }}</p>
+            }
+
+            @if (canManage() && task.status === 'Pending') {
+              <button
+                nz-button
+                nzType="primary"
+                nzSize="small"
+                [nzLoading]="actingTaskId() === task.id"
+                (click)="start(task)"
+              >
+                Temizliğe Başla
+              </button>
+            }
+            @if (canManage() && task.status === 'InProgress') {
+              <button
+                nz-button
+                nzType="primary"
+                nzSize="small"
+                [nzLoading]="actingTaskId() === task.id"
+                (click)="complete(task)"
+              >
+                Tamamlandı Olarak İşaretle
+              </button>
+            }
+          </nz-card>
+        }
+      </div>
+    }
+  </div>
+}

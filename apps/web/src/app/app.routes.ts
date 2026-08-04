@@ -34,6 +34,13 @@ export const appRoutes: Route[] = [
             (m) => m.ReservationList,
           ),
       },
+      {
+        path: 'housekeeping',
+        loadComponent: () =>
+          import('./features/housekeeping/housekeeping-queue/housekeeping-queue').then(
+            (m) => m.HousekeepingQueue,
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },

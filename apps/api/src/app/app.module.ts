@@ -9,6 +9,7 @@ import { VillasModule } from './modules/villas/villas.module';
 import { CustomersModule } from './modules/customers/customers.module';
 import { ReservationsModule } from './modules/reservations/reservations.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { HousekeepingModule } from './modules/housekeeping/housekeeping.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
     CustomersModule,
     ReservationsModule,
     PaymentsModule,
+    HousekeepingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

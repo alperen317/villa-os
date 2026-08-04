@@ -14,6 +14,12 @@
         <nz-icon nzType="calendar" />
         <span>Rezervasyonlar</span>
       </li>
+      @if (showHousekeepingNav()) {
+        <li nz-menu-item routerLink="/housekeeping" routerLinkActive="ant-menu-item-selected">
+          <nz-icon nzType="clear" />
+          <span>Temizlik</span>
+        </li>
+      }
     </ul>
   </nz-sider>
 
