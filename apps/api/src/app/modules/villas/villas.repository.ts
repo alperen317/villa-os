@@ -27,6 +27,20 @@ export class VillasRepository {
     return this.prisma.villa.count({ where: { deletedAt: null, status: params.status } });
   }
 
+  async findVillaIdsWithOpenMaintenance(villaIds: string[]): Promise<Set<string>> {
+    if (villaIds.length === 0) {
+      return new Set();
+    }
+
+    const records = await this.prisma.maintenanceRecord.findMany({
+      where: { villaId: { in: villaIds }, status: { not: 'Completed' } },
+      select: { villaId: true },
+      distinct: ['villaId'],
+    });
+
+    return new Set(records.map((record) => record.villaId));
+  }
+
   update(id: string, data: Prisma.VillaUncheckedUpdateInput): Promise<Villa> {
     return this.prisma.villa.update({ where: { id }, data });
   }

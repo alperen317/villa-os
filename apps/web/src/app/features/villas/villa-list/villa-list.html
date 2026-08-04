@@ -31,7 +31,15 @@
     <tbody>
       @for (villa of villas(); track villa.id) {
         <tr>
-          <td><a [routerLink]="['/villas', villa.id]">{{ villa.name }}</a></td>
+          <td>
+            <a [routerLink]="['/villas', villa.id]">{{ villa.name }}</a>
+            @if (villa.hasOpenMaintenance) {
+              <nz-tag class="maintenance-badge" nzColor="orange" nz-tooltip nzTooltipTitle="Açık bakım kaydı var">
+                <nz-icon nzType="tool" />
+                Bakımda
+              </nz-tag>
+            }
+          </td>
           <td>
             <nz-tag [nzColor]="villa.status === 'Active' ? 'green' : 'default'">
               {{ villa.status === 'Active' ? 'Aktif' : 'Pasif' }}

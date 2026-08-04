@@ -10,6 +10,7 @@ import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTagModule } from 'ng-zorro-antd/tag';
+import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 import { Villa } from '../../../core/models/villa.model';
 import { VillasService } from '../villas.service';
 
@@ -27,6 +28,7 @@ import { VillasService } from '../villas.service';
     NzPopconfirmModule,
     NzTableModule,
     NzTagModule,
+    NzTooltipModule,
   ],
   templateUrl: './villa-list.html',
   styleUrl: './villa-list.scss',

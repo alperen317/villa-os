@@ -5,6 +5,10 @@ import { UpdateVillaDto } from './dto/update-villa.dto';
 import { VillasRepository } from './villas.repository';
 import { Villa, VillaStatus } from '../../../generated/prisma/client';
 
+export interface VillaWithMaintenanceFlag extends Villa {
+  hasOpenMaintenance: boolean;
+}
+
 @Injectable()
 export class VillasService {
   constructor(private readonly villasRepository: VillasRepository) {}
@@ -16,13 +20,23 @@ export class VillasService {
   async findAll(
     pagination: PaginationQueryDto,
     status?: VillaStatus,
-  ): Promise<{ data: Villa[]; total: number }> {
+  ): Promise<{ data: VillaWithMaintenanceFlag[]; total: number }> {
     const [data, total] = await Promise.all([
       this.villasRepository.findMany({ skip: pagination.skip, take: pagination.limit, status }),
       this.villasRepository.count({ status }),
     ]);
 
-    return { data, total };
+    const openMaintenanceVillaIds = await this.villasRepository.findVillaIdsWithOpenMaintenance(
+      data.map((villa) => villa.id),
+    );
+
+    return {
+      data: data.map((villa) => ({
+        ...villa,
+        hasOpenMaintenance: openMaintenanceVillaIds.has(villa.id),
+      })),
+      total,
+    };
   }
 
   async findOneOrThrow(id: string): Promise<Villa> {

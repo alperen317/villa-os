@@ -18,7 +18,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CreateVillaDto } from './dto/create-villa.dto';
 import { ListVillasQueryDto } from './dto/list-villas-query.dto';
 import { UpdateVillaDto } from './dto/update-villa.dto';
-import { VillasService } from './villas.service';
+import { VillasService, VillaWithMaintenanceFlag } from './villas.service';
 import { UserRole, Villa, VillaStatus } from '../../../generated/prisma/client';
 
 @ApiTags('villas')
@@ -38,7 +38,7 @@ export class VillasController {
   async findAll(
     @Query() query: ListVillasQueryDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<Villa[]> {
+  ): Promise<VillaWithMaintenanceFlag[]> {
     const { data, total } = await this.villasService.findAll(query, query.status);
     res.setHeader('X-Total-Count', String(total));
     return data;

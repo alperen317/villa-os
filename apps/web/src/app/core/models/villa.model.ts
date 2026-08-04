@@ -10,6 +10,7 @@ export interface Villa {
   status: VillaStatus;
   createdAt: string;
   updatedAt: string;
+  hasOpenMaintenance?: boolean;
 }
 
 export interface CreateVillaInput {
