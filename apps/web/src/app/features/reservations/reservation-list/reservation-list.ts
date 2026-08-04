@@ -4,6 +4,7 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCalendarModule } from 'ng-zorro-antd/calendar';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
+import { NzDescriptionsModule } from 'ng-zorro-antd/descriptions';
 import { NzDropdownModule } from 'ng-zorro-antd/dropdown';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -47,6 +48,7 @@ const STATUS_COLORS: Record<ReservationStatus, string> = {
     NzButtonModule,
     NzCalendarModule,
     NzDatePickerModule,
+    NzDescriptionsModule,
     NzDropdownModule,
     NzFormModule,
     NzIconModule,

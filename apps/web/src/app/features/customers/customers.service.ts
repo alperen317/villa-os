@@ -16,6 +16,16 @@ export class CustomersService {
     return response;
   }
 
+  async count(): Promise<number> {
+    const response = await firstValueFrom(
+      this.http.get<Customer[]>(`${API_BASE_URL}/customers`, {
+        params: new HttpParams().set('limit', 1),
+        observe: 'response',
+      }),
+    );
+    return Number(response.headers.get('X-Total-Count') ?? 0);
+  }
+
   create(input: CreateCustomerInput): Promise<Customer> {
     return firstValueFrom(this.http.post<Customer>(`${API_BASE_URL}/customers`, input));
   }

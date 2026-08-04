@@ -2,8 +2,8 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
+import { NzDescriptionsModule } from 'ng-zorro-antd/descriptions';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
@@ -11,6 +11,7 @@ import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
+import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { Floor, Villa } from '../../../core/models/villa.model';
@@ -23,14 +24,15 @@ import { VillasService } from '../villas.service';
     ReactiveFormsModule,
     RouterModule,
     NzButtonModule,
-    NzCardModule,
     NzCheckboxModule,
+    NzDescriptionsModule,
     NzFormModule,
     NzIconModule,
     NzInputModule,
     NzInputNumberModule,
     NzModalModule,
     NzPopconfirmModule,
+    NzSkeletonModule,
     NzTableModule,
     NzTagModule,
   ],

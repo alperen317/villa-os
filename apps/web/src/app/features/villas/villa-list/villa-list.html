@@ -1,61 +1,78 @@
 <div class="page-header">
-  <h2>Villalar</h2>
+  <div>
+    <h2 class="page-title">Villalar</h2>
+    <p class="page-subtitle">İşletmene ait villaları ve durumlarını yönet.</p>
+  </div>
   <button nz-button nzType="primary" (click)="openCreateModal()">
     <nz-icon nzType="plus" />
     Yeni Villa
   </button>
 </div>
 
-<nz-table
-  [nzData]="villas()"
-  [nzFrontPagination]="false"
-  [nzTotal]="total()"
-  [nzPageIndex]="pageIndex()"
-  [nzPageSize]="pageSize()"
-  [nzLoading]="loading()"
-  (nzPageIndexChange)="onPageIndexChange($event)"
->
-  <thead>
-    <tr>
-      <th>Ad</th>
-      <th>Durum</th>
-      <th>Adres</th>
-      <th>Aksiyonlar</th>
-    </tr>
-  </thead>
-  <tbody>
-    @for (villa of villas(); track villa.id) {
+<div class="page-surface">
+  <nz-table
+    [nzData]="villas()"
+    [nzFrontPagination]="false"
+    [nzTotal]="total()"
+    [nzPageIndex]="pageIndex()"
+    [nzPageSize]="pageSize()"
+    [nzLoading]="loading()"
+    [nzNoResult]="emptyState"
+    (nzPageIndexChange)="onPageIndexChange($event)"
+  >
+    <thead>
       <tr>
-        <td><a [routerLink]="['/villas', villa.id]">{{ villa.name }}</a></td>
-        <td>
-          <nz-tag [nzColor]="villa.status === 'Active' ? 'green' : 'default'">
-            {{ villa.status === 'Active' ? 'Aktif' : 'Pasif' }}
-          </nz-tag>
-        </td>
-        <td>{{ villa.address || '-' }}</td>
-        <td class="actions">
-          <button nz-button nzType="text" aria-label="Villayı düzenle" (click)="openEditModal(villa)">
-            <nz-icon nzType="edit" />
-          </button>
-          <button nz-button nzType="text" (click)="toggleStatus(villa)">
-            {{ villa.status === 'Active' ? 'Pasife Al' : 'Aktif Et' }}
-          </button>
-          <button
-            nz-button
-            nzType="text"
-            nzDanger
-            aria-label="Villayı sil"
-            nz-popconfirm
-            nzPopconfirmTitle="Bu villayı silmek istediğine emin misin?"
-            (nzOnConfirm)="remove(villa)"
-          >
-            <nz-icon nzType="delete" />
-          </button>
-        </td>
+        <th>Ad</th>
+        <th>Durum</th>
+        <th>Adres</th>
+        <th>Aksiyonlar</th>
       </tr>
-    }
-  </tbody>
-</nz-table>
+    </thead>
+    <tbody>
+      @for (villa of villas(); track villa.id) {
+        <tr>
+          <td><a [routerLink]="['/villas', villa.id]">{{ villa.name }}</a></td>
+          <td>
+            <nz-tag [nzColor]="villa.status === 'Active' ? 'green' : 'default'">
+              {{ villa.status === 'Active' ? 'Aktif' : 'Pasif' }}
+            </nz-tag>
+          </td>
+          <td>{{ villa.address || '-' }}</td>
+          <td class="actions">
+            <button nz-button nzType="text" aria-label="Villayı düzenle" (click)="openEditModal(villa)">
+              <nz-icon nzType="edit" />
+            </button>
+            <button nz-button nzType="text" (click)="toggleStatus(villa)">
+              {{ villa.status === 'Active' ? 'Pasife Al' : 'Aktif Et' }}
+            </button>
+            <button
+              nz-button
+              nzType="text"
+              nzDanger
+              aria-label="Villayı sil"
+              nz-popconfirm
+              nzPopconfirmTitle="Bu villayı silmek istediğine emin misin?"
+              (nzOnConfirm)="remove(villa)"
+            >
+              <nz-icon nzType="delete" />
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<ng-template #emptyState>
+  <div class="empty-state">
+    <nz-icon nzType="home" class="empty-icon" />
+    <p>Henüz villa eklenmedi.</p>
+    <button nz-button nzType="primary" (click)="openCreateModal()">
+      <nz-icon nzType="plus" />
+      İlk Villayı Ekle
+    </button>
+  </div>
+</ng-template>
 
 <nz-modal
   [nzVisible]="modalVisible()"

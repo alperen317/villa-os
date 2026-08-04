@@ -1,24 +1,71 @@
-.dashboard-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.page-header {
+  margin-bottom: 20px;
+}
+
+.error-alert {
+  margin-bottom: 20px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
-  padding: 32px 16px;
-  background: #f0f2f5;
-  min-height: 100vh;
+  margin-bottom: 24px;
 }
 
-.user-card,
-.ping-card {
-  width: 100%;
-  max-width: 480px;
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
-.actions {
-  margin-top: 16px;
+.stat-card:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 1px 6px rgba(37, 99, 235, 0.12);
 }
 
-.ping-description {
-  color: rgba(0, 0, 0, 0.45);
-  margin-bottom: 12px;
+.stat-card--loading {
+  justify-content: center;
+  min-height: 76px;
+}
+
+.stat-icon {
+  font-size: 24px;
+  color: #2563eb;
+  background: #eff6ff;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.diagnostics {
+  color: #64748b;
+}
+
+.diagnostics summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: #475569;
+}
+
+.diagnostics-description {
+  margin: 12px 0 8px;
+  font-size: 13px;
+}
+
+.diagnostics-actions {
+  margin-top: 12px;
 }

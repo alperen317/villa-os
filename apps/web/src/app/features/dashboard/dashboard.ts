@@ -1,52 +1,83 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCardModule } from 'ng-zorro-antd/card';
-import { NzDescriptionsModule } from 'ng-zorro-antd/descriptions';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { AuthService } from '../../core/auth/auth.service';
+import { CustomersService } from '../customers/customers.service';
+import { ReservationsService } from '../reservations/reservations.service';
+import { VillasService } from '../villas/villas.service';
+
+interface StatCard {
+  label: string;
+  value: number;
+  icon: string;
+  link: string;
+}
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [
-    NzAlertModule,
-    NzButtonModule,
-    NzCardModule,
-    NzDescriptionsModule,
-    NzIconModule,
-    NzSpinModule,
-    NzTagModule,
-  ],
+  imports: [RouterModule, NzAlertModule, NzButtonModule, NzCardModule, NzIconModule, NzSpinModule, NzTagModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
 export class Dashboard implements OnInit {
   protected readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
+  private readonly villasService = inject(VillasService);
+  private readonly reservationsService = inject(ReservationsService);
+  private readonly customersService = inject(CustomersService);
 
-  protected readonly loading = signal(false);
+  protected readonly loadingUser = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+
+  protected readonly statsLoading = signal(true);
+  protected readonly stats = signal<StatCard[]>([]);
 
   protected readonly pingStatus = signal<number | null>(null);
   protected readonly pinging = signal(false);
 
   async ngOnInit(): Promise<void> {
+    await this.loadUser();
+    await this.loadStats();
+  }
+
+  private async loadUser(): Promise<void> {
     if (this.authService.currentUser()) {
       return;
     }
 
-    this.loading.set(true);
+    this.loadingUser.set(true);
     try {
-      // Exercises GET /api/v1/auth/me with the stored access token.
       await this.authService.loadCurrentUser();
     } catch {
       this.errorMessage.set('Oturum bilgisi alınamadı, lütfen tekrar giriş yapın.');
     } finally {
-      this.loading.set(false);
+      this.loadingUser.set(false);
+    }
+  }
+
+  private async loadStats(): Promise<void> {
+    this.statsLoading.set(true);
+    try {
+      const [villas, pendingReservations, activeReservations, customerCount] = await Promise.all([
+        this.villasService.list({ limit: 1 }),
+        this.reservationsService.list({ limit: 1, status: 'Pending' }),
+        this.reservationsService.list({ limit: 1, status: 'Confirmed' }),
+        this.customersService.count(),
+      ]);
+
+      this.stats.set([
+        { label: 'Toplam Villa', value: villas.total, icon: 'home', link: '/villas' },
+        { label: 'Bekleyen Rezervasyon', value: pendingReservations.total, icon: 'clock-circle', link: '/reservations' },
+        { label: 'Onaylanmış Rezervasyon', value: activeReservations.total, icon: 'check-circle', link: '/reservations' },
+        { label: 'Kayıtlı Müşteri', value: customerCount, icon: 'user', link: '/reservations' },
+      ]);
+    } finally {
+      this.statsLoading.set(false);
     }
   }
 
@@ -57,10 +88,5 @@ export class Dashboard implements OnInit {
     } finally {
       this.pinging.set(false);
     }
-  }
-
-  async logout(): Promise<void> {
-    await this.authService.logout();
-    await this.router.navigateByUrl('/login');
   }
 }

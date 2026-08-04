@@ -1,39 +1,48 @@
-<div class="dashboard-page">
-  <nz-card class="user-card" nzTitle="Dashboard">
-    @if (loading()) {
-      <nz-spin nzSimple></nz-spin>
-    } @else if (errorMessage(); as message) {
-      <nz-alert nzType="error" [nzMessage]="message" nzShowIcon></nz-alert>
-    } @else if (authService.currentUser(); as user) {
-      <nz-descriptions nzTitle="GET /api/v1/auth/me sonucu" [nzColumn]="1" nzBordered>
-        <nz-descriptions-item nzTitle="Kullanıcı adı">{{ user.username }}</nz-descriptions-item>
-        <nz-descriptions-item nzTitle="Rol">{{ user.role }}</nz-descriptions-item>
-        <nz-descriptions-item nzTitle="Kullanıcı ID">{{ user.sub }}</nz-descriptions-item>
-      </nz-descriptions>
-    }
-
-    <div class="actions">
-      <button nz-button nzDanger (click)="logout()">
-        <nz-icon nzType="logout" />
-        Çıkış yap
-      </button>
-    </div>
-  </nz-card>
-
-  <nz-card class="ping-card" nzTitle="Backend testi">
-    <p class="ping-description">GET /api/v1/auth/ping</p>
-
-    @if (pingStatus(); as status) {
-      <nz-tag [nzColor]="status === 200 ? 'success' : 'error'">
-        <nz-icon [nzType]="status === 200 ? 'check-circle' : 'close-circle'" />
-        {{ status }} {{ status === 200 ? 'OK' : 'Bad Request' }}
-      </nz-tag>
-    }
-
-    <div class="actions">
-      <button nz-button nzType="primary" (click)="testConnection()" [nzLoading]="pinging()">
-        İstek gönder
-      </button>
-    </div>
-  </nz-card>
+<div class="page-header">
+  <div>
+    <h2 class="page-title">
+      Hoş geldin@if (authService.currentUser(); as user) {, {{ user.username }}}
+    </h2>
+    <p class="page-subtitle">Villa OS operasyon paneline genel bakış.</p>
+  </div>
 </div>
+
+@if (errorMessage(); as message) {
+  <nz-alert nzType="error" [nzMessage]="message" nzShowIcon class="error-alert"></nz-alert>
+}
+
+<div class="stats-grid">
+  @if (statsLoading()) {
+    @for (i of [1, 2, 3, 4]; track i) {
+      <div class="page-surface stat-card stat-card--loading">
+        <nz-spin nzSimple></nz-spin>
+      </div>
+    }
+  } @else {
+    @for (stat of stats(); track stat.label) {
+      <a [routerLink]="stat.link" class="page-surface stat-card">
+        <nz-icon [nzType]="stat.icon" class="stat-icon" />
+        <div>
+          <div class="stat-value">{{ stat.value }}</div>
+          <div class="stat-label">{{ stat.label }}</div>
+        </div>
+      </a>
+    }
+  }
+</div>
+
+<details class="page-surface diagnostics">
+  <summary>Sistem durumu</summary>
+  <p class="diagnostics-description">GET /api/v1/auth/ping — bağlantı ve oturum durumunu test eder.</p>
+
+  @if (pingStatus(); as status) {
+    <nz-tag [nzColor]="status === 200 ? 'success' : 'error'">
+      <nz-icon [nzType]="status === 200 ? 'check-circle' : 'close-circle'" />
+      {{ status }} {{ status === 200 ? 'OK' : 'Bad Request' }}
+    </nz-tag>
+  }
+
+  <div class="diagnostics-actions">
+    <button nz-button (click)="testConnection()" [nzLoading]="pinging()">İstek gönder</button>
+  </div>
+</details>

@@ -1,15 +1,34 @@
-.page-header {
-  display: flex;
+.back-link {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  margin: 16px 0;
+  gap: 4px;
+  color: #64748b;
+  font-size: 13px;
+  margin-bottom: 12px;
 }
 
-.page-header h2,
-.page-header h3 {
+.back-link:hover {
+  color: #2563eb;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin: 0 0 16px;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title {
   margin: 4px 0;
-  display: inline-block;
-  margin-right: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
 }
 
 .info-card {
@@ -20,4 +39,18 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 0;
+  color: #64748b;
+}
+
+.empty-icon {
+  font-size: 32px;
+  color: #cbd5e1;
 }

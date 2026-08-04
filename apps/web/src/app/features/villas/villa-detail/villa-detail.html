@@ -1,79 +1,110 @@
-@if (villa(); as v) {
+<a routerLink="/villas" class="back-link">
+  <nz-icon nzType="left" />
+  Villalar
+</a>
+
+@if (loading() && !villa()) {
+  <div class="page-surface">
+    <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 3 }"></nz-skeleton>
+  </div>
+} @else if (villa(); as v) {
   <div class="page-header">
     <div>
-      <a routerLink="/villas">← Villalar</a>
-      <h2>{{ v.name }}</h2>
-      <nz-tag [nzColor]="v.status === 'Active' ? 'green' : 'default'">
-        {{ v.status === 'Active' ? 'Aktif' : 'Pasif' }}
-      </nz-tag>
+      <div class="title-row">
+        <h2 class="page-title">{{ v.name }}</h2>
+        <nz-tag [nzColor]="v.status === 'Active' ? 'green' : 'default'">
+          {{ v.status === 'Active' ? 'Aktif' : 'Pasif' }}
+        </nz-tag>
+      </div>
+      <p class="page-subtitle">Villa bilgilerini ve katlarını yönet.</p>
     </div>
     <button nz-button (click)="toggleVillaStatus()">
       {{ v.status === 'Active' ? 'Pasife Al' : 'Aktif Et' }}
     </button>
   </div>
 
-  <nz-card [nzTitle]="'Villa Bilgileri'" class="info-card">
-    <p><strong>Adres:</strong> {{ v.address || '-' }}</p>
-    <p><strong>Açıklama:</strong> {{ v.description || '-' }}</p>
-  </nz-card>
+  <div class="page-surface info-card">
+    <nz-descriptions nzTitle="Villa Bilgileri" [nzColumn]="2" nzBordered [nzSize]="'small'">
+      <nz-descriptions-item nzTitle="Adres" [nzSpan]="2">{{ v.address || '-' }}</nz-descriptions-item>
+      <nz-descriptions-item nzTitle="Açıklama" [nzSpan]="2">{{ v.description || '-' }}</nz-descriptions-item>
+    </nz-descriptions>
+  </div>
 }
 
 <div class="page-header">
-  <h3>Katlar</h3>
+  <h3 class="section-title">Katlar</h3>
   <button nz-button nzType="primary" (click)="openCreateModal()">
     <nz-icon nzType="plus" />
     Yeni Kat
   </button>
 </div>
 
-<nz-table [nzData]="floors()" [nzLoading]="loading()" [nzShowPagination]="false">
-  <thead>
-    <tr>
-      <th>Ad</th>
-      <th>Kapasite</th>
-      <th>Yatak/Banyo</th>
-      <th>Günlük Fiyat</th>
-      <th>Durum</th>
-      <th>Aksiyonlar</th>
-    </tr>
-  </thead>
-  <tbody>
-    @for (floor of floors(); track floor.id) {
+<div class="page-surface">
+  <nz-table
+    [nzData]="floors()"
+    [nzLoading]="loading()"
+    [nzShowPagination]="false"
+    [nzNoResult]="emptyFloors"
+  >
+    <thead>
       <tr>
-        <td>
-          {{ floor.name }}
-          @if (floor.isEntireVilla) {
-            <nz-tag nzColor="blue">Tüm Villa</nz-tag>
-          }
-        </td>
-        <td>{{ floor.capacity }} kişi</td>
-        <td>{{ floor.bedrooms }} yatak / {{ floor.bathrooms }} banyo</td>
-        <td>{{ floor.dailyPrice }} ₺</td>
-        <td>
-          <nz-tag [nzColor]="floor.rentable ? 'green' : 'default'">
-            {{ floor.rentable ? 'Kiralanabilir' : 'Pasif' }}
-          </nz-tag>
-        </td>
-        <td class="actions">
-          <button nz-button nzType="text" aria-label="Katı düzenle" (click)="openEditModal(floor)">
-            <nz-icon nzType="edit" />
-          </button>
-          <button
-            nz-button
-            nzType="text"
-            nzDanger
-            aria-label="Katı sil"
-            nz-popconfirm
-            nzPopconfirmTitle="Bu katı silmek istediğine emin misin?"
-            (nzOnConfirm)="removeFloor(floor)"
-          >
-            <nz-icon nzType="delete" />
-          </button>
-        </td>
+        <th>Ad</th>
+        <th>Kapasite</th>
+        <th>Yatak/Banyo</th>
+        <th>Günlük Fiyat</th>
+        <th>Durum</th>
+        <th>Aksiyonlar</th>
       </tr>
-    }
-  </tbody>
-</nz-table>
+    </thead>
+    <tbody>
+      @for (floor of floors(); track floor.id) {
+        <tr>
+          <td>
+            {{ floor.name }}
+            @if (floor.isEntireVilla) {
+              <nz-tag nzColor="blue">Tüm Villa</nz-tag>
+            }
+          </td>
+          <td>{{ floor.capacity }} kişi</td>
+          <td>{{ floor.bedrooms }} yatak / {{ floor.bathrooms }} banyo</td>
+          <td>{{ floor.dailyPrice }} ₺</td>
+          <td>
+            <nz-tag [nzColor]="floor.rentable ? 'green' : 'default'">
+              {{ floor.rentable ? 'Kiralanabilir' : 'Pasif' }}
+            </nz-tag>
+          </td>
+          <td class="actions">
+            <button nz-button nzType="text" aria-label="Katı düzenle" (click)="openEditModal(floor)">
+              <nz-icon nzType="edit" />
+            </button>
+            <button
+              nz-button
+              nzType="text"
+              nzDanger
+              aria-label="Katı sil"
+              nz-popconfirm
+              nzPopconfirmTitle="Bu katı silmek istediğine emin misin?"
+              (nzOnConfirm)="removeFloor(floor)"
+            >
+              <nz-icon nzType="delete" />
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<ng-template #emptyFloors>
+  <div class="empty-state">
+    <nz-icon nzType="appstore" class="empty-icon" />
+    <p>Bu villaya henüz kat eklenmedi.</p>
+    <button nz-button nzType="primary" (click)="openCreateModal()">
+      <nz-icon nzType="plus" />
+      İlk Katı Ekle
+    </button>
+  </div>
+</ng-template>
 
 <nz-modal
   [nzVisible]="modalVisible()"

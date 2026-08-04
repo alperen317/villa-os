@@ -9,14 +9,17 @@ import { provideNzI18n, tr_TR } from 'ng-zorro-antd/i18n';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
 import { provideNzNativeDateAdapter } from 'ng-zorro-antd/core/time';
 import {
+  AppstoreOutline,
   CalendarOutline,
   CheckCircleOutline,
+  ClockCircleOutline,
   CloseCircleOutline,
   DashboardOutline,
   DeleteOutline,
   EditOutline,
   EyeOutline,
   HomeOutline,
+  LeftOutline,
   LockOutline,
   LoginOutline,
   LogoutOutline,
@@ -56,6 +59,9 @@ export const appConfig: ApplicationConfig = {
       MenuFoldOutline,
       MenuUnfoldOutline,
       SearchOutline,
+      AppstoreOutline,
+      LeftOutline,
+      ClockCircleOutline,
     ]),
   ],
 };

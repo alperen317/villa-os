@@ -1,5 +1,11 @@
 <div class="login-page">
-  <nz-card class="login-card" nzTitle="Villa Management System">
+  <div class="login-brand">
+    <div class="login-logo">VOS</div>
+    <h1 class="login-title">Villa OS</h1>
+    <p class="login-tagline">Villa yönetim paneline giriş yap</p>
+  </div>
+
+  <nz-card class="login-card">
     <form nz-form [formGroup]="form" (ngSubmit)="submit()">
       <nz-form-item>
         <nz-form-label nzFor="username" nzNoColon class="sr-only">Kullanıcı adı</nz-form-label>
@@ -41,6 +47,7 @@
         nz-button
         nzType="primary"
         nzBlock
+        nzSize="large"
         type="submit"
         [nzLoading]="loading()"
         [disabled]="form.invalid"
