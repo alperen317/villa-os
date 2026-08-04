@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { CreateVillaDto } from './dto/create-villa.dto';
+import { ListVillasQueryDto } from './dto/list-villas-query.dto';
 import { UpdateVillaDto } from './dto/update-villa.dto';
 import { VillasRepository } from './villas.repository';
 import { Villa, VillaStatus } from '../../../generated/prisma/client';
@@ -18,12 +18,12 @@ export class VillasService {
   }
 
   async findAll(
-    pagination: PaginationQueryDto,
-    status?: VillaStatus,
+    query: ListVillasQueryDto,
   ): Promise<{ data: VillaWithMaintenanceFlag[]; total: number }> {
+    const params = { skip: query.skip, take: query.limit, status: query.status, arrivingToday: query.arrivingToday };
     const [data, total] = await Promise.all([
-      this.villasRepository.findMany({ skip: pagination.skip, take: pagination.limit, status }),
-      this.villasRepository.count({ status }),
+      this.villasRepository.findMany(params),
+      this.villasRepository.count(params),
     ]);
 
     const openMaintenanceVillaIds = await this.villasRepository.findVillaIdsWithOpenMaintenance(

@@ -20,7 +20,7 @@
     }
   } @else {
     @for (stat of stats(); track stat.label) {
-      <a [routerLink]="stat.link" class="page-surface stat-card">
+      <a [routerLink]="stat.link" [queryParams]="stat.queryParams" class="page-surface stat-card">
         <nz-icon [nzType]="stat.icon" class="stat-icon" />
         <div>
           <div class="stat-value">{{ stat.value }}</div>

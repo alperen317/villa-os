@@ -14,6 +14,7 @@ interface StatCard {
   value: string;
   icon: string;
   link: string;
+  queryParams?: Record<string, string>;
 }
 
 @Component({
@@ -62,7 +63,13 @@ export class Dashboard implements OnInit {
       const summary = await this.dashboardService.getSummary();
 
       this.stats.set([
-        { label: 'Bugünkü Girişler', value: String(summary.todayArrivals), icon: 'login', link: '/reservations' },
+        {
+          label: 'Bugünkü Girişler',
+          value: String(summary.todayArrivals),
+          icon: 'login',
+          link: '/villas',
+          queryParams: { arrivingToday: 'true' },
+        },
         { label: 'Bugünkü Çıkışlar', value: String(summary.todayDepartures), icon: 'logout', link: '/reservations' },
         { label: 'Şu An Konaklayan', value: String(summary.currentGuests), icon: 'user', link: '/reservations' },
         {

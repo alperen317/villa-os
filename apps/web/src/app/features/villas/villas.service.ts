@@ -17,13 +17,14 @@ import {
 export class VillasService {
   private readonly http = inject(HttpClient);
 
-  async list(params: { page?: number; limit?: number; status?: VillaStatus } = {}): Promise<
-    PagedResult<Villa>
-  > {
+  async list(
+    params: { page?: number; limit?: number; status?: VillaStatus; arrivingToday?: boolean } = {},
+  ): Promise<PagedResult<Villa>> {
     let query = new HttpParams();
     if (params.page) query = query.set('page', params.page);
     if (params.limit) query = query.set('limit', params.limit);
     if (params.status) query = query.set('status', params.status);
+    if (params.arrivingToday) query = query.set('arrivingToday', 'true');
 
     const response = await firstValueFrom(
       this.http.get<Villa[]>(`${API_BASE_URL}/villas`, { params: query, observe: 'response' }),

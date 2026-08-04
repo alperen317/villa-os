@@ -39,7 +39,7 @@ export class VillasController {
     @Query() query: ListVillasQueryDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<VillaWithMaintenanceFlag[]> {
-    const { data, total } = await this.villasService.findAll(query, query.status);
+    const { data, total } = await this.villasService.findAll(query);
     res.setHeader('X-Total-Count', String(total));
     return data;
   }

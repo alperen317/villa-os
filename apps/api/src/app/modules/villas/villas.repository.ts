@@ -14,17 +14,37 @@ export class VillasRepository {
     return this.prisma.villa.findFirst({ where: { id, deletedAt: null } });
   }
 
-  findMany(params: { skip: number; take: number; status?: VillaStatus }): Promise<Villa[]> {
+  findMany(params: {
+    skip: number;
+    take: number;
+    status?: VillaStatus;
+    arrivingToday?: boolean;
+  }): Promise<Villa[]> {
     return this.prisma.villa.findMany({
-      where: { deletedAt: null, status: params.status },
+      where: { deletedAt: null, status: params.status, ...this.arrivingTodayFilter(params.arrivingToday) },
       skip: params.skip,
       take: params.take,
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  count(params: { status?: VillaStatus }): Promise<number> {
-    return this.prisma.villa.count({ where: { deletedAt: null, status: params.status } });
+  count(params: { status?: VillaStatus; arrivingToday?: boolean }): Promise<number> {
+    return this.prisma.villa.count({
+      where: { deletedAt: null, status: params.status, ...this.arrivingTodayFilter(params.arrivingToday) },
+    });
+  }
+
+  private arrivingTodayFilter(arrivingToday?: boolean): Prisma.VillaWhereInput {
+    if (!arrivingToday) {
+      return {};
+    }
+
+    const now = new Date();
+    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+    return {
+      reservations: { some: { checkIn: today, status: { not: 'Cancelled' }, deletedAt: null } },
+    };
   }
 
   async findVillaIdsWithOpenMaintenance(villaIds: string[]): Promise<Set<string>> {

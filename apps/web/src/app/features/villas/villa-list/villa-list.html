@@ -9,6 +9,18 @@
   </button>
 </div>
 
+@if (arrivingTodayFilter()) {
+  <div class="filter-banner">
+    <nz-tag nzColor="blue">
+      <nz-icon nzType="login" />
+      Bugün girişi olan villalar
+    </nz-tag>
+    <button nz-button nzType="text" nzSize="small" (click)="clearArrivingTodayFilter()">
+      Filtreyi Temizle
+    </button>
+  </div>
+}
+
 <div class="page-surface">
   <nz-table
     [nzData]="villas()"

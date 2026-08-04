@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -37,12 +37,15 @@ export class VillaList implements OnInit {
   private readonly villasService = inject(VillasService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly message = inject(NzMessageService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   protected readonly villas = signal<Villa[]>([]);
   protected readonly total = signal(0);
   protected readonly loading = signal(false);
   protected readonly pageIndex = signal(1);
   protected readonly pageSize = signal(10);
+  protected readonly arrivingTodayFilter = signal(false);
 
   protected readonly modalVisible = signal(false);
   protected readonly modalSaving = signal(false);
@@ -55,6 +58,7 @@ export class VillaList implements OnInit {
   });
 
   ngOnInit(): void {
+    this.arrivingTodayFilter.set(this.route.snapshot.queryParamMap.get('arrivingToday') === 'true');
     this.loadPage();
   }
 
@@ -64,12 +68,20 @@ export class VillaList implements OnInit {
       const result = await this.villasService.list({
         page: this.pageIndex(),
         limit: this.pageSize(),
+        arrivingToday: this.arrivingTodayFilter() || undefined,
       });
       this.villas.set(result.data);
       this.total.set(result.total);
     } finally {
       this.loading.set(false);
     }
+  }
+
+  clearArrivingTodayFilter(): void {
+    this.arrivingTodayFilter.set(false);
+    this.pageIndex.set(1);
+    this.router.navigate([], { queryParams: {} });
+    this.loadPage();
   }
 
   onPageIndexChange(index: number): void {
