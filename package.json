@@ -55,18 +55,19 @@
     "apps/*"
   ],
   "dependencies": {
-    "@angular/cdk": "~22.0.4",
+    "@angular/animations": "~22.0.4",
     "@angular/common": "~22.0.4",
     "@angular/compiler": "~22.0.4",
     "@angular/core": "~22.0.4",
     "@angular/forms": "~22.0.4",
-    "@angular/material": "~22.0.4",
     "@angular/platform-browser": "~22.0.4",
     "@angular/platform-browser-dynamic": "~22.0.4",
     "@angular/router": "~22.0.4",
+    "@ant-design/icons-angular": "^22.0.0",
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
+    "ng-zorro-antd": "^22.0.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "~7.8.0"
   }

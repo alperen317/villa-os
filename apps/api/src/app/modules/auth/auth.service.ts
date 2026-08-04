@@ -78,6 +78,12 @@ export class AuthService {
     await this.redis.del(REFRESH_TOKEN_REDIS_PREFIX + payload.jti);
   }
 
+  verifyAccessToken(accessToken: string): AccessTokenPayload {
+    return this.jwtService.verify<AccessTokenPayload>(accessToken, {
+      secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
+    });
+  }
+
   private signAccessToken(user: User): string {
     const payload: AccessTokenPayload = {
       sub: user.id,

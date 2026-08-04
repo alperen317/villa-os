@@ -1,0 +1,39 @@
+<div class="dashboard-page">
+  <nz-card class="user-card" nzTitle="Dashboard">
+    @if (loading()) {
+      <nz-spin nzSimple></nz-spin>
+    } @else if (errorMessage(); as message) {
+      <nz-alert nzType="error" [nzMessage]="message" nzShowIcon></nz-alert>
+    } @else if (authService.currentUser(); as user) {
+      <nz-descriptions nzTitle="GET /api/v1/auth/me sonucu" [nzColumn]="1" nzBordered>
+        <nz-descriptions-item nzTitle="Kullanıcı adı">{{ user.username }}</nz-descriptions-item>
+        <nz-descriptions-item nzTitle="Rol">{{ user.role }}</nz-descriptions-item>
+        <nz-descriptions-item nzTitle="Kullanıcı ID">{{ user.sub }}</nz-descriptions-item>
+      </nz-descriptions>
+    }
+
+    <div class="actions">
+      <button nz-button nzDanger (click)="logout()">
+        <nz-icon nzType="logout" />
+        Çıkış yap
+      </button>
+    </div>
+  </nz-card>
+
+  <nz-card class="ping-card" nzTitle="Backend testi">
+    <p class="ping-description">GET /api/v1/auth/ping</p>
+
+    @if (pingStatus(); as status) {
+      <nz-tag [nzColor]="status === 200 ? 'success' : 'error'">
+        <nz-icon [nzType]="status === 200 ? 'check-circle' : 'close-circle'" />
+        {{ status }} {{ status === 200 ? 'OK' : 'Bad Request' }}
+      </nz-tag>
+    }
+
+    <div class="actions">
+      <button nz-button nzType="primary" (click)="testConnection()" [nzLoading]="pinging()">
+        İstek gönder
+      </button>
+    </div>
+  </nz-card>
+</div>

@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Headers, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService, TokenPair } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -38,10 +38,31 @@ export class AuthController {
     await this.authService.logout(dto.refreshToken);
   }
 
-  @Post('me')
+  @Get('me')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Return the currently authenticated user (from the access token)' })
   me(@CurrentUser() user: AccessTokenPayload): AccessTokenPayload {
     return user;
+  }
+
+  @Public()
+  @Get('ping')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Manual connectivity check: 200 if the bearer token is a valid access token, 400 otherwise',
+  })
+  ping(@Headers('authorization') authorization?: string): { authenticated: true; user: AccessTokenPayload } {
+    const token = authorization?.startsWith('Bearer ') ? authorization.slice('Bearer '.length) : undefined;
+
+    if (!token) {
+      throw new BadRequestException('No access token provided');
+    }
+
+    try {
+      const user = this.authService.verifyAccessToken(token);
+      return { authenticated: true, user };
+    } catch {
+      throw new BadRequestException('Access token is invalid or expired');
+    }
   }
 }

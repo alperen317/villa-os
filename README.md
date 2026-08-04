@@ -52,7 +52,7 @@ Unlike traditional hotel software, this system is designed specifically for busi
 
 ### Frontend
 - Angular 22
-- Angular Material
+- ng-zorro-antd
 - Angular Signals
 - RxJS
 - FullCalendar

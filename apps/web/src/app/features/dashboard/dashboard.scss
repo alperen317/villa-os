@@ -1,0 +1,24 @@
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 16px;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+.user-card,
+.ping-card {
+  width: 100%;
+  max-width: 480px;
+}
+
+.actions {
+  margin-top: 16px;
+}
+
+.ping-description {
+  color: rgba(0, 0, 0, 0.45);
+  margin-bottom: 12px;
+}

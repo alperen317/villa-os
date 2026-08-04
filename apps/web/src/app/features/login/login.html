@@ -1,0 +1,48 @@
+<div class="login-page">
+  <nz-card class="login-card" nzTitle="Villa Management System">
+    <form nz-form [formGroup]="form" (ngSubmit)="submit()">
+      <nz-form-item>
+        <nz-form-control>
+          <nz-input-group nzPrefixIcon="user">
+            <input
+              type="text"
+              nz-input
+              formControlName="username"
+              placeholder="Kullanıcı adı"
+              autocomplete="username"
+            />
+          </nz-input-group>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-control>
+          <nz-input-group nzPrefixIcon="lock">
+            <input
+              type="password"
+              nz-input
+              formControlName="password"
+              placeholder="Şifre"
+              autocomplete="current-password"
+            />
+          </nz-input-group>
+        </nz-form-control>
+      </nz-form-item>
+
+      @if (errorMessage(); as message) {
+        <nz-alert nzType="error" [nzMessage]="message" nzShowIcon class="form-alert"></nz-alert>
+      }
+
+      <button
+        nz-button
+        nzType="primary"
+        nzBlock
+        type="submit"
+        [nzLoading]="loading()"
+        [disabled]="form.invalid"
+      >
+        Giriş yap
+      </button>
+    </form>
+  </nz-card>
+</div>
