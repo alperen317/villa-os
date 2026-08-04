@@ -39,7 +39,7 @@
   </button>
 </div>
 
-<div class="page-surface">
+<div class="page-surface surface-spaced">
   <nz-table
     [nzData]="floors()"
     [nzLoading]="loading()"
@@ -105,6 +105,122 @@
     </button>
   </div>
 </ng-template>
+
+<div class="page-header">
+  <h3 class="section-title">Bakım Kayıtları</h3>
+  <button nz-button nzType="primary" (click)="openCreateMaintenanceModal()">
+    <nz-icon nzType="plus" />
+    Yeni Kayıt
+  </button>
+</div>
+
+<div class="page-surface">
+  <nz-table
+    [nzData]="maintenanceRecords()"
+    [nzLoading]="maintenanceLoading()"
+    [nzShowPagination]="false"
+    [nzNoResult]="emptyMaintenance"
+  >
+    <thead>
+      <tr>
+        <th>Başlık</th>
+        <th>Öncelik</th>
+        <th>Açıldı</th>
+        <th>Durum</th>
+        <th>Aksiyonlar</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (record of maintenanceRecords(); track record.id) {
+        <tr>
+          <td>
+            {{ record.title }}
+            @if (record.description) {
+              <div class="record-description">{{ record.description }}</div>
+            }
+          </td>
+          <td><nz-tag [nzColor]="priorityColors[record.priority]">{{ priorityLabels[record.priority] }}</nz-tag></td>
+          <td>{{ record.openedAt | date: 'dd.MM.yyyy' }}</td>
+          <td>
+            <nz-tag [nzColor]="maintenanceStatusColors[record.status]">{{ statusLabels[record.status] }}</nz-tag>
+          </td>
+          <td>
+            @if (record.status === 'Open') {
+              <button
+                nz-button
+                nzSize="small"
+                [nzLoading]="maintenanceActingId() === record.id"
+                (click)="startMaintenance(record)"
+              >
+                Başlat
+              </button>
+            }
+            @if (record.status === 'InProgress') {
+              <button
+                nz-button
+                nzSize="small"
+                nzType="primary"
+                [nzLoading]="maintenanceActingId() === record.id"
+                (click)="completeMaintenance(record)"
+              >
+                Tamamlandı Olarak İşaretle
+              </button>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<ng-template #emptyMaintenance>
+  <div class="empty-state">
+    <nz-icon nzType="tool" class="empty-icon" />
+    <p>Bu villa için bakım kaydı yok.</p>
+    <button nz-button nzType="primary" (click)="openCreateMaintenanceModal()">
+      <nz-icon nzType="plus" />
+      İlk Kaydı Oluştur
+    </button>
+  </div>
+</ng-template>
+
+<nz-modal
+  [nzVisible]="maintenanceModalVisible()"
+  nzTitle="Yeni Bakım Kaydı"
+  [nzOkLoading]="maintenanceSaving()"
+  [nzOkDisabled]="maintenanceForm.invalid"
+  (nzOnCancel)="maintenanceModalVisible.set(false)"
+  (nzOnOk)="saveMaintenanceRecord()"
+>
+  <ng-container *nzModalContent>
+    <form nz-form [formGroup]="maintenanceForm">
+      <nz-form-item>
+        <nz-form-label nzRequired>Başlık</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="title" placeholder="ör. Klima Bakımı" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Öncelik</nz-form-label>
+        <nz-form-control>
+          <nz-select formControlName="priority">
+            @for (priority of priorityKeys; track priority) {
+              <nz-option [nzValue]="priority" [nzLabel]="priorityLabels[priority]" />
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Açıklama</nz-form-label>
+        <nz-form-control>
+          <textarea nz-input formControlName="description" rows="3"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>
 
 <nz-modal
   [nzVisible]="modalVisible()"

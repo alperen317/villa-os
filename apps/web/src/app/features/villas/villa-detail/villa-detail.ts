@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
@@ -11,16 +12,38 @@ import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
+import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTagModule } from 'ng-zorro-antd/tag';
+import {
+  MAINTENANCE_PRIORITY_LABELS,
+  MAINTENANCE_STATUS_LABELS,
+  MaintenancePriority,
+  MaintenanceRecord,
+} from '../../../core/models/maintenance.model';
 import { Floor, Villa } from '../../../core/models/villa.model';
+import { MaintenanceService } from '../maintenance.service';
 import { VillasService } from '../villas.service';
+
+const PRIORITY_COLORS: Record<MaintenancePriority, string> = {
+  Low: 'default',
+  Medium: 'blue',
+  High: 'orange',
+  Urgent: 'red',
+};
+
+const MAINTENANCE_STATUS_COLORS: Record<MaintenanceRecord['status'], string> = {
+  Open: 'gold',
+  InProgress: 'blue',
+  Completed: 'green',
+};
 
 @Component({
   selector: 'app-villa-detail',
   standalone: true,
   imports: [
+    DatePipe,
     ReactiveFormsModule,
     RouterModule,
     NzButtonModule,
@@ -32,6 +55,7 @@ import { VillasService } from '../villas.service';
     NzInputNumberModule,
     NzModalModule,
     NzPopconfirmModule,
+    NzSelectModule,
     NzSkeletonModule,
     NzTableModule,
     NzTagModule,
@@ -42,6 +66,7 @@ import { VillasService } from '../villas.service';
 export class VillaDetail implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly villasService = inject(VillasService);
+  private readonly maintenanceService = inject(MaintenanceService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly message = inject(NzMessageService);
 
@@ -53,6 +78,18 @@ export class VillaDetail implements OnInit {
   protected readonly modalSaving = signal(false);
   protected editingFloor: Floor | null = null;
 
+  protected readonly priorityLabels = MAINTENANCE_PRIORITY_LABELS;
+  protected readonly statusLabels = MAINTENANCE_STATUS_LABELS;
+  protected readonly priorityColors = PRIORITY_COLORS;
+  protected readonly maintenanceStatusColors = MAINTENANCE_STATUS_COLORS;
+  protected readonly priorityKeys = Object.keys(MAINTENANCE_PRIORITY_LABELS) as MaintenancePriority[];
+
+  protected readonly maintenanceRecords = signal<MaintenanceRecord[]>([]);
+  protected readonly maintenanceLoading = signal(false);
+  protected readonly maintenanceModalVisible = signal(false);
+  protected readonly maintenanceSaving = signal(false);
+  protected readonly maintenanceActingId = signal<string | null>(null);
+
   protected readonly form = this.formBuilder.nonNullable.group({
     name: ['', Validators.required],
     capacity: [1, [Validators.required, Validators.min(1)]],
@@ -63,12 +100,19 @@ export class VillaDetail implements OnInit {
     isEntireVilla: [false],
   });
 
+  protected readonly maintenanceForm = this.formBuilder.nonNullable.group({
+    title: ['', Validators.required],
+    description: [''],
+    priority: ['Medium' as MaintenancePriority, Validators.required],
+  });
+
   private get villaId(): string {
     return this.route.snapshot.paramMap.get('id')!;
   }
 
   ngOnInit(): void {
     this.load();
+    this.loadMaintenanceRecords();
   }
 
   async load(): Promise<void> {
@@ -82,6 +126,71 @@ export class VillaDetail implements OnInit {
       this.floors.set(floors);
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  async loadMaintenanceRecords(): Promise<void> {
+    this.maintenanceLoading.set(true);
+    try {
+      this.maintenanceRecords.set(await this.maintenanceService.list(this.villaId));
+    } catch {
+      this.message.error('Bakım kayıtları alınamadı');
+    } finally {
+      this.maintenanceLoading.set(false);
+    }
+  }
+
+  openCreateMaintenanceModal(): void {
+    this.maintenanceForm.reset({ title: '', description: '', priority: 'Medium' });
+    this.maintenanceModalVisible.set(true);
+  }
+
+  async saveMaintenanceRecord(): Promise<void> {
+    if (this.maintenanceForm.invalid) {
+      return;
+    }
+
+    const value = this.maintenanceForm.getRawValue();
+
+    this.maintenanceSaving.set(true);
+    try {
+      await this.maintenanceService.create(this.villaId, {
+        title: value.title,
+        description: value.description || undefined,
+        priority: value.priority,
+      });
+
+      this.message.success('Bakım kaydı oluşturuldu');
+      this.maintenanceModalVisible.set(false);
+      await this.loadMaintenanceRecords();
+    } catch (error) {
+      this.message.error(this.extractErrorMessage(error));
+    } finally {
+      this.maintenanceSaving.set(false);
+    }
+  }
+
+  async startMaintenance(record: MaintenanceRecord): Promise<void> {
+    this.maintenanceActingId.set(record.id);
+    try {
+      await this.maintenanceService.start(this.villaId, record.id);
+      await this.loadMaintenanceRecords();
+    } catch (error) {
+      this.message.error(this.extractErrorMessage(error));
+    } finally {
+      this.maintenanceActingId.set(null);
+    }
+  }
+
+  async completeMaintenance(record: MaintenanceRecord): Promise<void> {
+    this.maintenanceActingId.set(record.id);
+    try {
+      await this.maintenanceService.complete(this.villaId, record.id);
+      await this.loadMaintenanceRecords();
+    } catch (error) {
+      this.message.error(this.extractErrorMessage(error));
+    } finally {
+      this.maintenanceActingId.set(null);
     }
   }
 

@@ -29,6 +29,7 @@ import {
   MoreOutline,
   PlusOutline,
   SearchOutline,
+  ToolOutline,
   UserOutline,
 } from '@ant-design/icons-angular/icons';
 import { appRoutes } from './app.routes';
@@ -64,6 +65,7 @@ export const appConfig: ApplicationConfig = {
       LeftOutline,
       ClockCircleOutline,
       ClearOutline,
+      ToolOutline,
     ]),
   ],
 };

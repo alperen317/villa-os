@@ -1,0 +1,93 @@
+import { Test } from '@nestjs/testing';
+import { VillasService } from '../villas/villas.service';
+import { InvalidMaintenanceTransitionException } from './exceptions/invalid-maintenance-transition.exception';
+import { MaintenanceRepository } from './maintenance.repository';
+import { MaintenanceService } from './maintenance.service';
+import { MaintenancePriority, MaintenanceRecord, MaintenanceStatus } from '../../../generated/prisma/client';
+
+function record(overrides: Partial<MaintenanceRecord> = {}): MaintenanceRecord {
+  return {
+    id: 'record-1',
+    villaId: 'villa-1',
+    title: 'AC servicing',
+    description: null,
+    priority: MaintenancePriority.Medium,
+    status: MaintenanceStatus.Open,
+    openedAt: new Date(),
+    completedAt: null,
+    ...overrides,
+  };
+}
+
+describe('MaintenanceService', () => {
+  let service: MaintenanceService;
+  let repository: jest.Mocked<MaintenanceRepository>;
+
+  beforeEach(async () => {
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        MaintenanceService,
+        {
+          provide: MaintenanceRepository,
+          useValue: { create: jest.fn(), findById: jest.fn(), findManyByVilla: jest.fn(), update: jest.fn() },
+        },
+        { provide: VillasService, useValue: { findOneOrThrow: jest.fn() } },
+      ],
+    }).compile();
+
+    service = moduleRef.get(MaintenanceService);
+    repository = moduleRef.get(MaintenanceRepository);
+  });
+
+  describe('start', () => {
+    it('moves an Open record to InProgress', async () => {
+      repository.findById.mockResolvedValue(record());
+      repository.update.mockResolvedValue(record({ status: MaintenanceStatus.InProgress }));
+
+      await service.start('villa-1', 'record-1');
+
+      expect(repository.update).toHaveBeenCalledWith(
+        'record-1',
+        expect.objectContaining({ status: MaintenanceStatus.InProgress }),
+      );
+    });
+
+    it('rejects starting a record that is not Open', async () => {
+      repository.findById.mockResolvedValue(record({ status: MaintenanceStatus.Completed }));
+
+      await expect(service.start('villa-1', 'record-1')).rejects.toThrow(
+        InvalidMaintenanceTransitionException,
+      );
+    });
+  });
+
+  describe('complete', () => {
+    it('moves an InProgress record to Completed and stamps completedAt', async () => {
+      repository.findById.mockResolvedValue(record({ status: MaintenanceStatus.InProgress }));
+      repository.update.mockResolvedValue(record({ status: MaintenanceStatus.Completed }));
+
+      await service.complete('villa-1', 'record-1');
+
+      expect(repository.update).toHaveBeenCalledWith(
+        'record-1',
+        expect.objectContaining({ status: MaintenanceStatus.Completed, completedAt: expect.any(Date) }),
+      );
+    });
+
+    it('rejects completing a record that is not InProgress', async () => {
+      repository.findById.mockResolvedValue(record({ status: MaintenanceStatus.Open }));
+
+      await expect(service.complete('villa-1', 'record-1')).rejects.toThrow(
+        InvalidMaintenanceTransitionException,
+      );
+    });
+  });
+
+  describe('findOneOrThrow', () => {
+    it('rejects a record that belongs to a different villa', async () => {
+      repository.findById.mockResolvedValue(record({ villaId: 'villa-other' }));
+
+      await expect(service.findOneOrThrow('villa-1', 'record-1')).rejects.toThrow();
+    });
+  });
+});
