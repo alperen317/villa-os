@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsUUID } from 'class-validator';
+import { IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 import { ReservationStatus } from '../../../../generated/prisma/client';
 
@@ -14,4 +14,16 @@ export class ListReservationsQueryDto extends PaginationQueryDto {
   @IsOptional()
   @IsEnum(ReservationStatus)
   status?: ReservationStatus;
+
+  @IsOptional()
+  @IsDateString()
+  dateFrom?: string;
+
+  @IsOptional()
+  @IsDateString()
+  dateTo?: string;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
 }

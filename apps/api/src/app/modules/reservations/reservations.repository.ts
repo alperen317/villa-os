@@ -42,14 +42,12 @@ export class ReservationsRepository {
     villaId?: string;
     customerId?: string;
     status?: ReservationStatus;
+    dateFrom?: string;
+    dateTo?: string;
+    search?: string;
   }): Promise<ReservationWithRelations[]> {
     return this.prisma.reservation.findMany({
-      where: {
-        deletedAt: null,
-        villaId: params.villaId,
-        customerId: params.customerId,
-        status: params.status,
-      },
+      where: this.buildWhere(params),
       include: RESERVATION_INCLUDE,
       skip: params.skip,
       take: params.take,
@@ -57,15 +55,53 @@ export class ReservationsRepository {
     });
   }
 
-  count(params: { villaId?: string; customerId?: string; status?: ReservationStatus }): Promise<number> {
-    return this.prisma.reservation.count({
-      where: {
-        deletedAt: null,
-        villaId: params.villaId,
-        customerId: params.customerId,
-        status: params.status,
-      },
-    });
+  count(params: {
+    villaId?: string;
+    customerId?: string;
+    status?: ReservationStatus;
+    dateFrom?: string;
+    dateTo?: string;
+    search?: string;
+  }): Promise<number> {
+    return this.prisma.reservation.count({ where: this.buildWhere(params) });
+  }
+
+  private buildWhere(params: {
+    villaId?: string;
+    customerId?: string;
+    status?: ReservationStatus;
+    dateFrom?: string;
+    dateTo?: string;
+    search?: string;
+  }): Prisma.ReservationWhereInput {
+    const where: Prisma.ReservationWhereInput = {
+      deletedAt: null,
+      villaId: params.villaId,
+      customerId: params.customerId,
+      status: params.status,
+    };
+
+    // Overlap semantics (matches findConflicting): a reservation is "in range"
+    // if any part of its stay falls within [dateFrom, dateTo], not just its check-in.
+    if (params.dateFrom) {
+      where.checkOut = { gt: new Date(params.dateFrom) };
+    }
+    if (params.dateTo) {
+      const exclusiveEnd = new Date(params.dateTo);
+      exclusiveEnd.setDate(exclusiveEnd.getDate() + 1);
+      where.checkIn = { lt: exclusiveEnd };
+    }
+
+    if (params.search?.trim()) {
+      const term = params.search.trim();
+      where.OR = [
+        { reservationNumber: { contains: term, mode: 'insensitive' } },
+        { customer: { firstName: { contains: term, mode: 'insensitive' } } },
+        { customer: { lastName: { contains: term, mode: 'insensitive' } } },
+      ];
+    }
+
+    return where;
   }
 
   update(id: string, data: Prisma.ReservationUncheckedUpdateInput): Promise<ReservationWithRelations> {

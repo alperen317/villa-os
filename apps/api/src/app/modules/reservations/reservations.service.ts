@@ -90,6 +90,9 @@ export class ReservationsService {
       villaId: query.villaId,
       customerId: query.customerId,
       status: query.status,
+      dateFrom: query.dateFrom,
+      dateTo: query.dateTo,
+      search: query.search,
     };
 
     const [data, total] = await Promise.all([
