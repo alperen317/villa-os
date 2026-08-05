@@ -4,8 +4,31 @@
   margin-bottom: 16px;
 }
 
+.filter-search {
+  width: 220px;
+}
+
 .view-toggle {
   margin-left: auto;
+}
+
+.date-filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.date-range-picker {
+  width: 260px;
+}
+
+.date-presets {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .calendar-cell {
@@ -97,12 +120,30 @@
     align-items: stretch;
   }
 
-  .filter-select {
+  .filter-select,
+  .filter-search {
     width: 100%;
   }
 
   .view-toggle {
     margin-left: 0;
+  }
+
+  .date-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .date-range-picker {
+    width: 100%;
+  }
+
+  .date-presets {
+    justify-content: stretch;
+  }
+
+  .date-presets button {
+    flex: 1;
   }
 
   .availability-form {

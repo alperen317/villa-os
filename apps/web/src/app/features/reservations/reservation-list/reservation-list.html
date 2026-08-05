@@ -10,6 +10,16 @@
 </div>
 
 <div class="filters">
+  @if (viewMode() === 'list') {
+    <input
+      nz-input
+      [ngModel]="filterSearch()"
+      (ngModelChange)="onSearchChange($event)"
+      placeholder="Müşteri veya rez. no ara"
+      class="filter-search"
+    />
+  }
+
   <nz-select
     [ngModel]="filterVillaId()"
     (ngModelChange)="filterVillaId.set($event); onFilterChange()"
@@ -47,6 +57,58 @@
 </div>
 
 @if (viewMode() === 'list') {
+  <div class="date-filter-bar">
+    <nz-range-picker
+      [ngModel]="filterDateRange()"
+      (ngModelChange)="onDateRangeChange($event)"
+      nzAllowClear
+      class="date-range-picker"
+    />
+
+    <div class="date-presets">
+      <button
+        nz-button
+        nzSize="small"
+        [nzType]="filterDatePreset() === 'today' ? 'primary' : 'default'"
+        (click)="setDatePreset('today')"
+      >
+        Bugün
+      </button>
+      <button
+        nz-button
+        nzSize="small"
+        [nzType]="filterDatePreset() === 'tomorrow' ? 'primary' : 'default'"
+        (click)="setDatePreset('tomorrow')"
+      >
+        Yarın
+      </button>
+      <button
+        nz-button
+        nzSize="small"
+        [nzType]="filterDatePreset() === 'week' ? 'primary' : 'default'"
+        (click)="setDatePreset('week')"
+      >
+        Bu Hafta
+      </button>
+      <button
+        nz-button
+        nzSize="small"
+        [nzType]="filterDatePreset() === 'month' ? 'primary' : 'default'"
+        (click)="setDatePreset('month')"
+      >
+        Bu Ay
+      </button>
+      @if (filterDateRange()) {
+        <button nz-button nzSize="small" nzType="text" (click)="clearDateFilter()">
+          <nz-icon nzType="close" />
+          Temizle
+        </button>
+      }
+    </div>
+  </div>
+}
+
+@if (viewMode() === 'list') {
   <div class="page-surface">
     <nz-table
       class="responsive-table"
@@ -55,6 +117,7 @@
       [nzTotal]="total()"
       [nzPageIndex]="pageIndex()"
       [nzPageSize]="pageSize()"
+      [nzHideOnSinglePage]="true"
       [nzLoading]="loading()"
       [nzNoResult]="emptyReservations"
       (nzPageIndexChange)="onPageIndexChange($event)"
@@ -77,8 +140,9 @@
             <td data-label="Rez. No">{{ reservation.reservationNumber }}</td>
             <td data-label="Villa / Kat">{{ reservation.villa.name }} / {{ reservation.floor.name }}</td>
             <td data-label="Müşteri">
-              <a [routerLink]="['/customers', reservation.customerId]">
+              <a [routerLink]="['/customers', reservation.customerId]" class="ref-link">
                 {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+                <nz-icon nzType="right" class="ref-link-icon" />
               </a>
             </td>
             <td data-label="Giriş - Çıkış">
@@ -354,7 +418,10 @@
               {{ reservation.villa.name }} / {{ reservation.floor.name }}
             </nz-descriptions-item>
             <nz-descriptions-item nzTitle="Müşteri">
-              {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+              <a [routerLink]="['/customers', reservation.customerId]" class="ref-link" (click)="detailVisible.set(false)">
+                {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+                <nz-icon nzType="right" class="ref-link-icon" />
+              </a>
             </nz-descriptions-item>
             <nz-descriptions-item nzTitle="Giriş - Çıkış">
               {{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}

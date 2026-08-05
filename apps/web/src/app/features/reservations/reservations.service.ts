@@ -23,6 +23,9 @@ export class ReservationsService {
       villaId?: string;
       customerId?: string;
       status?: ReservationStatus;
+      dateFrom?: string;
+      dateTo?: string;
+      search?: string;
     } = {},
   ): Promise<PagedResult<Reservation>> {
     let query = new HttpParams();
@@ -31,6 +34,9 @@ export class ReservationsService {
     if (params.villaId) query = query.set('villaId', params.villaId);
     if (params.customerId) query = query.set('customerId', params.customerId);
     if (params.status) query = query.set('status', params.status);
+    if (params.dateFrom) query = query.set('dateFrom', params.dateFrom);
+    if (params.dateTo) query = query.set('dateTo', params.dateTo);
+    if (params.search) query = query.set('search', params.search);
 
     const response = await firstValueFrom(
       this.http.get<Reservation[]>(`${API_BASE_URL}/reservations`, {

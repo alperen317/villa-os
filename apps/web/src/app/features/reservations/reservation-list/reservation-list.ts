@@ -101,6 +101,10 @@ export class ReservationList implements OnInit {
   protected readonly villas = this.villasStore.villas;
   protected readonly filterVillaId = signal<string | null>(null);
   protected readonly filterStatus = signal<ReservationStatus | null>(null);
+  protected readonly filterDateRange = signal<[Date, Date] | null>(null);
+  protected readonly filterDatePreset = signal<string | null>(null);
+  protected readonly filterSearch = signal('');
+  private searchDebounceTimer?: ReturnType<typeof setTimeout>;
 
   protected readonly modalVisible = signal(false);
   protected readonly modalSaving = signal(false);
@@ -168,11 +172,15 @@ export class ReservationList implements OnInit {
   async loadPage(): Promise<void> {
     this.loading.set(true);
     try {
+      const [dateFrom, dateTo] = this.dateRangeAsIso();
       const result = await this.reservationsService.list({
         page: this.pageIndex(),
         limit: this.pageSize(),
         villaId: this.filterVillaId() ?? undefined,
         status: this.filterStatus() ?? undefined,
+        dateFrom,
+        dateTo,
+        search: this.filterSearch().trim() || undefined,
       });
       this.reservations.set(result.data);
       this.total.set(result.total);
@@ -194,6 +202,71 @@ export class ReservationList implements OnInit {
     } finally {
       this.calendarLoading.set(false);
     }
+  }
+
+  private dateRangeAsIso(): [string | undefined, string | undefined] {
+    const range = this.filterDateRange();
+    if (!range) return [undefined, undefined];
+    return [this.toIsoDate(range[0]), this.toIsoDate(range[1])];
+  }
+
+  onDateRangeChange(range: [Date, Date] | null): void {
+    this.filterDateRange.set(range);
+    this.filterDatePreset.set(null);
+    this.onFilterChange();
+  }
+
+  onSearchChange(term: string): void {
+    this.filterSearch.set(term);
+    if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
+    this.searchDebounceTimer = setTimeout(() => this.onFilterChange(), 350);
+  }
+
+  setDatePreset(preset: 'today' | 'tomorrow' | 'week' | 'month'): void {
+    const today = this.stripToDate(new Date());
+    let start: Date;
+    let end: Date;
+
+    switch (preset) {
+      case 'today':
+        start = today;
+        end = today;
+        break;
+      case 'tomorrow':
+        start = this.addDays(today, 1);
+        end = this.addDays(today, 1);
+        break;
+      case 'week': {
+        const dayOfWeek = (today.getDay() + 6) % 7; // Monday = 0
+        start = this.addDays(today, -dayOfWeek);
+        end = this.addDays(start, 6);
+        break;
+      }
+      case 'month':
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+        end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        break;
+    }
+
+    this.filterDatePreset.set(preset);
+    this.filterDateRange.set([start, end]);
+    this.onFilterChange();
+  }
+
+  clearDateFilter(): void {
+    this.filterDatePreset.set(null);
+    this.filterDateRange.set(null);
+    this.onFilterChange();
+  }
+
+  private stripToDate(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  private addDays(date: Date, days: number): Date {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
   }
 
   setViewMode(mode: string | number): void {
@@ -404,6 +477,8 @@ export class ReservationList implements OnInit {
       await this.loadPage();
       if (this.viewMode() === 'calendar') {
         await this.loadCalendarData();
+      } else if (this.viewMode() === 'availability' && this.availabilityResults()) {
+        await this.searchAvailability();
       }
     } catch (error) {
       this.message.error(this.extractErrorMessage(error));
@@ -431,7 +506,10 @@ export class ReservationList implements OnInit {
   }
 
   private toIsoDate(date: Date): string {
-    return date.toISOString().slice(0, 10);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   private extractErrorMessage(error: unknown): string {
