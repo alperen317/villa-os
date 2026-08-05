@@ -45,6 +45,25 @@
   margin-bottom: 12px;
 }
 
+.task-villa-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-ink);
+
+  nz-icon {
+    color: var(--color-accent);
+  }
+}
+
+// .ref-link (global) is inline-flex, which lets a following sibling (the
+// action button) ride up onto the same line when nothing else separates
+// them — happened on Pending cards, which have no startedAt/notes line to
+// force a break. Force block layout here so every card wraps consistently.
+a.task-reservation {
+  display: flex;
+}
+
 .task-reservation {
   color: var(--color-muted);
   font-size: 13px;

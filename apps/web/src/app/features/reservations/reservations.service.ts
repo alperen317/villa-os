@@ -51,6 +51,10 @@ export class ReservationsService {
     };
   }
 
+  get(id: string): Promise<Reservation> {
+    return firstValueFrom(this.http.get<Reservation>(`${API_BASE_URL}/reservations/${id}`));
+  }
+
   create(input: CreateReservationInput): Promise<Reservation> {
     return firstValueFrom(this.http.post<Reservation>(`${API_BASE_URL}/reservations`, input));
   }

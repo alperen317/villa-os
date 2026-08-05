@@ -4,7 +4,13 @@ import { HousekeepingStatus, Prisma } from '../../../generated/prisma/client';
 
 const HOUSEKEEPING_TASK_INCLUDE = {
   villa: { select: { id: true, name: true } },
-  reservation: { select: { id: true, reservationNumber: true } },
+  reservation: {
+    select: {
+      id: true,
+      reservationNumber: true,
+      floor: { select: { id: true, name: true, isEntireVilla: true } },
+    },
+  },
   assignedUser: { select: { id: true, username: true } },
 } satisfies Prisma.HousekeepingTaskInclude;
 

@@ -16,7 +16,11 @@ function task(overrides: Partial<HousekeepingTaskWithRelations> = {}): Housekeep
     completedAt: null,
     notes: null,
     villa: { id: 'villa-1', name: 'Villa 1' },
-    reservation: { id: 'reservation-1', reservationNumber: 'RES-1' },
+    reservation: {
+      id: 'reservation-1',
+      reservationNumber: 'RES-1',
+      floor: { id: 'floor-1', name: 'Zemin Kat', isEntireVilla: false },
+    },
     assignedUser: null,
     ...overrides,
   } as HousekeepingTaskWithRelations;

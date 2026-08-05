@@ -40,9 +40,26 @@
         }
 
         @for (task of tasksForStatus(column.status); track task.id) {
-          <nz-card class="task-card" [nzTitle]="task.villa.name">
+          <nz-card class="task-card" [nzTitle]="villaTitle">
+            <ng-template #villaTitle>
+              <span class="task-villa-title">
+                <nz-icon nzType="home" />
+                {{ task.villa.name }}
+              </span>
+            </ng-template>
+
             @if (task.reservation) {
-              <p class="task-reservation">{{ task.reservation.reservationNumber }}</p>
+              <a
+                class="task-reservation ref-link"
+                [routerLink]="['/reservations']"
+                [queryParams]="{ res: task.reservation.id }"
+              >
+                {{ task.reservation.reservationNumber }}
+                <nz-icon nzType="right" class="ref-link-icon" />
+              </a>
+              <p class="task-meta">
+                {{ task.reservation.floor.isEntireVilla ? 'Tüm Villa' : task.reservation.floor.name }}
+              </p>
             } @else {
               <p class="task-reservation task-reservation--adhoc">Rezervasyonsuz görev</p>
             }

@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
@@ -36,6 +37,7 @@ const QUEUE_COLUMNS: { status: HousekeepingStatus; title: string }[] = [
     DatePipe,
     FormsModule,
     ReactiveFormsModule,
+    RouterModule,
     NzButtonModule,
     NzCardModule,
     NzEmptyModule,

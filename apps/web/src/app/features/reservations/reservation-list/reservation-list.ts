@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCalendarModule } from 'ng-zorro-antd/calendar';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
@@ -81,6 +81,8 @@ export class ReservationList implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly message = inject(NzMessageService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   protected readonly statusLabels = RESERVATION_STATUS_LABELS;
   protected readonly nextActions = RESERVATION_NEXT_ACTIONS;
@@ -167,6 +169,25 @@ export class ReservationList implements OnInit {
     this.form.controls.villaId.valueChanges.subscribe((villaId) => {
       this.onVillaChange(villaId);
     });
+
+    await this.openDetailFromQueryParam();
+  }
+
+  /** Lets other screens (e.g. Housekeeping) deep-link to a reservation via ?res=<id>. */
+  private async openDetailFromQueryParam(): Promise<void> {
+    const reservationId = this.route.snapshot.queryParamMap.get('res');
+    if (!reservationId) {
+      return;
+    }
+
+    this.router.navigate([], { queryParams: {} });
+
+    try {
+      const reservation = await this.reservationsService.get(reservationId);
+      this.openDetail(reservation);
+    } catch {
+      this.message.error('Rezervasyon bulunamadı');
+    }
   }
 
   async loadPage(): Promise<void> {
