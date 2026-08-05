@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { VillasService } from '../villas/villas.service';
 import { CreateMaintenanceRecordDto } from './dto/create-maintenance-record.dto';
+import { ListAllMaintenanceRecordsQueryDto } from './dto/list-all-maintenance-records-query.dto';
 import { ListMaintenanceRecordsQueryDto } from './dto/list-maintenance-records-query.dto';
 import { InvalidMaintenanceTransitionException } from './exceptions/invalid-maintenance-transition.exception';
-import { MaintenanceRepository } from './maintenance.repository';
+import { MaintenanceRepository, MaintenanceRecordWithVilla } from './maintenance.repository';
 import { MaintenanceRecord, MaintenanceStatus } from '../../../generated/prisma/client';
 
 @Injectable()
@@ -32,6 +33,14 @@ export class MaintenanceService {
     await this.villasService.findOneOrThrow(villaId);
     return this.maintenanceRepository.findManyByVilla({
       villaId,
+      status: query.status,
+      priority: query.priority,
+    });
+  }
+
+  findAll(query: ListAllMaintenanceRecordsQueryDto): Promise<MaintenanceRecordWithVilla[]> {
+    return this.maintenanceRepository.findMany({
+      villaId: query.villaId,
       status: query.status,
       priority: query.priority,
     });

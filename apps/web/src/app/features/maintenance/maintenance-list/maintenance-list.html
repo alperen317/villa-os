@@ -1,0 +1,152 @@
+<div class="page-header">
+  <div>
+    <h2 class="page-title">Bakım Kayıtları</h2>
+    <p class="page-subtitle">Tüm villalardaki bakım kayıtlarını görüntüle ve yönet.</p>
+  </div>
+  <div class="filters">
+    <nz-select
+      [ngModel]="filterVillaId()"
+      (ngModelChange)="filterVillaId.set($event); onFilterChange()"
+      nzAllowClear
+      nzPlaceHolder="Villa"
+      class="filter-select"
+    >
+      @for (villa of villas(); track villa.id) {
+        <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+      }
+    </nz-select>
+    <nz-select
+      [ngModel]="filterStatus()"
+      (ngModelChange)="filterStatus.set($event); onFilterChange()"
+      nzAllowClear
+      nzPlaceHolder="Durum"
+      class="filter-select"
+    >
+      @for (status of statusKeys; track status) {
+        <nz-option [nzValue]="status" [nzLabel]="statusLabels[status]" />
+      }
+    </nz-select>
+    <button nz-button nzType="primary" (click)="openCreateModal()">
+      <nz-icon nzType="plus" />
+      Yeni Kayıt
+    </button>
+  </div>
+</div>
+
+<div class="page-surface">
+  <nz-table
+    [nzData]="records()"
+    [nzFrontPagination]="false"
+    [nzShowPagination]="false"
+    [nzLoading]="loading()"
+    [nzNoResult]="emptyState"
+  >
+    <thead>
+      <tr>
+        <th>Villa</th>
+        <th>Başlık</th>
+        <th>Öncelik</th>
+        <th>Açıldı</th>
+        <th>Durum</th>
+        <th>Aksiyonlar</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (record of records(); track record.id) {
+        <tr>
+          <td><a [routerLink]="['/villas', record.villa.id]">{{ record.villa.name }}</a></td>
+          <td>
+            {{ record.title }}
+            @if (record.description) {
+              <div class="record-description">{{ record.description }}</div>
+            }
+          </td>
+          <td><nz-tag [nzColor]="priorityColors[record.priority]">{{ priorityLabels[record.priority] }}</nz-tag></td>
+          <td>{{ record.openedAt | date: 'dd.MM.yyyy' }}</td>
+          <td>
+            <nz-tag [nzColor]="statusColors[record.status]">{{ statusLabels[record.status] }}</nz-tag>
+          </td>
+          <td>
+            @if (record.status === 'Open') {
+              <button
+                nz-button
+                nzSize="small"
+                [nzLoading]="actingRecordId() === record.id"
+                (click)="start(record)"
+              >
+                Başlat
+              </button>
+            }
+            @if (record.status === 'InProgress') {
+              <button
+                nz-button
+                nzSize="small"
+                nzType="primary"
+                [nzLoading]="actingRecordId() === record.id"
+                (click)="complete(record)"
+              >
+                Tamamlandı Olarak İşaretle
+              </button>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<ng-template #emptyState>
+  <div class="empty-state">
+    <nz-icon nzType="tool" class="empty-icon" />
+    <p>Kayıtlı bakım bulunamadı.</p>
+  </div>
+</ng-template>
+
+<nz-modal
+  [nzVisible]="modalVisible()"
+  nzTitle="Yeni Bakım Kaydı"
+  [nzOkLoading]="modalSaving()"
+  [nzOkDisabled]="form.invalid"
+  (nzOnCancel)="modalVisible.set(false)"
+  (nzOnOk)="save()"
+>
+  <ng-container *nzModalContent>
+    <form nz-form [formGroup]="form">
+      <nz-form-item>
+        <nz-form-label nzRequired>Villa</nz-form-label>
+        <nz-form-control>
+          <nz-select formControlName="villaId" nzPlaceHolder="Villa seç">
+            @for (villa of villas(); track villa.id) {
+              <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Başlık</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="title" placeholder="ör. Klima Bakımı" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Öncelik</nz-form-label>
+        <nz-form-control>
+          <nz-select formControlName="priority">
+            @for (priority of priorityKeys; track priority) {
+              <nz-option [nzValue]="priority" [nzLabel]="priorityLabels[priority]" />
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Açıklama</nz-form-label>
+        <nz-form-control>
+          <textarea nz-input formControlName="description" rows="3"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>

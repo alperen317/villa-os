@@ -53,6 +53,13 @@ export const appRoutes: Route[] = [
             (m) => m.HousekeepingQueue,
           ),
       },
+      {
+        path: 'maintenance',
+        loadComponent: () =>
+          import('./features/maintenance/maintenance-list/maintenance-list').then(
+            (m) => m.MaintenanceList,
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },

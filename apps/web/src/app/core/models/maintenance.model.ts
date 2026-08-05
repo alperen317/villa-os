@@ -12,6 +12,10 @@ export interface MaintenanceRecord {
   completedAt: string | null;
 }
 
+export interface MaintenanceRecordWithVilla extends MaintenanceRecord {
+  villa: { id: string; name: string };
+}
+
 export interface CreateMaintenanceRecordInput {
   title: string;
   description?: string;

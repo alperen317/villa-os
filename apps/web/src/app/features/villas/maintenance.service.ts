@@ -6,6 +6,7 @@ import {
   CreateMaintenanceRecordInput,
   MaintenancePriority,
   MaintenanceRecord,
+  MaintenanceRecordWithVilla,
   MaintenanceStatus,
 } from '../../core/models/maintenance.model';
 
@@ -23,6 +24,21 @@ export class MaintenanceService {
 
     return firstValueFrom(
       this.http.get<MaintenanceRecord[]>(`${API_BASE_URL}/villas/${villaId}/maintenance-records`, {
+        params: query,
+      }),
+    );
+  }
+
+  listAll(
+    params: { villaId?: string; status?: MaintenanceStatus; priority?: MaintenancePriority } = {},
+  ): Promise<MaintenanceRecordWithVilla[]> {
+    let query = new HttpParams();
+    if (params.villaId) query = query.set('villaId', params.villaId);
+    if (params.status) query = query.set('status', params.status);
+    if (params.priority) query = query.set('priority', params.priority);
+
+    return firstValueFrom(
+      this.http.get<MaintenanceRecordWithVilla[]>(`${API_BASE_URL}/maintenance-records`, {
         params: query,
       }),
     );
