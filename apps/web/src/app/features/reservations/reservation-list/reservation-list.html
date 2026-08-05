@@ -75,7 +75,11 @@
           <tr>
             <td>{{ reservation.reservationNumber }}</td>
             <td>{{ reservation.villa.name }} / {{ reservation.floor.name }}</td>
-            <td>{{ reservation.customer.firstName }} {{ reservation.customer.lastName }}</td>
+            <td>
+              <a [routerLink]="['/customers', reservation.customerId]">
+                {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+              </a>
+            </td>
             <td>{{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}</td>
             <td>{{ reservation.guestCount }}</td>
             <td>{{ reservation.totalPrice }} ₺</td>

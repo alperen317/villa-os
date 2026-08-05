@@ -30,6 +30,7 @@ import {
   MoreOutline,
   PlusOutline,
   SearchOutline,
+  TeamOutline,
   ToolOutline,
   UserOutline,
 } from '@ant-design/icons-angular/icons';
@@ -68,6 +69,7 @@ export const appConfig: ApplicationConfig = {
       ClearOutline,
       ToolOutline,
       DollarOutline,
+      TeamOutline,
     ]),
   ],
 };

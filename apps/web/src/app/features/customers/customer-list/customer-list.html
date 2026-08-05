@@ -1,0 +1,147 @@
+<div class="page-header">
+  <div>
+    <h2 class="page-title">Müşteriler</h2>
+    <p class="page-subtitle">Müşteri profillerini ve rezervasyon geçmişini yönet.</p>
+  </div>
+  <button nz-button nzType="primary" (click)="openCreateModal()">
+    <nz-icon nzType="plus" />
+    Yeni Müşteri
+  </button>
+</div>
+
+<div class="page-surface search-bar">
+  <nz-input-group nzPrefixIcon="search" class="search-input">
+    <input
+      nz-input
+      placeholder="Ad, soyad, telefon veya e-posta ara"
+      [ngModel]="searchTerm()"
+      (ngModelChange)="searchTerm.set($event)"
+      (keyup.enter)="onSearch()"
+    />
+  </nz-input-group>
+  <button nz-button (click)="onSearch()">Ara</button>
+</div>
+
+<div class="page-surface">
+  <nz-table
+    [nzData]="customers()"
+    [nzFrontPagination]="false"
+    [nzTotal]="total()"
+    [nzPageIndex]="pageIndex()"
+    [nzPageSize]="pageSize()"
+    [nzLoading]="loading()"
+    [nzNoResult]="emptyState"
+    (nzPageIndexChange)="onPageIndexChange($event)"
+  >
+    <thead>
+      <tr>
+        <th>Ad Soyad</th>
+        <th>Telefon</th>
+        <th>E-posta</th>
+        <th>Aksiyonlar</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (customer of customers(); track customer.id) {
+        <tr>
+          <td>
+            <a [routerLink]="['/customers', customer.id]">
+              {{ customer.firstName }} {{ customer.lastName }}
+            </a>
+          </td>
+          <td>{{ customer.phone || '-' }}</td>
+          <td>{{ customer.email || '-' }}</td>
+          <td class="actions">
+            <button nz-button nzType="text" aria-label="Müşteriyi düzenle" (click)="openEditModal(customer)">
+              <nz-icon nzType="edit" />
+            </button>
+            <button
+              nz-button
+              nzType="text"
+              nzDanger
+              aria-label="Müşteriyi sil"
+              nz-popconfirm
+              nzPopconfirmTitle="Bu müşteriyi silmek istediğine emin misin?"
+              (nzOnConfirm)="remove(customer)"
+            >
+              <nz-icon nzType="delete" />
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<ng-template #emptyState>
+  <div class="empty-state">
+    <nz-icon nzType="user" class="empty-icon" />
+    <p>Henüz müşteri eklenmedi.</p>
+    <button nz-button nzType="primary" (click)="openCreateModal()">
+      <nz-icon nzType="plus" />
+      İlk Müşteriyi Ekle
+    </button>
+  </div>
+</ng-template>
+
+<nz-modal
+  [nzVisible]="modalVisible()"
+  [nzTitle]="editingCustomer ? 'Müşteri Düzenle' : 'Yeni Müşteri'"
+  [nzOkLoading]="modalSaving()"
+  [nzOkDisabled]="form.invalid"
+  (nzOnCancel)="modalVisible.set(false)"
+  (nzOnOk)="save()"
+>
+  <ng-container *nzModalContent>
+    <form nz-form [formGroup]="form">
+      <nz-form-item>
+        <nz-form-label nzRequired>Ad</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="firstName" placeholder="Ad" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Soyad</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="lastName" placeholder="Soyad" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Telefon</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="phone" placeholder="Telefon" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>E-posta</nz-form-label>
+        <nz-form-control nzErrorTip="Geçerli bir e-posta adresi girin">
+          <input nz-input formControlName="email" placeholder="E-posta" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Kimlik No</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="identityNumber" placeholder="TC Kimlik No" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Pasaport No</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="passportNumber" placeholder="Pasaport No" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Notlar</nz-form-label>
+        <nz-form-control>
+          <textarea nz-input formControlName="notes" rows="3"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>

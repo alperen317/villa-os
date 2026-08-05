@@ -20,3 +20,5 @@ export interface CreateCustomerInput {
   passportNumber?: string;
   notes?: string;
 }
+
+export type UpdateCustomerInput = Partial<CreateCustomerInput>;

@@ -1,0 +1,139 @@
+<a routerLink="/customers" class="back-link">
+  <nz-icon nzType="left" />
+  Müşteriler
+</a>
+
+@if (loading() && !customer()) {
+  <div class="page-surface">
+    <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 3 }"></nz-skeleton>
+  </div>
+} @else if (customer(); as c) {
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">{{ c.firstName }} {{ c.lastName }}</h2>
+      <p class="page-subtitle">Müşteri bilgilerini ve rezervasyon geçmişini görüntüle.</p>
+    </div>
+    <button nz-button (click)="openEditModal()">
+      <nz-icon nzType="edit" />
+      Düzenle
+    </button>
+  </div>
+
+  <div class="page-surface info-card">
+    <nz-descriptions nzTitle="Müşteri Bilgileri" [nzColumn]="2" nzBordered [nzSize]="'small'">
+      <nz-descriptions-item nzTitle="Telefon">{{ c.phone || '-' }}</nz-descriptions-item>
+      <nz-descriptions-item nzTitle="E-posta">{{ c.email || '-' }}</nz-descriptions-item>
+      <nz-descriptions-item nzTitle="Kimlik No">{{ c.identityNumber || '-' }}</nz-descriptions-item>
+      <nz-descriptions-item nzTitle="Pasaport No">{{ c.passportNumber || '-' }}</nz-descriptions-item>
+      <nz-descriptions-item nzTitle="Notlar" [nzSpan]="2">{{ c.notes || '-' }}</nz-descriptions-item>
+    </nz-descriptions>
+  </div>
+}
+
+<div class="page-header">
+  <h3 class="section-title">Rezervasyonlar</h3>
+  <a routerLink="/reservations">Tümünü Gör</a>
+</div>
+
+<div class="page-surface">
+  <nz-table
+    [nzData]="reservations()"
+    [nzLoading]="reservationsLoading()"
+    [nzShowPagination]="false"
+    [nzNoResult]="emptyReservations"
+  >
+    <thead>
+      <tr>
+        <th>Rez. No</th>
+        <th>Villa</th>
+        <th>Giriş - Çıkış</th>
+        <th>Misafir</th>
+        <th>Durum</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (reservation of reservations(); track reservation.id) {
+        <tr>
+          <td>{{ reservation.reservationNumber }}</td>
+          <td>{{ reservation.villa.name }}</td>
+          <td>{{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}</td>
+          <td>{{ reservation.guestCount }}</td>
+          <td>
+            <nz-tag [nzColor]="reservationStatusColors[reservation.status]">
+              {{ reservationStatusLabels[reservation.status] }}
+            </nz-tag>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<ng-template #emptyReservations>
+  <div class="empty-state">
+    <nz-icon nzType="calendar" class="empty-icon" />
+    <p>Bu müşteri için henüz rezervasyon yok.</p>
+  </div>
+</ng-template>
+
+<nz-modal
+  [nzVisible]="modalVisible()"
+  nzTitle="Müşteri Düzenle"
+  [nzOkLoading]="modalSaving()"
+  [nzOkDisabled]="form.invalid"
+  (nzOnCancel)="modalVisible.set(false)"
+  (nzOnOk)="save()"
+>
+  <ng-container *nzModalContent>
+    <form nz-form [formGroup]="form">
+      <nz-form-item>
+        <nz-form-label nzRequired>Ad</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="firstName" placeholder="Ad" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Soyad</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="lastName" placeholder="Soyad" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Telefon</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="phone" placeholder="Telefon" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>E-posta</nz-form-label>
+        <nz-form-control nzErrorTip="Geçerli bir e-posta adresi girin">
+          <input nz-input formControlName="email" placeholder="E-posta" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Kimlik No</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="identityNumber" placeholder="TC Kimlik No" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Pasaport No</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="passportNumber" placeholder="Pasaport No" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Notlar</nz-form-label>
+        <nz-form-control>
+          <textarea nz-input formControlName="notes" rows="3"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>

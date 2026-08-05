@@ -35,6 +35,18 @@ export const appRoutes: Route[] = [
           ),
       },
       {
+        path: 'customers',
+        loadComponent: () =>
+          import('./features/customers/customer-list/customer-list').then((m) => m.CustomerList),
+      },
+      {
+        path: 'customers/:id',
+        loadComponent: () =>
+          import('./features/customers/customer-detail/customer-detail').then(
+            (m) => m.CustomerDetail,
+          ),
+      },
+      {
         path: 'housekeeping',
         loadComponent: () =>
           import('./features/housekeeping/housekeeping-queue/housekeeping-queue').then(

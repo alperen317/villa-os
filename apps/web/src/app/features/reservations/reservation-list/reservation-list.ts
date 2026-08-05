@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCalendarModule } from 'ng-zorro-antd/calendar';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
@@ -48,6 +49,7 @@ const PAYMENT_MANAGER_ROLES = new Set(['Administrator', 'Accounting']);
     DatePipe,
     FormsModule,
     ReactiveFormsModule,
+    RouterModule,
     NzButtonModule,
     NzCalendarModule,
     NzDatePickerModule,
