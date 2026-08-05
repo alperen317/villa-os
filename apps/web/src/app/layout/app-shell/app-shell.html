@@ -10,7 +10,13 @@
     [nzCollapsed]="collapsed()"
     (nzCollapsedChange)="collapsed.set($event)"
   >
-    <div class="logo">{{ collapsed() ? 'VOS' : 'Villa OS' }}</div>
+    <div class="logo">
+      @if (settingsStore.logoUrl(); as logoUrl) {
+        <img [src]="logoUrl" [alt]="settingsStore.companyName()" class="logo-image" />
+      } @else {
+        <span>{{ collapsed() ? 'VOS' : settingsStore.companyName() }}</span>
+      }
+    </div>
     <ul nz-menu nzTheme="dark" nzMode="inline" (click)="mobileNavOpen.set(false)">
       <li nz-menu-item routerLink="/dashboard" routerLinkActive="ant-menu-item-selected">
         <nz-icon nzType="dashboard" />
@@ -38,6 +44,12 @@
         <nz-icon nzType="tool" />
         <span>Bakım</span>
       </li>
+      @if (showSettingsNav()) {
+        <li nz-menu-item routerLink="/settings" routerLinkActive="ant-menu-item-selected">
+          <nz-icon nzType="setting" />
+          <span>Ayarlar</span>
+        </li>
+      }
     </ul>
   </nz-sider>
 

@@ -1,5 +1,5 @@
 import { Route } from '@angular/router';
-import { authGuard, guestGuard } from './core/auth/auth.guard';
+import { adminGuard, authGuard, guestGuard } from './core/auth/auth.guard';
 
 export const appRoutes: Route[] = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -59,6 +59,12 @@ export const appRoutes: Route[] = [
           import('./features/maintenance/maintenance-list/maintenance-list').then(
             (m) => m.MaintenanceList,
           ),
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./features/settings/settings-page/settings-page').then((m) => m.SettingsPage),
+        canActivate: [adminGuard],
       },
     ],
   },

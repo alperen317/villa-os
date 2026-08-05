@@ -5,6 +5,9 @@ dist
 tmp
 out-tsc
 
+# runtime uploads (local disk storage, not source-controlled)
+apps/api/uploads/
+
 # dependencies
 node_modules
 

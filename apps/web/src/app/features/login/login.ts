@@ -9,6 +9,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { AuthService } from '../../core/auth/auth.service';
+import { SettingsStore } from '../settings/settings.store';
 
 @Component({
   selector: 'app-login',
@@ -30,6 +31,7 @@ export class Login {
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  protected readonly settingsStore = inject(SettingsStore);
 
   protected readonly loading = signal(false);
   protected readonly errorMessage = signal<string | null>(null);

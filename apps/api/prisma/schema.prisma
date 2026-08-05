@@ -210,6 +210,19 @@ model User {
   @@map("users")
 }
 
+model Settings {
+  id             String   @id @default(uuid()) @db.Uuid
+  companyName    String   @default("Villa OS") @map("company_name")
+  logoPath       String?  @map("logo_path")
+  accentColor    String   @default("#2563eb") @map("accent_color")
+  contactEmail   String?  @map("contact_email")
+  contactPhone   String?  @map("contact_phone")
+  contactAddress String?  @map("contact_address")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
 model ReservationDocument {
   id            String   @id @default(uuid()) @db.Uuid
   reservationId String   @map("reservation_id") @db.Uuid

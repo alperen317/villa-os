@@ -115,6 +115,7 @@
     "@nestjs/testing": "^11.0.0",
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.6",
+    "@types/multer": "^2.2.0",
     "@types/passport-jwt": "^4.0.1",
     "@types/pg": "^8.20.3",
     "tsx": "^4.23.5"

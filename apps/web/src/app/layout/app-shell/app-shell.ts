@@ -5,6 +5,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { AuthService } from '../../core/auth/auth.service';
+import { SettingsStore } from '../../features/settings/settings.store';
 
 const HOUSEKEEPING_NAV_ROLES = new Set(['Administrator', 'Operations', 'Housekeeping']);
 
@@ -17,6 +18,7 @@ const HOUSEKEEPING_NAV_ROLES = new Set(['Administrator', 'Operations', 'Housekee
 })
 export class AppShell implements OnInit {
   protected readonly authService = inject(AuthService);
+  protected readonly settingsStore = inject(SettingsStore);
   private readonly router = inject(Router);
 
   protected readonly collapsed = signal(false);
@@ -26,6 +28,10 @@ export class AppShell implements OnInit {
     const role = this.authService.currentUser()?.role;
     return role ? HOUSEKEEPING_NAV_ROLES.has(role) : false;
   });
+
+  protected readonly showSettingsNav = computed(
+    () => this.authService.currentUser()?.role === 'Administrator',
+  );
 
   async ngOnInit(): Promise<void> {
     if (!this.authService.currentUser()) {

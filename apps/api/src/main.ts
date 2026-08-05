@@ -1,10 +1,16 @@
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { mkdirSync } from 'fs';
 import { AppModule } from './app/app.module';
+import { UPLOADS_ROOT } from './app/infra/uploads/uploads-path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  mkdirSync(UPLOADS_ROOT, { recursive: true });
+  app.useStaticAssets(UPLOADS_ROOT, { prefix: '/uploads/' });
 
   app.enableCors({ origin: 'http://localhost:4200', exposedHeaders: ['X-Total-Count'] });
   app.setGlobalPrefix('api');

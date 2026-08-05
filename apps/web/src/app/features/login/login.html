@@ -1,7 +1,13 @@
 <div class="login-page">
   <div class="login-brand">
-    <div class="login-logo">VOS</div>
-    <h1 class="login-title">Villa OS</h1>
+    <div class="login-logo">
+      @if (settingsStore.logoUrl(); as logoUrl) {
+        <img [src]="logoUrl" [alt]="settingsStore.companyName()" class="login-logo-image" />
+      } @else {
+        VOS
+      }
+    </div>
+    <h1 class="login-title">{{ settingsStore.companyName() }}</h1>
     <p class="login-tagline">Villa yönetim paneline giriş yap</p>
   </div>
 

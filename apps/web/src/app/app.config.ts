@@ -1,5 +1,7 @@
 import {
   ApplicationConfig,
+  inject,
+  provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
@@ -13,6 +15,7 @@ import {
   AppstoreOutline,
   CalendarOutline,
   CheckCircleOutline,
+  CheckOutline,
   ClearOutline,
   ClockCircleOutline,
   CloseCircleOutline,
@@ -29,15 +32,19 @@ import {
   MenuFoldOutline,
   MenuUnfoldOutline,
   MoreOutline,
+  PictureOutline,
   PlusOutline,
   RightOutline,
   SearchOutline,
+  SettingOutline,
   TeamOutline,
   ToolOutline,
+  UploadOutline,
   UserOutline,
 } from '@ant-design/icons-angular/icons';
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { SettingsStore } from './features/settings/settings.store';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -48,6 +55,7 @@ export const appConfig: ApplicationConfig = {
     provideNzI18n(tr_TR),
     provideNzNativeDateAdapter(),
     provideCharts(withDefaultRegisterables()),
+    provideAppInitializer(() => inject(SettingsStore).ensureLoaded()),
     provideNzIcons([
       UserOutline,
       LockOutline,
@@ -74,6 +82,10 @@ export const appConfig: ApplicationConfig = {
       DollarOutline,
       TeamOutline,
       RightOutline,
+      SettingOutline,
+      PictureOutline,
+      UploadOutline,
+      CheckOutline,
     ]),
   ],
 };

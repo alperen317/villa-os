@@ -10,10 +10,13 @@ body {
   // overridden below wherever the app actually surfaces it, so this token
   // stays the one true blue instead of two similar-but-different blues.
   --color-accent: #2563eb;
-  --color-accent-hover: #1d4ed8;
-  --color-accent-active: #1e40af;
-  --color-accent-subtle: #eff6ff;
-  --color-accent-border: #93c5fd;
+  // Derived from --color-accent via color-mix() rather than hardcoded, so a
+  // single runtime override (whitelabel accent color) recolors hover/active/
+  // subtle/border states too instead of leaving them stuck on the old blue.
+  --color-accent-hover: color-mix(in srgb, var(--color-accent) 85%, black);
+  --color-accent-active: color-mix(in srgb, var(--color-accent) 70%, black);
+  --color-accent-subtle: color-mix(in srgb, var(--color-accent) 8%, white);
+  --color-accent-border: color-mix(in srgb, var(--color-accent) 50%, white);
 
   // One neutral family (slate) used everywhere, no warm/cool mixing.
   --color-ink: #1e293b;
@@ -25,11 +28,12 @@ body {
   --color-surface: #ffffff;
   --color-canvas: #f8fafc;
 
-  // Sidebar stays dark, but tinted from the same slate family instead of
-  // Ant's stock navy — a dark nav next to a light canvas should still read
-  // as one palette.
-  --color-nav-bg: #0f172a;
-  --color-nav-bg-active: #1e293b;
+  // Sidebar stays dark, but tinted from the accent color (via color-mix, same
+  // approach as the accent-* shades above) instead of a color fixed
+  // independently of the chosen theme — otherwise picking a theme only
+  // recolors buttons/links and the nav looks like it didn't change at all.
+  --color-nav-bg: color-mix(in srgb, var(--color-accent) 30%, #0f172a);
+  --color-nav-bg-active: color-mix(in srgb, var(--color-accent) 50%, #0f172a);
   --color-nav-text: #94a3b8;
   --color-nav-text-active: #ffffff;
 
@@ -360,6 +364,14 @@ a:hover {
 .ant-menu.ant-menu-dark,
 .ant-menu-dark .ant-menu-sub {
   background: var(--color-nav-bg) !important;
+}
+
+// The collapse/expand trigger at the bottom of the sider ships with its own
+// hardcoded Ant dark color (#002140), unrelated to --color-nav-bg — override
+// it here (not app-shell.scss) since it's DOM rendered inside nz-sider's own
+// template, which a scoped component stylesheet can't reach.
+.ant-layout-sider-trigger {
+  background: var(--color-nav-bg-active) !important;
 }
 
 // ---------------------------------------------------------------------------
