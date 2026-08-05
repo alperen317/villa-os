@@ -34,6 +34,8 @@ export class MaintenanceRepository {
   }
 
   findMany(params: {
+    skip: number;
+    take: number;
     villaId?: string;
     status?: MaintenanceStatus;
     priority?: MaintenancePriority;
@@ -42,6 +44,14 @@ export class MaintenanceRepository {
       where: { villaId: params.villaId, status: params.status, priority: params.priority },
       include: MAINTENANCE_RECORD_WITH_VILLA_INCLUDE,
       orderBy: { openedAt: 'desc' },
+      skip: params.skip,
+      take: params.take,
+    });
+  }
+
+  count(params: { villaId?: string; status?: MaintenanceStatus; priority?: MaintenancePriority }): Promise<number> {
+    return this.prisma.maintenanceRecord.count({
+      where: { villaId: params.villaId, status: params.status, priority: params.priority },
     });
   }
 

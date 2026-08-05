@@ -18,8 +18,7 @@ import {
   MaintenanceRecordWithVilla,
   MaintenanceStatus,
 } from '../../../core/models/maintenance.model';
-import { Villa } from '../../../core/models/villa.model';
-import { VillasService } from '../../villas/villas.service';
+import { VillasStore } from '../../villas/villas.store';
 import { MaintenanceService } from '../../villas/maintenance.service';
 
 const PRIORITY_COLORS: Record<MaintenancePriority, string> = {
@@ -57,7 +56,7 @@ const STATUS_COLORS: Record<MaintenanceStatus, string> = {
 })
 export class MaintenanceList implements OnInit {
   private readonly maintenanceService = inject(MaintenanceService);
-  private readonly villasService = inject(VillasService);
+  private readonly villasStore = inject(VillasStore);
   private readonly message = inject(NzMessageService);
   private readonly formBuilder = inject(FormBuilder);
 
@@ -68,11 +67,14 @@ export class MaintenanceList implements OnInit {
   protected readonly statusKeys = Object.keys(MAINTENANCE_STATUS_LABELS) as MaintenanceStatus[];
   protected readonly priorityKeys = Object.keys(MAINTENANCE_PRIORITY_LABELS) as MaintenancePriority[];
 
-  protected readonly villas = signal<Villa[]>([]);
+  protected readonly villas = this.villasStore.villas;
   protected readonly filterVillaId = signal<string | null>(null);
   protected readonly filterStatus = signal<MaintenanceStatus | null>(null);
 
   protected readonly records = signal<MaintenanceRecordWithVilla[]>([]);
+  protected readonly total = signal(0);
+  protected readonly pageIndex = signal(1);
+  protected readonly pageSize = signal(10);
   protected readonly loading = signal(false);
   protected readonly actingRecordId = signal<string | null>(null);
 
@@ -87,20 +89,21 @@ export class MaintenanceList implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    const result = await this.villasService.list({ limit: 100 });
-    this.villas.set(result.data);
+    await this.villasStore.ensureLoaded();
     await this.loadRecords();
   }
 
   async loadRecords(): Promise<void> {
     this.loading.set(true);
     try {
-      this.records.set(
-        await this.maintenanceService.listAll({
-          villaId: this.filterVillaId() ?? undefined,
-          status: this.filterStatus() ?? undefined,
-        }),
-      );
+      const result = await this.maintenanceService.listAll({
+        page: this.pageIndex(),
+        limit: this.pageSize(),
+        villaId: this.filterVillaId() ?? undefined,
+        status: this.filterStatus() ?? undefined,
+      });
+      this.records.set(result.data);
+      this.total.set(result.total);
     } catch {
       this.message.error('Bakım kayıtları alınamadı');
     } finally {
@@ -109,6 +112,12 @@ export class MaintenanceList implements OnInit {
   }
 
   onFilterChange(): void {
+    this.pageIndex.set(1);
+    this.loadRecords();
+  }
+
+  onPageIndexChange(index: number): void {
+    this.pageIndex.set(index);
     this.loadRecords();
   }
 

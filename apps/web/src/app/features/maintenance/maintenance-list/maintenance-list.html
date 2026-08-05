@@ -37,9 +37,12 @@
   <nz-table
     [nzData]="records()"
     [nzFrontPagination]="false"
-    [nzShowPagination]="false"
+    [nzTotal]="total()"
+    [nzPageIndex]="pageIndex()"
+    [nzPageSize]="pageSize()"
     [nzLoading]="loading()"
     [nzNoResult]="emptyState"
+    (nzPageIndexChange)="onPageIndexChange($event)"
   >
     <thead>
       <tr>

@@ -38,12 +38,22 @@ export class MaintenanceService {
     });
   }
 
-  findAll(query: ListAllMaintenanceRecordsQueryDto): Promise<MaintenanceRecordWithVilla[]> {
-    return this.maintenanceRepository.findMany({
+  async findAll(
+    query: ListAllMaintenanceRecordsQueryDto,
+  ): Promise<{ data: MaintenanceRecordWithVilla[]; total: number }> {
+    const params = {
+      skip: query.skip,
+      take: query.limit,
       villaId: query.villaId,
       status: query.status,
       priority: query.priority,
-    });
+    };
+    const [data, total] = await Promise.all([
+      this.maintenanceRepository.findMany(params),
+      this.maintenanceRepository.count(params),
+    ]);
+
+    return { data, total };
   }
 
   async findOneOrThrow(villaId: string, id: string): Promise<MaintenanceRecord> {
