@@ -7,6 +7,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { AuthService } from '../../core/auth/auth.service';
+import { ReportList } from '../reports/report-list/report-list';
 import { DashboardService } from './dashboard.service';
 
 interface StatCard {
@@ -20,7 +21,16 @@ interface StatCard {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterModule, NzAlertModule, NzButtonModule, NzCardModule, NzIconModule, NzSpinModule, NzTagModule],
+  imports: [
+    RouterModule,
+    NzAlertModule,
+    NzButtonModule,
+    NzCardModule,
+    NzIconModule,
+    NzSpinModule,
+    NzTagModule,
+    ReportList,
+  ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })

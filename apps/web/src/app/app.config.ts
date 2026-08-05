@@ -8,6 +8,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideNzI18n, tr_TR } from 'ng-zorro-antd/i18n';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
 import { provideNzNativeDateAdapter } from 'ng-zorro-antd/core/time';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import {
   AppstoreOutline,
   CalendarOutline,
@@ -45,6 +46,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     provideNzI18n(tr_TR),
     provideNzNativeDateAdapter(),
+    provideCharts(withDefaultRegisterables()),
     provideNzIcons([
       UserOutline,
       LockOutline,

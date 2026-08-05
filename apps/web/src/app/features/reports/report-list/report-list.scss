@@ -1,0 +1,63 @@
+.reports-section {
+  margin-top: 24px;
+}
+
+.section-header {
+  margin-bottom: 16px;
+
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+}
+
+.section-subtitle {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  nz-form-item {
+    margin-bottom: 0;
+  }
+}
+
+.filter-select {
+  width: 220px;
+}
+
+.stat-row {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.chart-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  .chart-box {
+    flex: 2;
+  }
+
+  .chart-box--small {
+    flex: 1;
+  }
+}
+
+.chart-box {
+  height: 280px;
+  margin-bottom: 16px;
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+}

@@ -31,18 +31,5 @@
   }
 </div>
 
-<details class="page-surface diagnostics">
-  <summary>Sistem durumu</summary>
-  <p class="diagnostics-description">GET /api/v1/auth/ping — bağlantı ve oturum durumunu test eder.</p>
+<app-report-list />
 
-  @if (pingStatus(); as status) {
-    <nz-tag [nzColor]="status === 200 ? 'success' : 'error'">
-      <nz-icon [nzType]="status === 200 ? 'check-circle' : 'close-circle'" />
-      {{ status }} {{ status === 200 ? 'OK' : 'Bad Request' }}
-    </nz-tag>
-  }
-
-  <div class="diagnostics-actions">
-    <button nz-button (click)="testConnection()" [nzLoading]="pinging()">İstek gönder</button>
-  </div>
-</details>

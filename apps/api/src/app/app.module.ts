@@ -12,6 +12,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { HousekeepingModule } from './modules/housekeeping/housekeeping.module';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { ReportingModule } from './modules/reporting/reporting.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     HousekeepingModule,
     MaintenanceModule,
     DashboardModule,
+    ReportingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
