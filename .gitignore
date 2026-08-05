@@ -55,3 +55,6 @@ test-output
 # local docs / AI tool config (not tracked)
 docs/
 .claude/
+
+.agents
+skills-lock.json
