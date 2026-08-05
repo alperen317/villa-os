@@ -25,8 +25,7 @@ import {
   RESERVATION_STATUS_COLORS,
   RESERVATION_STATUS_LABELS,
 } from '../../../core/models/reservation.model';
-import { Villa } from '../../../core/models/villa.model';
-import { VillasService } from '../../villas/villas.service';
+import { VillasStore } from '../../villas/villas.store';
 import { ReportsService } from '../reports.service';
 
 const CHART_COLORS = ['#2f54eb', '#13a8a8', '#fa8c16', '#eb2f96', '#52c41a', '#722ed1'];
@@ -71,7 +70,7 @@ function toIsoDate(date: Date): string {
 })
 export class ReportList implements OnInit {
   private readonly reportsService = inject(ReportsService);
-  private readonly villasService = inject(VillasService);
+  private readonly villasStore = inject(VillasStore);
   private readonly message = inject(NzMessageService);
   private readonly formBuilder = inject(FormBuilder);
 
@@ -79,7 +78,7 @@ export class ReportList implements OnInit {
   protected readonly statusColors = RESERVATION_STATUS_COLORS;
   protected readonly paymentMethodLabels = PAYMENT_METHOD_LABELS;
 
-  protected readonly villas = signal<Villa[]>([]);
+  protected readonly villas = this.villasStore.villas;
   protected readonly tabIndex = signal(0);
   protected readonly loading = signal(false);
 
@@ -171,8 +170,7 @@ export class ReportList implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    const result = await this.villasService.list({ limit: 100 });
-    this.villas.set(result.data);
+    await this.villasStore.ensureLoaded();
     await this.loadActiveReport();
   }
 

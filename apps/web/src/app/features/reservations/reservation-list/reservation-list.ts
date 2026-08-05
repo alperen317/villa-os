@@ -34,9 +34,10 @@ import {
   Reservation,
   ReservationStatus,
 } from '../../../core/models/reservation.model';
-import { Floor, FloorWithVilla, Villa } from '../../../core/models/villa.model';
+import { Floor, FloorWithVilla } from '../../../core/models/villa.model';
 import { CustomersService } from '../../customers/customers.service';
 import { VillasService } from '../../villas/villas.service';
+import { VillasStore } from '../../villas/villas.store';
 import { PaymentsService } from '../payments.service';
 import { ReservationAction, ReservationsService } from '../reservations.service';
 
@@ -74,6 +75,7 @@ const PAYMENT_MANAGER_ROLES = new Set(['Administrator', 'Accounting']);
 export class ReservationList implements OnInit {
   private readonly reservationsService = inject(ReservationsService);
   private readonly villasService = inject(VillasService);
+  private readonly villasStore = inject(VillasStore);
   private readonly customersService = inject(CustomersService);
   private readonly paymentsService = inject(PaymentsService);
   private readonly authService = inject(AuthService);
@@ -96,7 +98,7 @@ export class ReservationList implements OnInit {
   protected readonly calendarReservations = signal<Reservation[]>([]);
   protected readonly calendarLoading = signal(false);
 
-  protected readonly villas = signal<Villa[]>([]);
+  protected readonly villas = this.villasStore.villas;
   protected readonly filterVillaId = signal<string | null>(null);
   protected readonly filterStatus = signal<ReservationStatus | null>(null);
 
@@ -155,8 +157,7 @@ export class ReservationList implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    const result = await this.villasService.list({ limit: 100 });
-    this.villas.set(result.data);
+    await this.villasStore.ensureLoaded();
     await this.loadPage();
 
     this.form.controls.villaId.valueChanges.subscribe((villaId) => {

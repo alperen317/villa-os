@@ -18,8 +18,7 @@ import {
   HousekeepingStatus,
   HousekeepingTask,
 } from '../../../core/models/housekeeping.model';
-import { Villa } from '../../../core/models/villa.model';
-import { VillasService } from '../../villas/villas.service';
+import { VillasStore } from '../../villas/villas.store';
 import { HousekeepingService } from '../housekeeping.service';
 
 const MUTATE_ROLES = new Set(['Administrator', 'Housekeeping']);
@@ -53,7 +52,7 @@ const QUEUE_COLUMNS: { status: HousekeepingStatus; title: string }[] = [
 })
 export class HousekeepingQueue implements OnInit {
   private readonly housekeepingService = inject(HousekeepingService);
-  private readonly villasService = inject(VillasService);
+  private readonly villasStore = inject(VillasStore);
   private readonly authService = inject(AuthService);
   private readonly message = inject(NzMessageService);
   private readonly formBuilder = inject(FormBuilder);
@@ -61,7 +60,7 @@ export class HousekeepingQueue implements OnInit {
   protected readonly statusLabels = HOUSEKEEPING_STATUS_LABELS;
   protected readonly columns = QUEUE_COLUMNS;
 
-  protected readonly villas = signal<Villa[]>([]);
+  protected readonly villas = this.villasStore.villas;
   protected readonly filterVillaId = signal<string | null>(null);
 
   protected readonly tasks = signal<HousekeepingTask[]>([]);
@@ -82,8 +81,7 @@ export class HousekeepingQueue implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    const result = await this.villasService.list({ limit: 100 });
-    this.villas.set(result.data);
+    await this.villasStore.ensureLoaded();
     await this.loadTasks();
   }
 
