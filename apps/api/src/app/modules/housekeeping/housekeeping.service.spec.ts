@@ -44,6 +44,46 @@ describe('HousekeepingService', () => {
     villasService = moduleRef.get(VillasService);
   });
 
+  describe('findAll', () => {
+    it('fetches active and completed tasks separately, capping completed to the most recent', async () => {
+      repository.findMany.mockResolvedValueOnce([task()]).mockResolvedValueOnce([task({ status: HousekeepingStatus.Completed })]);
+
+      await service.findAll({ villaId: 'villa-1' } as never);
+
+      expect(repository.findMany).toHaveBeenNthCalledWith(1, {
+        villaId: 'villa-1',
+        statusNot: HousekeepingStatus.Completed,
+      });
+      expect(repository.findMany).toHaveBeenNthCalledWith(2, {
+        villaId: 'villa-1',
+        status: HousekeepingStatus.Completed,
+        take: 50,
+        orderBy: { completedAt: 'desc' },
+      });
+    });
+
+    it('caps completed tasks to the most recent when explicitly filtering by Completed', async () => {
+      repository.findMany.mockResolvedValue([task({ status: HousekeepingStatus.Completed })]);
+
+      await service.findAll({ status: HousekeepingStatus.Completed } as never);
+
+      expect(repository.findMany).toHaveBeenCalledWith({
+        villaId: undefined,
+        status: HousekeepingStatus.Completed,
+        take: 50,
+        orderBy: { completedAt: 'desc' },
+      });
+    });
+
+    it('does not cap Pending/InProgress filters', async () => {
+      repository.findMany.mockResolvedValue([task()]);
+
+      await service.findAll({ status: HousekeepingStatus.Pending } as never);
+
+      expect(repository.findMany).toHaveBeenCalledWith({ villaId: undefined, status: HousekeepingStatus.Pending });
+    });
+  });
+
   describe('createForReservation', () => {
     it('creates a Pending task tied to the reservation and villa (BR-008)', async () => {
       repository.create.mockResolvedValue(task());

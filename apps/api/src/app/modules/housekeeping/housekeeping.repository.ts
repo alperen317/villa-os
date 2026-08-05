@@ -30,10 +30,18 @@ export class HousekeepingRepository {
   findMany(params: {
     villaId?: string;
     status?: HousekeepingStatus;
+    statusNot?: HousekeepingStatus;
+    take?: number;
+    orderBy?: Prisma.HousekeepingTaskOrderByWithRelationInput;
   }): Promise<HousekeepingTaskWithRelations[]> {
     return this.prisma.housekeepingTask.findMany({
-      where: { villaId: params.villaId, status: params.status },
+      where: {
+        villaId: params.villaId,
+        status: params.status ?? (params.statusNot ? { not: params.statusNot } : undefined),
+      },
       include: HOUSEKEEPING_TASK_INCLUDE,
+      take: params.take,
+      orderBy: params.orderBy,
     });
   }
 

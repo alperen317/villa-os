@@ -6,6 +6,10 @@ import { HousekeepingRepository, HousekeepingTaskWithRelations } from './houseke
 import { ListHousekeepingTasksQueryDto } from './dto/list-housekeeping-tasks-query.dto';
 import { HousekeepingStatus } from '../../../generated/prisma/client';
 
+// Pending/InProgress tasks are naturally bounded (they clear out as they're worked),
+// but Completed accumulates forever — cap it to the most recent ones for the queue view.
+const COMPLETED_TASK_LIMIT = 50;
+
 @Injectable()
 export class HousekeepingService {
   constructor(
@@ -22,8 +26,34 @@ export class HousekeepingService {
     return this.housekeepingRepository.create({ villaId: dto.villaId, notes: dto.notes });
   }
 
-  findAll(query: ListHousekeepingTasksQueryDto): Promise<HousekeepingTaskWithRelations[]> {
-    return this.housekeepingRepository.findMany({ villaId: query.villaId, status: query.status });
+  async findAll(query: ListHousekeepingTasksQueryDto): Promise<HousekeepingTaskWithRelations[]> {
+    if (query.status === HousekeepingStatus.Completed) {
+      return this.housekeepingRepository.findMany({
+        villaId: query.villaId,
+        status: HousekeepingStatus.Completed,
+        take: COMPLETED_TASK_LIMIT,
+        orderBy: { completedAt: 'desc' },
+      });
+    }
+
+    if (query.status) {
+      return this.housekeepingRepository.findMany({ villaId: query.villaId, status: query.status });
+    }
+
+    const [active, completed] = await Promise.all([
+      this.housekeepingRepository.findMany({
+        villaId: query.villaId,
+        statusNot: HousekeepingStatus.Completed,
+      }),
+      this.housekeepingRepository.findMany({
+        villaId: query.villaId,
+        status: HousekeepingStatus.Completed,
+        take: COMPLETED_TASK_LIMIT,
+        orderBy: { completedAt: 'desc' },
+      }),
+    ]);
+
+    return [...active, ...completed];
   }
 
   async findOneOrThrow(id: string): Promise<HousekeepingTaskWithRelations> {
