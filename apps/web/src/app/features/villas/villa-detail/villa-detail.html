@@ -24,7 +24,12 @@
   </div>
 
   <div class="page-surface info-card">
-    <nz-descriptions nzTitle="Villa Bilgileri" [nzColumn]="2" nzBordered [nzSize]="'small'">
+    <nz-descriptions
+      nzTitle="Villa Bilgileri"
+      [nzColumn]="{ xxl: 2, xl: 2, lg: 2, md: 2, sm: 1, xs: 1 }"
+      nzBordered
+      [nzSize]="'small'"
+    >
       <nz-descriptions-item nzTitle="Adres" [nzSpan]="2">{{ v.address || '-' }}</nz-descriptions-item>
       <nz-descriptions-item nzTitle="Açıklama" [nzSpan]="2">{{ v.description || '-' }}</nz-descriptions-item>
     </nz-descriptions>
@@ -41,6 +46,7 @@
 
 <div class="page-surface surface-spaced">
   <nz-table
+    class="responsive-table"
     [nzData]="floors()"
     [nzLoading]="loading()"
     [nzShowPagination]="false"
@@ -59,21 +65,21 @@
     <tbody>
       @for (floor of floors(); track floor.id) {
         <tr>
-          <td>
+          <td data-label="Ad">
             {{ floor.name }}
             @if (floor.isEntireVilla) {
               <nz-tag nzColor="blue">Tüm Villa</nz-tag>
             }
           </td>
-          <td>{{ floor.capacity }} kişi</td>
-          <td>{{ floor.bedrooms }} yatak / {{ floor.bathrooms }} banyo</td>
-          <td>{{ floor.dailyPrice }} ₺</td>
-          <td>
+          <td data-label="Kapasite">{{ floor.capacity }} kişi</td>
+          <td data-label="Yatak/Banyo">{{ floor.bedrooms }} yatak / {{ floor.bathrooms }} banyo</td>
+          <td data-label="Günlük Fiyat">{{ floor.dailyPrice }} ₺</td>
+          <td data-label="Durum">
             <nz-tag [nzColor]="floor.rentable ? 'green' : 'default'">
               {{ floor.rentable ? 'Kiralanabilir' : 'Pasif' }}
             </nz-tag>
           </td>
-          <td class="actions">
+          <td class="actions td-actions">
             <button nz-button nzType="text" aria-label="Katı düzenle" (click)="openEditModal(floor)">
               <nz-icon nzType="edit" />
             </button>
@@ -113,6 +119,7 @@
 
 <div class="page-surface surface-spaced">
   <nz-table
+    class="responsive-table"
     [nzData]="reservations()"
     [nzLoading]="reservationsLoading()"
     [nzShowPagination]="false"
@@ -130,11 +137,13 @@
     <tbody>
       @for (reservation of reservations(); track reservation.id) {
         <tr>
-          <td>{{ reservation.reservationNumber }}</td>
-          <td>{{ reservation.customer.firstName }} {{ reservation.customer.lastName }}</td>
-          <td>{{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}</td>
-          <td>{{ reservation.guestCount }}</td>
-          <td>
+          <td data-label="Rez. No">{{ reservation.reservationNumber }}</td>
+          <td data-label="Müşteri">{{ reservation.customer.firstName }} {{ reservation.customer.lastName }}</td>
+          <td data-label="Giriş - Çıkış">
+            {{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}
+          </td>
+          <td data-label="Misafir">{{ reservation.guestCount }}</td>
+          <td data-label="Durum">
             <nz-tag [nzColor]="reservationStatusColors[reservation.status]">
               {{ reservationStatusLabels[reservation.status] }}
             </nz-tag>
@@ -162,6 +171,7 @@
 
 <div class="page-surface">
   <nz-table
+    class="responsive-table"
     [nzData]="maintenanceRecords()"
     [nzLoading]="maintenanceLoading()"
     [nzShowPagination]="false"
@@ -179,18 +189,20 @@
     <tbody>
       @for (record of maintenanceRecords(); track record.id) {
         <tr>
-          <td>
+          <td data-label="Başlık" class="td-block">
             {{ record.title }}
             @if (record.description) {
               <div class="record-description">{{ record.description }}</div>
             }
           </td>
-          <td><nz-tag [nzColor]="priorityColors[record.priority]">{{ priorityLabels[record.priority] }}</nz-tag></td>
-          <td>{{ record.openedAt | date: 'dd.MM.yyyy' }}</td>
-          <td>
+          <td data-label="Öncelik">
+            <nz-tag [nzColor]="priorityColors[record.priority]">{{ priorityLabels[record.priority] }}</nz-tag>
+          </td>
+          <td data-label="Açıldı">{{ record.openedAt | date: 'dd.MM.yyyy' }}</td>
+          <td data-label="Durum">
             <nz-tag [nzColor]="maintenanceStatusColors[record.status]">{{ statusLabels[record.status] }}</nz-tag>
           </td>
-          <td>
+          <td class="td-actions">
             @if (record.status === 'Open') {
               <button
                 nz-button

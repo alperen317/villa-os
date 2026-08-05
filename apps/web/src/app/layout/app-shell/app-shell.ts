@@ -20,6 +20,7 @@ export class AppShell implements OnInit {
   private readonly router = inject(Router);
 
   protected readonly collapsed = signal(false);
+  protected readonly mobileNavOpen = signal(false);
 
   protected readonly showHousekeepingNav = computed(() => {
     const role = this.authService.currentUser()?.role;

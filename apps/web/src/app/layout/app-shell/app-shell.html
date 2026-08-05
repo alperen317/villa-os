@@ -1,7 +1,17 @@
 <nz-layout class="shell">
-  <nz-sider class="sider" nzCollapsible [nzCollapsed]="collapsed()" (nzCollapsedChange)="collapsed.set($event)">
+  @if (mobileNavOpen()) {
+    <div class="sider-backdrop" (click)="mobileNavOpen.set(false)"></div>
+  }
+
+  <nz-sider
+    class="sider"
+    [class.sider--open]="mobileNavOpen()"
+    nzCollapsible
+    [nzCollapsed]="collapsed()"
+    (nzCollapsedChange)="collapsed.set($event)"
+  >
     <div class="logo">{{ collapsed() ? 'VOS' : 'Villa OS' }}</div>
-    <ul nz-menu nzTheme="dark" nzMode="inline">
+    <ul nz-menu nzTheme="dark" nzMode="inline" (click)="mobileNavOpen.set(false)">
       <li nz-menu-item routerLink="/dashboard" routerLinkActive="ant-menu-item-selected">
         <nz-icon nzType="dashboard" />
         <span>Dashboard</span>
@@ -33,19 +43,29 @@
 
   <nz-layout class="main-layout">
     <nz-header class="header">
+      <button
+        nz-button
+        nzType="text"
+        class="nav-toggle"
+        aria-label="Menüyü aç"
+        (click)="mobileNavOpen.set(true)"
+      >
+        <nz-icon nzType="menu-unfold" />
+      </button>
+
       <span class="user-info">
         @if (authService.currentUser(); as user) {
           <nz-icon nzType="user" />
-          {{ user.username }} · {{ user.role }}
+          <span class="user-info-text">{{ user.username }} · {{ user.role }}</span>
         }
       </span>
       <button nz-button nzType="text" (click)="logout()">
         <nz-icon nzType="logout" />
-        Çıkış
+        <span class="logout-text">Çıkış</span>
       </button>
     </nz-header>
 
-    <nz-content class="content">
+    <nz-content class="content" id="main-content" tabindex="-1">
       <router-outlet></router-outlet>
     </nz-content>
   </nz-layout>

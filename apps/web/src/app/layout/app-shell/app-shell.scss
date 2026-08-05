@@ -1,48 +1,116 @@
 .shell {
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
+// Sidebar stays dark, but tinted from the app's own slate family instead of
+// Ant's stock navy (#001529) — a dark nav next to a light canvas should
+// still read as one palette. !important guards against ng-zorro's
+// pre-compiled .ant-layout-sider-dark rule.
 .sider {
-  height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
+  background: var(--color-nav-bg) !important;
+  transition: transform 200ms ease;
 }
 
 .main-layout {
-  height: 100vh;
+  height: 100dvh;
 }
 
 .logo {
   height: 32px;
   margin: 16px;
   color: white;
-  font-weight: 600;
+  font-weight: 650;
+  letter-spacing: -0.01em;
   text-align: center;
   overflow: hidden;
   white-space: nowrap;
 }
 
 .header {
-  background: #fff;
+  background: var(--color-surface);
   padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #e2e8f0;
+  gap: 8px;
+  border-bottom: 1px solid var(--color-line);
   flex-shrink: 0;
+}
+
+.nav-toggle {
+  display: none;
 }
 
 .user-info {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #475569;
+  color: var(--color-ink-soft);
   font-size: 14px;
+  min-width: 0;
+}
+
+.user-info-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .content {
   padding: 24px 32px;
-  background: #f8fafc;
-  height: calc(100vh - 64px);
+  background: var(--color-canvas);
+  height: calc(100dvh - 64px);
   overflow-y: auto;
+}
+
+.sider-backdrop {
+  display: none;
+}
+
+// Below the breakpoint the sidebar leaves the document flow and becomes an
+// off-canvas drawer: fixed, translated out of view, and toggled by the
+// hamburger button in the header instead of squeezing the content column.
+@media (max-width: 768px) {
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .logout-text {
+    display: none;
+  }
+
+  .header {
+    padding: 0 12px;
+  }
+
+  .content {
+    padding: 16px;
+  }
+
+  .sider {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1001;
+    width: 240px !important;
+    max-width: 80vw;
+    flex: 0 0 240px !important;
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-md);
+  }
+
+  .sider--open {
+    transform: translateX(0);
+  }
+
+  .sider-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.45);
+  }
 }

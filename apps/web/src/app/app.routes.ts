@@ -62,5 +62,9 @@ export const appRoutes: Route[] = [
       },
     ],
   },
-  { path: '**', redirectTo: 'dashboard' },
+  {
+    path: 'not-found',
+    loadComponent: () => import('./features/not-found/not-found').then((m) => m.NotFound),
+  },
+  { path: '**', redirectTo: 'not-found' },
 ];

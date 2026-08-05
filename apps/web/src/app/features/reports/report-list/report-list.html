@@ -39,7 +39,7 @@
         <canvas baseChart type="line" [data]="occupancyChartData()" [options]="chartOptions"></canvas>
       </div>
 
-      <nz-table [nzData]="report.villas" [nzPageSize]="10">
+      <nz-table class="responsive-table" [nzData]="report.villas" [nzPageSize]="10">
         <thead>
           <tr>
             <th>Villa</th>
@@ -51,10 +51,10 @@
         <tbody>
           @for (villa of report.villas; track villa.villaId) {
             <tr>
-              <td>{{ villa.villaName }}</td>
-              <td>{{ villa.occupiedNights }}</td>
-              <td>{{ villa.availableNights }}</td>
-              <td>%{{ villa.occupancyRate }}</td>
+              <td data-label="Villa">{{ villa.villaName }}</td>
+              <td data-label="Dolu Gece">{{ villa.occupiedNights }}</td>
+              <td data-label="Müsait Gece">{{ villa.availableNights }}</td>
+              <td data-label="Doluluk Oranı">%{{ villa.occupancyRate }}</td>
             </tr>
           }
         </tbody>
@@ -80,7 +80,7 @@
         </div>
       </div>
 
-      <nz-table [nzData]="report.payments" [nzPageSize]="10">
+      <nz-table class="responsive-table" [nzData]="report.payments" [nzPageSize]="10">
         <thead>
           <tr>
             <th>Tarih</th>
@@ -93,11 +93,11 @@
         <tbody>
           @for (payment of report.payments; track payment.id) {
             <tr>
-              <td>{{ payment.paymentDate | date: 'dd.MM.yyyy' }}</td>
-              <td>{{ payment.villaName }}</td>
-              <td>{{ payment.reservationNumber }}</td>
-              <td>{{ paymentMethodLabels[payment.paymentMethod] }}</td>
-              <td>{{ currency(payment.amount) }}</td>
+              <td data-label="Tarih">{{ payment.paymentDate | date: 'dd.MM.yyyy' }}</td>
+              <td data-label="Villa">{{ payment.villaName }}</td>
+              <td data-label="Rezervasyon">{{ payment.reservationNumber }}</td>
+              <td data-label="Yöntem">{{ paymentMethodLabels[payment.paymentMethod] }}</td>
+              <td data-label="Tutar">{{ currency(payment.amount) }}</td>
             </tr>
           }
         </tbody>
@@ -119,7 +119,7 @@
         <canvas baseChart type="bar" [data]="reservationsStatusChartData()" [options]="chartOptions"></canvas>
       </div>
 
-      <nz-table [nzData]="report.reservations" [nzPageSize]="10">
+      <nz-table class="responsive-table" [nzData]="report.reservations" [nzPageSize]="10">
         <thead>
           <tr>
             <th>Rezervasyon No</th>
@@ -136,15 +136,17 @@
         <tbody>
           @for (reservation of report.reservations; track reservation.id) {
             <tr>
-              <td>{{ reservation.reservationNumber }}</td>
-              <td>{{ reservation.villaName }}</td>
-              <td>{{ reservation.customerName }}</td>
-              <td>{{ reservation.checkIn | date: 'dd.MM.yyyy' }}</td>
-              <td>{{ reservation.checkOut | date: 'dd.MM.yyyy' }}</td>
-              <td>{{ reservation.nights }}</td>
-              <td>{{ reservation.guestCount }}</td>
-              <td>{{ currency(reservation.totalPrice) }}</td>
-              <td><nz-tag [nzColor]="statusColors[reservation.status]">{{ statusLabels[reservation.status] }}</nz-tag></td>
+              <td data-label="Rezervasyon No">{{ reservation.reservationNumber }}</td>
+              <td data-label="Villa">{{ reservation.villaName }}</td>
+              <td data-label="Müşteri">{{ reservation.customerName }}</td>
+              <td data-label="Giriş">{{ reservation.checkIn | date: 'dd.MM.yyyy' }}</td>
+              <td data-label="Çıkış">{{ reservation.checkOut | date: 'dd.MM.yyyy' }}</td>
+              <td data-label="Gece">{{ reservation.nights }}</td>
+              <td data-label="Misafir">{{ reservation.guestCount }}</td>
+              <td data-label="Tutar">{{ currency(reservation.totalPrice) }}</td>
+              <td data-label="Durum">
+                <nz-tag [nzColor]="statusColors[reservation.status]">{{ statusLabels[reservation.status] }}</nz-tag>
+              </td>
             </tr>
           }
         </tbody>
@@ -164,7 +166,7 @@
         <canvas baseChart type="bar" [data]="customersChartData()" [options]="chartOptions"></canvas>
       </div>
 
-      <nz-table [nzData]="report.customers" [nzPageSize]="10">
+      <nz-table class="responsive-table" [nzData]="report.customers" [nzPageSize]="10">
         <thead>
           <tr>
             <th>Müşteri</th>
@@ -176,10 +178,10 @@
         <tbody>
           @for (customer of report.customers; track customer.customerId) {
             <tr>
-              <td>{{ customer.customerName }}</td>
-              <td>{{ customer.reservationCount }}</td>
-              <td>{{ currency(customer.totalSpent) }}</td>
-              <td>{{ customer.lastCheckIn | date: 'dd.MM.yyyy' }}</td>
+              <td data-label="Müşteri">{{ customer.customerName }}</td>
+              <td data-label="Rezervasyon Sayısı">{{ customer.reservationCount }}</td>
+              <td data-label="Toplam Harcama">{{ currency(customer.totalSpent) }}</td>
+              <td data-label="Son Giriş">{{ customer.lastCheckIn | date: 'dd.MM.yyyy' }}</td>
             </tr>
           }
         </tbody>

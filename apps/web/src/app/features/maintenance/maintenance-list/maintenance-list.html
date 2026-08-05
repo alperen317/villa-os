@@ -35,6 +35,7 @@
 
 <div class="page-surface">
   <nz-table
+    class="responsive-table"
     [nzData]="records()"
     [nzFrontPagination]="false"
     [nzTotal]="total()"
@@ -57,19 +58,21 @@
     <tbody>
       @for (record of records(); track record.id) {
         <tr>
-          <td><a [routerLink]="['/villas', record.villa.id]">{{ record.villa.name }}</a></td>
-          <td>
+          <td data-label="Villa"><a [routerLink]="['/villas', record.villa.id]">{{ record.villa.name }}</a></td>
+          <td data-label="Başlık" class="td-block">
             {{ record.title }}
             @if (record.description) {
               <div class="record-description">{{ record.description }}</div>
             }
           </td>
-          <td><nz-tag [nzColor]="priorityColors[record.priority]">{{ priorityLabels[record.priority] }}</nz-tag></td>
-          <td>{{ record.openedAt | date: 'dd.MM.yyyy' }}</td>
-          <td>
+          <td data-label="Öncelik">
+            <nz-tag [nzColor]="priorityColors[record.priority]">{{ priorityLabels[record.priority] }}</nz-tag>
+          </td>
+          <td data-label="Açıldı">{{ record.openedAt | date: 'dd.MM.yyyy' }}</td>
+          <td data-label="Durum">
             <nz-tag [nzColor]="statusColors[record.status]">{{ statusLabels[record.status] }}</nz-tag>
           </td>
-          <td>
+          <td class="td-actions">
             @if (record.status === 'Open') {
               <button
                 nz-button

@@ -49,6 +49,7 @@
 @if (viewMode() === 'list') {
   <div class="page-surface">
     <nz-table
+      class="responsive-table"
       [nzData]="reservations()"
       [nzFrontPagination]="false"
       [nzTotal]="total()"
@@ -73,18 +74,22 @@
       <tbody>
         @for (reservation of reservations(); track reservation.id) {
           <tr>
-            <td>{{ reservation.reservationNumber }}</td>
-            <td>{{ reservation.villa.name }} / {{ reservation.floor.name }}</td>
-            <td>
+            <td data-label="Rez. No">{{ reservation.reservationNumber }}</td>
+            <td data-label="Villa / Kat">{{ reservation.villa.name }} / {{ reservation.floor.name }}</td>
+            <td data-label="Müşteri">
               <a [routerLink]="['/customers', reservation.customerId]">
                 {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
               </a>
             </td>
-            <td>{{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}</td>
-            <td>{{ reservation.guestCount }}</td>
-            <td>{{ reservation.totalPrice }} ₺</td>
-            <td><nz-tag [nzColor]="statusColors[reservation.status]">{{ statusLabels[reservation.status] }}</nz-tag></td>
-            <td>
+            <td data-label="Giriş - Çıkış">
+              {{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}
+            </td>
+            <td data-label="Misafir">{{ reservation.guestCount }}</td>
+            <td data-label="Tutar">{{ reservation.totalPrice }} ₺</td>
+            <td data-label="Durum">
+              <nz-tag [nzColor]="statusColors[reservation.status]">{{ statusLabels[reservation.status] }}</nz-tag>
+            </td>
+            <td class="td-actions">
               @if (nextActions[reservation.status].length > 0) {
                 <button nz-button nzType="text" aria-label="Rezervasyon aksiyonları" nz-dropdown [nzDropdownMenu]="menu">
                   <nz-icon nzType="more" />
@@ -200,7 +205,7 @@
           <p>Bu tarih aralığında uygun boş yer bulunamadı.</p>
         </div>
       } @else {
-        <nz-table [nzData]="results" [nzShowPagination]="false">
+        <nz-table class="responsive-table" [nzData]="results" [nzShowPagination]="false">
           <thead>
             <tr>
               <th>Villa</th>
@@ -213,16 +218,16 @@
           <tbody>
             @for (floor of results; track floor.id) {
               <tr>
-                <td>{{ floor.villa.name }}</td>
-                <td>
+                <td data-label="Villa">{{ floor.villa.name }}</td>
+                <td data-label="Kat">
                   {{ floor.name }}
                   @if (floor.isEntireVilla) {
                     <nz-tag nzColor="blue">Tüm Villa</nz-tag>
                   }
                 </td>
-                <td>{{ floor.capacity }} kişi</td>
-                <td>{{ floor.dailyPrice }} ₺</td>
-                <td>
+                <td data-label="Kapasite">{{ floor.capacity }} kişi</td>
+                <td data-label="Günlük Fiyat">{{ floor.dailyPrice }} ₺</td>
+                <td class="td-actions">
                   <button nz-button nzType="link" (click)="bookFromAvailability(floor)">Rezervasyon Oluştur</button>
                 </td>
               </tr>
@@ -406,7 +411,7 @@
                 <p>Henüz ödeme kaydedilmedi.</p>
               </div>
             } @else {
-              <nz-table [nzData]="summary.payments" [nzShowPagination]="false" [nzSize]="'small'">
+              <nz-table class="responsive-table" [nzData]="summary.payments" [nzShowPagination]="false" [nzSize]="'small'">
                 <thead>
                   <tr>
                     <th>Tarih</th>
@@ -419,11 +424,11 @@
                 <tbody>
                   @for (payment of summary.payments; track payment.id) {
                     <tr>
-                      <td>{{ payment.paymentDate | date: 'dd.MM.yyyy' }}</td>
-                      <td>{{ payment.amount }} ₺</td>
-                      <td>{{ paymentMethodLabels[payment.paymentMethod] }}</td>
-                      <td>{{ payment.referenceNumber || '-' }}</td>
-                      <td>{{ payment.notes || '-' }}</td>
+                      <td data-label="Tarih">{{ payment.paymentDate | date: 'dd.MM.yyyy' }}</td>
+                      <td data-label="Tutar">{{ payment.amount }} ₺</td>
+                      <td data-label="Yöntem">{{ paymentMethodLabels[payment.paymentMethod] }}</td>
+                      <td data-label="Referans">{{ payment.referenceNumber || '-' }}</td>
+                      <td data-label="Not">{{ payment.notes || '-' }}</td>
                     </tr>
                   }
                 </tbody>

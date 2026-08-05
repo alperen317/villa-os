@@ -20,7 +20,12 @@
   </div>
 
   <div class="page-surface info-card">
-    <nz-descriptions nzTitle="Müşteri Bilgileri" [nzColumn]="2" nzBordered [nzSize]="'small'">
+    <nz-descriptions
+      nzTitle="Müşteri Bilgileri"
+      [nzColumn]="{ xxl: 2, xl: 2, lg: 2, md: 2, sm: 1, xs: 1 }"
+      nzBordered
+      [nzSize]="'small'"
+    >
       <nz-descriptions-item nzTitle="Telefon">{{ c.phone || '-' }}</nz-descriptions-item>
       <nz-descriptions-item nzTitle="E-posta">{{ c.email || '-' }}</nz-descriptions-item>
       <nz-descriptions-item nzTitle="Kimlik No">{{ c.identityNumber || '-' }}</nz-descriptions-item>
@@ -37,6 +42,7 @@
 
 <div class="page-surface">
   <nz-table
+    class="responsive-table"
     [nzData]="reservations()"
     [nzLoading]="reservationsLoading()"
     [nzShowPagination]="false"
@@ -54,11 +60,13 @@
     <tbody>
       @for (reservation of reservations(); track reservation.id) {
         <tr>
-          <td>{{ reservation.reservationNumber }}</td>
-          <td>{{ reservation.villa.name }}</td>
-          <td>{{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}</td>
-          <td>{{ reservation.guestCount }}</td>
-          <td>
+          <td data-label="Rez. No">{{ reservation.reservationNumber }}</td>
+          <td data-label="Villa">{{ reservation.villa.name }}</td>
+          <td data-label="Giriş - Çıkış">
+            {{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}
+          </td>
+          <td data-label="Misafir">{{ reservation.guestCount }}</td>
+          <td data-label="Durum">
             <nz-tag [nzColor]="reservationStatusColors[reservation.status]">
               {{ reservationStatusLabels[reservation.status] }}
             </nz-tag>

@@ -23,6 +23,7 @@
 
 <div class="page-surface">
   <nz-table
+    class="responsive-table"
     [nzData]="villas()"
     [nzFrontPagination]="false"
     [nzTotal]="total()"
@@ -43,7 +44,7 @@
     <tbody>
       @for (villa of villas(); track villa.id) {
         <tr>
-          <td>
+          <td data-label="Ad">
             <a [routerLink]="['/villas', villa.id]">{{ villa.name }}</a>
             @if (villa.hasOpenMaintenance) {
               <nz-tag class="maintenance-badge" nzColor="orange" nz-tooltip nzTooltipTitle="Açık bakım kaydı var">
@@ -52,13 +53,13 @@
               </nz-tag>
             }
           </td>
-          <td>
+          <td data-label="Durum">
             <nz-tag [nzColor]="villa.status === 'Active' ? 'green' : 'default'">
               {{ villa.status === 'Active' ? 'Aktif' : 'Pasif' }}
             </nz-tag>
           </td>
-          <td>{{ villa.address || '-' }}</td>
-          <td class="actions">
+          <td data-label="Adres">{{ villa.address || '-' }}</td>
+          <td class="actions td-actions">
             <button nz-button nzType="text" aria-label="Villayı düzenle" (click)="openEditModal(villa)">
               <nz-icon nzType="edit" />
             </button>
