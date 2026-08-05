@@ -30,6 +30,7 @@ import {
   MenuUnfoldOutline,
   MoreOutline,
   PlusOutline,
+  RightOutline,
   SearchOutline,
   TeamOutline,
   ToolOutline,
@@ -72,6 +73,7 @@ export const appConfig: ApplicationConfig = {
       ToolOutline,
       DollarOutline,
       TeamOutline,
+      RightOutline,
     ]),
   ],
 };

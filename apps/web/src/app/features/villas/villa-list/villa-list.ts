@@ -77,6 +77,10 @@ export class VillaList implements OnInit {
     }
   }
 
+  goToDetail(villa: Villa): void {
+    this.router.navigate(['/villas', villa.id]);
+  }
+
   clearArrivingTodayFilter(): void {
     this.arrivingTodayFilter.set(false);
     this.pageIndex.set(1);

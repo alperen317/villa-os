@@ -41,6 +41,7 @@
     [nzTotal]="total()"
     [nzPageIndex]="pageIndex()"
     [nzPageSize]="pageSize()"
+    [nzHideOnSinglePage]="true"
     [nzLoading]="loading()"
     [nzNoResult]="emptyState"
     (nzPageIndexChange)="onPageIndexChange($event)"
@@ -58,7 +59,12 @@
     <tbody>
       @for (record of records(); track record.id) {
         <tr>
-          <td data-label="Villa"><a [routerLink]="['/villas', record.villa.id]">{{ record.villa.name }}</a></td>
+          <td data-label="Villa">
+            <a [routerLink]="['/villas', record.villa.id]" class="ref-link">
+              {{ record.villa.name }}
+              <nz-icon nzType="right" class="ref-link-icon" />
+            </a>
+          </td>
           <td data-label="Başlık" class="td-block">
             {{ record.title }}
             @if (record.description) {

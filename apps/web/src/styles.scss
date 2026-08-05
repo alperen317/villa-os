@@ -137,6 +137,68 @@ body {
   color: var(--color-muted);
 }
 
+// ---------------------------------------------------------------------------
+// Clickable-affordance primitives. Plain link-colored text is easy to miss in
+// a dense table, so these give interactive rows/cells a clear, consistent
+// "this goes somewhere" cue instead of relying on text color alone.
+// ---------------------------------------------------------------------------
+
+// A full table row that navigates to a detail page (the row *is* the entity).
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.clickable-row:hover,
+.clickable-row:focus-within {
+  background: var(--color-canvas);
+}
+
+// Narrow trailing column holding the chevron for a .clickable-row.
+.th-chevron,
+.td-chevron {
+  width: 32px;
+  text-align: center !important;
+  color: var(--color-faint);
+}
+
+.td-chevron {
+  transition:
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.clickable-row:hover .td-chevron,
+.clickable-row:focus-within .td-chevron {
+  color: var(--color-accent);
+  transform: translateX(2px);
+}
+
+// A link inside a row whose primary subject is something else (e.g. a
+// villa name referenced from a maintenance record row). Bolder weight plus a
+// chevron that reveals on hover/focus signals "this navigates away" without
+// implying the whole row is clickable.
+.ref-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.ref-link-icon {
+  font-size: 11px;
+  opacity: 0;
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.ref-link:hover .ref-link-icon,
+.ref-link:focus-visible .ref-link-icon {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
 // Empty state — used identically across every list page. One definition
 // instead of eight copies means the "nothing here yet" moment stays
 // consistent as the product grows.
@@ -425,6 +487,12 @@ a:hover {
 
   .responsive-table .ant-table-content td.td-actions::before {
     content: none;
+  }
+
+  // The chevron only makes sense as a hover cue on desktop rows; on mobile
+  // the whole stacked card is already the tap target.
+  .responsive-table .ant-table-content td.td-chevron {
+    display: none !important;
   }
 
   .responsive-table .ant-table-pagination {

@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -34,6 +34,7 @@ export class CustomerList implements OnInit {
   private readonly customersService = inject(CustomersService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly message = inject(NzMessageService);
+  private readonly router = inject(Router);
 
   protected readonly customers = signal<Customer[]>([]);
   protected readonly total = signal(0);
@@ -73,6 +74,10 @@ export class CustomerList implements OnInit {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  goToDetail(customer: Customer): void {
+    this.router.navigate(['/customers', customer.id]);
   }
 
   onSearch(): void {

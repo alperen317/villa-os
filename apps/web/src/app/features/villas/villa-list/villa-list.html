@@ -29,6 +29,7 @@
     [nzTotal]="total()"
     [nzPageIndex]="pageIndex()"
     [nzPageSize]="pageSize()"
+    [nzHideOnSinglePage]="true"
     [nzLoading]="loading()"
     [nzNoResult]="emptyState"
     (nzPageIndexChange)="onPageIndexChange($event)"
@@ -39,13 +40,14 @@
         <th>Durum</th>
         <th>Adres</th>
         <th>Aksiyonlar</th>
+        <th class="th-chevron"><span class="sr-only">Detay</span></th>
       </tr>
     </thead>
     <tbody>
       @for (villa of villas(); track villa.id) {
-        <tr>
+        <tr class="clickable-row" (click)="goToDetail(villa)">
           <td data-label="Ad">
-            <a [routerLink]="['/villas', villa.id]">{{ villa.name }}</a>
+            <a [routerLink]="['/villas', villa.id]" (click)="$event.stopPropagation()">{{ villa.name }}</a>
             @if (villa.hasOpenMaintenance) {
               <nz-tag class="maintenance-badge" nzColor="orange" nz-tooltip nzTooltipTitle="Açık bakım kaydı var">
                 <nz-icon nzType="tool" />
@@ -60,10 +62,15 @@
           </td>
           <td data-label="Adres">{{ villa.address || '-' }}</td>
           <td class="actions td-actions">
-            <button nz-button nzType="text" aria-label="Villayı düzenle" (click)="openEditModal(villa)">
+            <button
+              nz-button
+              nzType="text"
+              aria-label="Villayı düzenle"
+              (click)="$event.stopPropagation(); openEditModal(villa)"
+            >
               <nz-icon nzType="edit" />
             </button>
-            <button nz-button nzType="text" (click)="toggleStatus(villa)">
+            <button nz-button nzType="text" (click)="$event.stopPropagation(); toggleStatus(villa)">
               {{ villa.status === 'Active' ? 'Pasife Al' : 'Aktif Et' }}
             </button>
             <button
@@ -73,10 +80,14 @@
               aria-label="Villayı sil"
               nz-popconfirm
               nzPopconfirmTitle="Bu villayı silmek istediğine emin misin?"
+              (click)="$event.stopPropagation()"
               (nzOnConfirm)="remove(villa)"
             >
               <nz-icon nzType="delete" />
             </button>
+          </td>
+          <td class="td-chevron" data-label="">
+            <nz-icon nzType="right" />
           </td>
         </tr>
       }

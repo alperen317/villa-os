@@ -30,6 +30,7 @@
     [nzTotal]="total()"
     [nzPageIndex]="pageIndex()"
     [nzPageSize]="pageSize()"
+    [nzHideOnSinglePage]="true"
     [nzLoading]="loading()"
     [nzNoResult]="emptyState"
     (nzPageIndexChange)="onPageIndexChange($event)"
@@ -40,20 +41,26 @@
         <th>Telefon</th>
         <th>E-posta</th>
         <th>Aksiyonlar</th>
+        <th class="th-chevron"><span class="sr-only">Detay</span></th>
       </tr>
     </thead>
     <tbody>
       @for (customer of customers(); track customer.id) {
-        <tr>
+        <tr class="clickable-row" (click)="goToDetail(customer)">
           <td data-label="Ad Soyad">
-            <a [routerLink]="['/customers', customer.id]">
+            <a [routerLink]="['/customers', customer.id]" (click)="$event.stopPropagation()">
               {{ customer.firstName }} {{ customer.lastName }}
             </a>
           </td>
           <td data-label="Telefon">{{ customer.phone || '-' }}</td>
           <td data-label="E-posta">{{ customer.email || '-' }}</td>
           <td class="actions td-actions">
-            <button nz-button nzType="text" aria-label="Müşteriyi düzenle" (click)="openEditModal(customer)">
+            <button
+              nz-button
+              nzType="text"
+              aria-label="Müşteriyi düzenle"
+              (click)="$event.stopPropagation(); openEditModal(customer)"
+            >
               <nz-icon nzType="edit" />
             </button>
             <button
@@ -63,10 +70,14 @@
               aria-label="Müşteriyi sil"
               nz-popconfirm
               nzPopconfirmTitle="Bu müşteriyi silmek istediğine emin misin?"
+              (click)="$event.stopPropagation()"
               (nzOnConfirm)="remove(customer)"
             >
               <nz-icon nzType="delete" />
             </button>
+          </td>
+          <td class="td-chevron" data-label="">
+            <nz-icon nzType="right" />
           </td>
         </tr>
       }
