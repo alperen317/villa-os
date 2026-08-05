@@ -30,8 +30,22 @@ import { ReportsService } from '../reports.service';
 
 const CHART_COLORS = ['#2f54eb', '#13a8a8', '#fa8c16', '#eb2f96', '#52c41a', '#722ed1'];
 
+type DatePreset = 'today' | 'last7' | 'last30' | 'thisMonth' | 'lastMonth' | 'thisYear';
+
+function stripToDate(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
 function startOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function endOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+}
+
+function startOfYear(date: Date): Date {
+  return new Date(date.getFullYear(), 0, 1);
 }
 
 function addDays(date: Date, days: number): Date {
@@ -93,6 +107,8 @@ export class ReportList implements OnInit {
     dateRange: [[startOfMonth(new Date()), new Date()] as [Date, Date], Validators.required],
     villaId: [''],
   });
+
+  protected readonly filterDatePreset = signal<DatePreset | null>('thisMonth');
 
   protected readonly chartOptions: ChartConfiguration['options'] = {
     responsive: true,
@@ -170,8 +186,52 @@ export class ReportList implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
+    // Manual edits to the range picker (not routed through setDatePreset) should
+    // drop the active preset highlight — setDatePreset re-sets it right after
+    // its own setValue call, so this only fires for genuinely manual changes.
+    this.filterForm.controls.dateRange.valueChanges.subscribe(() => this.filterDatePreset.set(null));
+
     await this.villasStore.ensureLoaded();
     await this.loadActiveReport();
+  }
+
+  setDatePreset(preset: DatePreset): void {
+    const today = stripToDate(new Date());
+    let start: Date;
+    let end: Date;
+
+    switch (preset) {
+      case 'today':
+        start = today;
+        end = today;
+        break;
+      case 'last7':
+        start = addDays(today, -6);
+        end = today;
+        break;
+      case 'last30':
+        start = addDays(today, -29);
+        end = today;
+        break;
+      case 'thisMonth':
+        start = startOfMonth(today);
+        end = today;
+        break;
+      case 'lastMonth': {
+        const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        start = startOfMonth(lastMonth);
+        end = endOfMonth(lastMonth);
+        break;
+      }
+      case 'thisYear':
+        start = startOfYear(today);
+        end = today;
+        break;
+    }
+
+    this.filterForm.controls.dateRange.setValue([start, end]);
+    this.filterDatePreset.set(preset);
+    this.onFilterApply();
   }
 
   onTabIndexChange(index: number): void {

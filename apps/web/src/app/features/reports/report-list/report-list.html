@@ -4,10 +4,61 @@
     <p class="section-subtitle">Doluluk, gelir, rezervasyon ve müşteri raporlarını görüntüleyin.</p>
   </div>
 
+  <div class="date-presets">
+    <button
+      nz-button
+      nzSize="small"
+      [nzType]="filterDatePreset() === 'today' ? 'primary' : 'default'"
+      (click)="setDatePreset('today')"
+    >
+      Bugün
+    </button>
+    <button
+      nz-button
+      nzSize="small"
+      [nzType]="filterDatePreset() === 'last7' ? 'primary' : 'default'"
+      (click)="setDatePreset('last7')"
+    >
+      Son 7 Gün
+    </button>
+    <button
+      nz-button
+      nzSize="small"
+      [nzType]="filterDatePreset() === 'last30' ? 'primary' : 'default'"
+      (click)="setDatePreset('last30')"
+    >
+      Son 30 Gün
+    </button>
+    <button
+      nz-button
+      nzSize="small"
+      [nzType]="filterDatePreset() === 'thisMonth' ? 'primary' : 'default'"
+      (click)="setDatePreset('thisMonth')"
+    >
+      Bu Ay
+    </button>
+    <button
+      nz-button
+      nzSize="small"
+      [nzType]="filterDatePreset() === 'lastMonth' ? 'primary' : 'default'"
+      (click)="setDatePreset('lastMonth')"
+    >
+      Geçen Ay
+    </button>
+    <button
+      nz-button
+      nzSize="small"
+      [nzType]="filterDatePreset() === 'thisYear' ? 'primary' : 'default'"
+      (click)="setDatePreset('thisYear')"
+    >
+      Bu Yıl
+    </button>
+  </div>
+
   <form nz-form [formGroup]="filterForm" class="filter-bar">
   <nz-form-item>
     <nz-form-control>
-      <nz-range-picker formControlName="dateRange" />
+      <nz-range-picker formControlName="dateRange" class="date-range-picker" />
     </nz-form-control>
   </nz-form-item>
 
