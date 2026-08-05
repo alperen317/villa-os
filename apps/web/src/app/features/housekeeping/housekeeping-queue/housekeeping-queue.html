@@ -1,16 +1,24 @@
 <div class="page-header">
   <h2>Temizlik Kuyruğu</h2>
-  <nz-select
-    [ngModel]="filterVillaId()"
-    (ngModelChange)="filterVillaId.set($event); onFilterChange()"
-    nzAllowClear
-    nzPlaceHolder="Villa"
-    class="filter-select"
-  >
-    @for (villa of villas(); track villa.id) {
-      <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+  <div class="header-actions">
+    <nz-select
+      [ngModel]="filterVillaId()"
+      (ngModelChange)="filterVillaId.set($event); onFilterChange()"
+      nzAllowClear
+      nzPlaceHolder="Villa"
+      class="filter-select"
+    >
+      @for (villa of villas(); track villa.id) {
+        <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+      }
+    </nz-select>
+    @if (canManage()) {
+      <button nz-button nzType="primary" (click)="openCreateModal()">
+        <nz-icon nzType="plus" />
+        Yeni Görev
+      </button>
     }
-  </nz-select>
+  </div>
 </div>
 
 @if (loading()) {
@@ -30,7 +38,14 @@
 
         @for (task of tasksForStatus(column.status); track task.id) {
           <nz-card class="task-card" [nzTitle]="task.villa.name">
-            <p class="task-reservation">{{ task.reservation.reservationNumber }}</p>
+            @if (task.reservation) {
+              <p class="task-reservation">{{ task.reservation.reservationNumber }}</p>
+            } @else {
+              <p class="task-reservation task-reservation--adhoc">Rezervasyonsuz görev</p>
+            }
+            @if (task.notes) {
+              <p class="task-meta">{{ task.notes }}</p>
+            }
 
             @if (task.assignedUser) {
               <p class="task-meta"><nz-icon nzType="user" /> {{ task.assignedUser.username }}</p>
@@ -70,3 +85,34 @@
     }
   </div>
 }
+
+<nz-modal
+  [nzVisible]="modalVisible()"
+  nzTitle="Yeni Temizlik Görevi"
+  [nzOkLoading]="modalSaving()"
+  [nzOkDisabled]="form.invalid"
+  (nzOnCancel)="modalVisible.set(false)"
+  (nzOnOk)="save()"
+>
+  <ng-container *nzModalContent>
+    <form nz-form [formGroup]="form">
+      <nz-form-item>
+        <nz-form-label nzRequired>Villa</nz-form-label>
+        <nz-form-control>
+          <nz-select formControlName="villaId" nzPlaceHolder="Villa seç">
+            @for (villa of villas(); track villa.id) {
+              <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Not</nz-form-label>
+        <nz-form-control>
+          <textarea nz-input formControlName="notes" rows="3" placeholder="ör. Sezon öncesi genel temizlik"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>

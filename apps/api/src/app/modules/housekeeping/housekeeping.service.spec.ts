@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { VillasService } from '../villas/villas.service';
 import { InvalidHousekeepingTransitionException } from './exceptions/invalid-housekeeping-transition.exception';
 import { HousekeepingRepository, HousekeepingTaskWithRelations } from './housekeeping.repository';
 import { HousekeepingService } from './housekeeping.service';
@@ -24,6 +25,7 @@ function task(overrides: Partial<HousekeepingTaskWithRelations> = {}): Housekeep
 describe('HousekeepingService', () => {
   let service: HousekeepingService;
   let repository: jest.Mocked<HousekeepingRepository>;
+  let villasService: jest.Mocked<VillasService>;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -33,11 +35,13 @@ describe('HousekeepingService', () => {
           provide: HousekeepingRepository,
           useValue: { create: jest.fn(), findById: jest.fn(), findMany: jest.fn(), update: jest.fn() },
         },
+        { provide: VillasService, useValue: { findOneOrThrow: jest.fn() } },
       ],
     }).compile();
 
     service = moduleRef.get(HousekeepingService);
     repository = moduleRef.get(HousekeepingRepository);
+    villasService = moduleRef.get(VillasService);
   });
 
   describe('createForReservation', () => {
@@ -50,6 +54,23 @@ describe('HousekeepingService', () => {
         reservationId: 'reservation-1',
         villaId: 'villa-1',
       });
+    });
+  });
+
+  describe('createManual', () => {
+    it('creates an ad-hoc task for a villa with no reservation', async () => {
+      villasService.findOneOrThrow.mockResolvedValue({ id: 'villa-1' } as never);
+      repository.create.mockResolvedValue(task({ reservationId: null, reservation: null }));
+
+      await service.createManual({ villaId: 'villa-1', notes: 'Season prep' });
+
+      expect(repository.create).toHaveBeenCalledWith({ villaId: 'villa-1', notes: 'Season prep' });
+    });
+
+    it('rejects an unknown villa', async () => {
+      villasService.findOneOrThrow.mockRejectedValue(new Error('not found'));
+
+      await expect(service.createManual({ villaId: 'missing' })).rejects.toThrow();
     });
   });
 

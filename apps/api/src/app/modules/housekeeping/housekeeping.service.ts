@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { VillasService } from '../villas/villas.service';
+import { CreateHousekeepingTaskDto } from './dto/create-housekeeping-task.dto';
 import { InvalidHousekeepingTransitionException } from './exceptions/invalid-housekeeping-transition.exception';
 import { HousekeepingRepository, HousekeepingTaskWithRelations } from './housekeeping.repository';
 import { ListHousekeepingTasksQueryDto } from './dto/list-housekeeping-tasks-query.dto';
@@ -6,10 +8,18 @@ import { HousekeepingStatus } from '../../../generated/prisma/client';
 
 @Injectable()
 export class HousekeepingService {
-  constructor(private readonly housekeepingRepository: HousekeepingRepository) {}
+  constructor(
+    private readonly housekeepingRepository: HousekeepingRepository,
+    private readonly villasService: VillasService,
+  ) {}
 
   createForReservation(reservationId: string, villaId: string): Promise<HousekeepingTaskWithRelations> {
     return this.housekeepingRepository.create({ reservationId, villaId });
+  }
+
+  async createManual(dto: CreateHousekeepingTaskDto): Promise<HousekeepingTaskWithRelations> {
+    await this.villasService.findOneOrThrow(dto.villaId);
+    return this.housekeepingRepository.create({ villaId: dto.villaId, notes: dto.notes });
   }
 
   findAll(query: ListHousekeepingTasksQueryDto): Promise<HousekeepingTaskWithRelations[]> {

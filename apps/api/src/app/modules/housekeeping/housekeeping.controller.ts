@@ -1,8 +1,9 @@
-import { Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AccessTokenPayload } from '../auth/jwt-payload.interface';
+import { CreateHousekeepingTaskDto } from './dto/create-housekeeping-task.dto';
 import { ListHousekeepingTasksQueryDto } from './dto/list-housekeeping-tasks-query.dto';
 import { HousekeepingTaskWithRelations } from './housekeeping.repository';
 import { HousekeepingService } from './housekeeping.service';
@@ -14,6 +15,13 @@ const MUTATE_ROLES = [UserRole.Administrator, UserRole.Housekeeping] as const;
 @Controller('housekeeping-tasks')
 export class HousekeepingController {
   constructor(private readonly housekeepingService: HousekeepingService) {}
+
+  @Post()
+  @Roles(...MUTATE_ROLES)
+  @ApiOperation({ summary: 'Manually open an ad-hoc cleaning task for a villa (not tied to a reservation)' })
+  create(@Body() dto: CreateHousekeepingTaskDto): Promise<HousekeepingTaskWithRelations> {
+    return this.housekeepingService.createManual(dto);
+  }
 
   @Get()
   @ApiOperation({ summary: 'List housekeeping tasks (filterable by villaId/status)' })

@@ -5,6 +5,12 @@
   margin-bottom: 16px;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .filter-select {
   width: 220px;
 }
@@ -50,6 +56,10 @@
   color: #64748b;
   font-size: 13px;
   margin-bottom: 4px;
+}
+
+.task-reservation--adhoc {
+  font-style: italic;
 }
 
 .task-meta {

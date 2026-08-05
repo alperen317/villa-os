@@ -2,7 +2,11 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from '../../core/api-base-url';
-import { HousekeepingStatus, HousekeepingTask } from '../../core/models/housekeeping.model';
+import {
+  CreateHousekeepingTaskInput,
+  HousekeepingStatus,
+  HousekeepingTask,
+} from '../../core/models/housekeeping.model';
 
 @Injectable({ providedIn: 'root' })
 export class HousekeepingService {
@@ -15,6 +19,12 @@ export class HousekeepingService {
 
     return firstValueFrom(
       this.http.get<HousekeepingTask[]>(`${API_BASE_URL}/housekeeping-tasks`, { params: query }),
+    );
+  }
+
+  create(input: CreateHousekeepingTaskInput): Promise<HousekeepingTask> {
+    return firstValueFrom(
+      this.http.post<HousekeepingTask>(`${API_BASE_URL}/housekeeping-tasks`, input),
     );
   }
 

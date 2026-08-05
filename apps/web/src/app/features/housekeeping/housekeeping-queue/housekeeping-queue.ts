@@ -1,11 +1,14 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
+import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
 import { NzTagModule } from 'ng-zorro-antd/tag';
@@ -33,10 +36,14 @@ const QUEUE_COLUMNS: { status: HousekeepingStatus; title: string }[] = [
   imports: [
     DatePipe,
     FormsModule,
+    ReactiveFormsModule,
     NzButtonModule,
     NzCardModule,
     NzEmptyModule,
+    NzFormModule,
     NzIconModule,
+    NzInputModule,
+    NzModalModule,
     NzSelectModule,
     NzSkeletonModule,
     NzTagModule,
@@ -49,6 +56,7 @@ export class HousekeepingQueue implements OnInit {
   private readonly villasService = inject(VillasService);
   private readonly authService = inject(AuthService);
   private readonly message = inject(NzMessageService);
+  private readonly formBuilder = inject(FormBuilder);
 
   protected readonly statusLabels = HOUSEKEEPING_STATUS_LABELS;
   protected readonly columns = QUEUE_COLUMNS;
@@ -59,6 +67,14 @@ export class HousekeepingQueue implements OnInit {
   protected readonly tasks = signal<HousekeepingTask[]>([]);
   protected readonly loading = signal(false);
   protected readonly actingTaskId = signal<string | null>(null);
+
+  protected readonly modalVisible = signal(false);
+  protected readonly modalSaving = signal(false);
+
+  protected readonly form = this.formBuilder.nonNullable.group({
+    villaId: ['', Validators.required],
+    notes: [''],
+  });
 
   protected readonly canManage = computed(() => {
     const role = this.authService.currentUser()?.role;
@@ -84,6 +100,31 @@ export class HousekeepingQueue implements OnInit {
 
   onFilterChange(): void {
     this.loadTasks();
+  }
+
+  openCreateModal(): void {
+    this.form.reset({ villaId: '', notes: '' });
+    this.modalVisible.set(true);
+  }
+
+  async save(): Promise<void> {
+    if (this.form.invalid) {
+      return;
+    }
+
+    this.modalSaving.set(true);
+    const value = this.form.getRawValue();
+
+    try {
+      await this.housekeepingService.create({ villaId: value.villaId, notes: value.notes || undefined });
+      this.message.success('Temizlik görevi oluşturuldu');
+      this.modalVisible.set(false);
+      await this.loadTasks();
+    } catch (error) {
+      this.message.error(this.extractErrorMessage(error));
+    } finally {
+      this.modalSaving.set(false);
+    }
   }
 
   tasksForStatus(status: HousekeepingStatus): HousekeepingTask[] {
@@ -114,5 +155,12 @@ export class HousekeepingQueue implements OnInit {
     } finally {
       this.actingTaskId.set(null);
     }
+  }
+
+  private extractErrorMessage(error: unknown): string {
+    const httpError = error as { error?: { message?: string | string[] } };
+    const message = httpError?.error?.message;
+    if (Array.isArray(message)) return message.join(', ');
+    return message ?? 'İşlem başarısız oldu';
   }
 }

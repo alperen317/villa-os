@@ -164,7 +164,7 @@ model Payment {
 
 model HousekeepingTask {
   id             String             @id @default(uuid()) @db.Uuid
-  reservationId  String             @map("reservation_id") @db.Uuid
+  reservationId  String?            @map("reservation_id") @db.Uuid
   villaId        String             @map("villa_id") @db.Uuid
   assignedUserId String?            @map("assigned_user_id") @db.Uuid
   status         HousekeepingStatus @default(Pending)
@@ -172,9 +172,9 @@ model HousekeepingTask {
   completedAt    DateTime?          @map("completed_at")
   notes          String?
 
-  reservation  Reservation @relation(fields: [reservationId], references: [id])
-  villa        Villa       @relation(fields: [villaId], references: [id])
-  assignedUser User?       @relation(fields: [assignedUserId], references: [id])
+  reservation  Reservation? @relation(fields: [reservationId], references: [id])
+  villa        Villa        @relation(fields: [villaId], references: [id])
+  assignedUser User?        @relation(fields: [assignedUserId], references: [id])
 
   @@index([villaId])
   @@index([status])
