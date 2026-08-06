@@ -12,11 +12,11 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermission } from '../permissions/decorators/require-permission.decorator';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { logoUploadOptions } from './logo-upload.config';
 import { SettingsService } from './settings.service';
-import { Settings, UserRole } from '../../../generated/prisma/client';
+import { Settings } from '../../../generated/prisma/client';
 
 @ApiTags('settings')
 @Controller('settings')
@@ -31,14 +31,14 @@ export class SettingsController {
   }
 
   @Patch()
-  @Roles(UserRole.Administrator)
+  @RequirePermission('settings.write')
   @ApiOperation({ summary: 'Update whitelabel/branding settings' })
   update(@Body() dto: UpdateSettingsDto): Promise<Settings> {
     return this.settingsService.update(dto);
   }
 
   @Post('logo')
-  @Roles(UserRole.Administrator)
+  @RequirePermission('settings.write')
   @UseInterceptors(FileInterceptor('file', logoUploadOptions))
   @ApiOperation({ summary: 'Upload/replace the company logo' })
   uploadLogo(@UploadedFile() file: Express.Multer.File): Promise<Settings> {
@@ -50,7 +50,7 @@ export class SettingsController {
   }
 
   @Delete('logo')
-  @Roles(UserRole.Administrator)
+  @RequirePermission('settings.write')
   @ApiOperation({ summary: 'Remove the company logo' })
   removeLogo(): Promise<Settings> {
     return this.settingsService.removeLogo();

@@ -1,0 +1,68 @@
+.onboarding-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 16px;
+  background: var(--color-canvas);
+}
+
+.onboarding-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.onboarding-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-accent);
+}
+
+.onboarding-logo:has(.onboarding-logo-image) {
+  background: transparent;
+  box-shadow: none;
+}
+
+.onboarding-logo-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.onboarding-title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+
+.onboarding-tagline {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.onboarding-card {
+  width: 100%;
+  max-width: 360px;
+  border-color: var(--color-line);
+  border-radius: var(--radius-lg);
+}
+
+.form-alert {
+  margin-bottom: 16px;
+}

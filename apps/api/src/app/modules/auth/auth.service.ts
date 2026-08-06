@@ -1,14 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { RedisService } from '../../infra/redis/redis.service';
+import { OnboardingDto } from './dto/onboarding.dto';
 import { InvalidCredentialsException } from './exceptions/invalid-credentials.exception';
 import { InvalidRefreshTokenException } from './exceptions/invalid-refresh-token.exception';
 import { AccessTokenPayload, RefreshTokenPayload } from './jwt-payload.interface';
-import { User } from '../../../generated/prisma/client';
+import { User, UserRole } from '../../../generated/prisma/client';
 
 export interface TokenPair {
   accessToken: string;
@@ -45,7 +46,34 @@ export class AuthService {
       throw new InvalidCredentialsException();
     }
 
+    if (!user.isActive) {
+      throw new InvalidCredentialsException();
+    }
+
     return user;
+  }
+
+  async hasAnyUsers(): Promise<boolean> {
+    return (await this.prisma.user.count()) > 0;
+  }
+
+  async completeOnboarding(dto: OnboardingDto): Promise<TokenPair> {
+    const existingUserCount = await this.prisma.user.count();
+    if (existingUserCount > 0) {
+      throw new ConflictException('Kurulum zaten tamamlanmış');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const user = await this.prisma.user.create({
+      data: {
+        username: dto.username,
+        passwordHash,
+        role: UserRole.Administrator,
+        isActive: true,
+      },
+    });
+
+    return this.issueTokens(user);
   }
 
   async issueTokens(user: User): Promise<TokenPair> {

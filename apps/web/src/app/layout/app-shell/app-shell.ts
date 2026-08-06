@@ -30,7 +30,7 @@ export class AppShell implements OnInit {
     return role ? HOUSEKEEPING_NAV_ROLES.has(role) : false;
   });
 
-  protected readonly showSettingsNav = computed(
+  protected readonly showAdminNav = computed(
     () => this.authService.currentUser()?.role === 'Administrator',
   );
 

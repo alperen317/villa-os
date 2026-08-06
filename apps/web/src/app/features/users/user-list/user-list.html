@@ -1,0 +1,163 @@
+<div class="page-header">
+  <div>
+    <h2 class="page-title">Kullanıcılar</h2>
+    <p class="page-subtitle">Sistem kullanıcılarını ve rollerini yönet.</p>
+  </div>
+  <button nz-button nzType="primary" (click)="openCreateModal()">
+    <nz-icon nzType="plus" />
+    Yeni Kullanıcı
+  </button>
+</div>
+
+<div class="page-surface">
+  <nz-table
+    class="responsive-table"
+    [nzData]="users()"
+    [nzFrontPagination]="false"
+    [nzTotal]="total()"
+    [nzPageIndex]="pageIndex()"
+    [nzPageSize]="pageSize()"
+    [nzHideOnSinglePage]="true"
+    [nzLoading]="loading()"
+    [nzNoResult]="emptyState"
+    (nzPageIndexChange)="onPageIndexChange($event)"
+  >
+    <thead>
+      <tr>
+        <th>Kullanıcı Adı</th>
+        <th>Rol</th>
+        <th>Durum</th>
+        <th>Aksiyonlar</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (user of users(); track user.id) {
+        <tr>
+          <td data-label="Kullanıcı Adı">{{ user.username }}</td>
+          <td data-label="Rol">
+            <nz-tag>{{ roleLabels[user.role] }}</nz-tag>
+          </td>
+          <td data-label="Durum">
+            <nz-tag [nzColor]="user.isActive ? 'green' : 'default'">
+              {{ user.isActive ? 'Aktif' : 'Pasif' }}
+            </nz-tag>
+          </td>
+          <td class="actions td-actions">
+            <button nz-button nzType="text" aria-label="Rolü düzenle" (click)="openEditModal(user)">
+              <nz-icon nzType="edit" />
+            </button>
+            <button nz-button nzType="text" (click)="openResetPasswordModal(user)">
+              Şifre Sıfırla
+            </button>
+            @if (user.isActive && isSelf(user)) {
+              <button
+                nz-button
+                nzType="text"
+                disabled
+                nz-tooltip
+                nzTooltipTitle="Kendi hesabınızı deaktif edemezsiniz"
+              >
+                Pasife Al
+              </button>
+            } @else if (user.isActive) {
+              <button
+                nz-button
+                nzType="text"
+                nz-popconfirm
+                nzPopconfirmTitle="Bu kullanıcıyı pasife almak istediğine emin misin?"
+                (nzOnConfirm)="toggleActive(user)"
+              >
+                Pasife Al
+              </button>
+            } @else {
+              <button nz-button nzType="text" (click)="toggleActive(user)">Aktif Et</button>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<ng-template #emptyState>
+  <div class="empty-state">
+    <nz-icon nzType="team" class="empty-icon" />
+    <p>Henüz kullanıcı eklenmedi.</p>
+    <button nz-button nzType="primary" (click)="openCreateModal()">
+      <nz-icon nzType="plus" />
+      İlk Kullanıcıyı Ekle
+    </button>
+  </div>
+</ng-template>
+
+<nz-modal
+  [nzVisible]="modalVisible()"
+  [nzTitle]="editingUser ? 'Kullanıcıyı Düzenle' : 'Yeni Kullanıcı'"
+  [nzOkLoading]="modalSaving()"
+  [nzOkDisabled]="form.invalid"
+  (nzOnCancel)="modalVisible.set(false)"
+  (nzOnOk)="save()"
+>
+  <ng-container *nzModalContent>
+    <form nz-form [formGroup]="form">
+      <nz-form-item>
+        <nz-form-label nzRequired>Kullanıcı Adı</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="username" placeholder="Kullanıcı adı" />
+        </nz-form-control>
+      </nz-form-item>
+
+      @if (!editingUser) {
+        <nz-form-item>
+          <nz-form-label nzRequired>Şifre</nz-form-label>
+          <nz-form-control>
+            <input
+              nz-input
+              type="password"
+              formControlName="password"
+              placeholder="En az 8 karakter"
+              autocomplete="new-password"
+            />
+          </nz-form-control>
+        </nz-form-item>
+      }
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Rol</nz-form-label>
+        <nz-form-control>
+          <nz-select formControlName="role">
+            @for (option of roleOptions; track option.value) {
+              <nz-option [nzValue]="option.value" [nzLabel]="option.label"></nz-option>
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>
+
+<nz-modal
+  [nzVisible]="resetModalVisible()"
+  nzTitle="Şifre Sıfırla"
+  [nzOkLoading]="resetModalSaving()"
+  [nzOkDisabled]="resetForm.invalid"
+  (nzOnCancel)="resetModalVisible.set(false)"
+  (nzOnOk)="resetPassword()"
+>
+  <ng-container *nzModalContent>
+    <form nz-form [formGroup]="resetForm">
+      <nz-form-item>
+        <nz-form-label nzRequired>Yeni Şifre</nz-form-label>
+        <nz-form-control>
+          <input
+            nz-input
+            type="password"
+            formControlName="password"
+            placeholder="En az 8 karakter"
+            autocomplete="new-password"
+          />
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>

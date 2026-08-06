@@ -11,11 +11,11 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermission } from '../permissions/decorators/require-permission.decorator';
 import { CreateFloorDto } from './dto/create-floor.dto';
 import { UpdateFloorDto } from './dto/update-floor.dto';
 import { FloorsService } from './floors.service';
-import { Floor, UserRole } from '../../../generated/prisma/client';
+import { Floor } from '../../../generated/prisma/client';
 
 @ApiTags('floors')
 @Controller('villas/:villaId/floors')
@@ -23,7 +23,7 @@ export class FloorsController {
   constructor(private readonly floorsService: FloorsService) {}
 
   @Post()
-  @Roles(UserRole.Administrator)
+  @RequirePermission('villas.write')
   @ApiOperation({ summary: 'Add a rentable floor to a villa (FR-104, FR-201–FR-203)' })
   create(
     @Param('villaId', ParseUUIDPipe) villaId: string,
@@ -33,12 +33,14 @@ export class FloorsController {
   }
 
   @Get()
+  @RequirePermission('villas.read')
   @ApiOperation({ summary: 'List a villa’s floors' })
   findAll(@Param('villaId', ParseUUIDPipe) villaId: string): Promise<Floor[]> {
     return this.floorsService.findAllByVilla(villaId);
   }
 
   @Get(':id')
+  @RequirePermission('villas.read')
   @ApiOperation({ summary: 'Get a single floor' })
   findOne(
     @Param('villaId', ParseUUIDPipe) villaId: string,
@@ -48,7 +50,7 @@ export class FloorsController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.Administrator)
+  @RequirePermission('villas.write')
   @ApiOperation({ summary: 'Edit a floor (capacity, pricing, rentable status)' })
   update(
     @Param('villaId', ParseUUIDPipe) villaId: string,
@@ -59,7 +61,7 @@ export class FloorsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.Administrator)
+  @RequirePermission('villas.write')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Soft-delete a floor' })
   async remove(

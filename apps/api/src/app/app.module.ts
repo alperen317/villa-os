@@ -14,6 +14,8 @@ import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ReportingModule } from './modules/reporting/reporting.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { UsersModule } from './modules/users/users.module';
+import { PermissionsModule } from './modules/permissions/permissions.module';
 
 @Module({
   imports: [
@@ -21,6 +23,7 @@ import { SettingsModule } from './modules/settings/settings.module';
     PrismaModule,
     RedisModule,
     AuthModule,
+    PermissionsModule,
     VillasModule,
     CustomersModule,
     ReservationsModule,
@@ -30,6 +33,7 @@ import { SettingsModule } from './modules/settings/settings.module';
     DashboardModule,
     ReportingModule,
     SettingsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

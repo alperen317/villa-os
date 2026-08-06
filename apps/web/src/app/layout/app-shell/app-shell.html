@@ -44,7 +44,11 @@
         <nz-icon nzType="tool" />
         <span>Bakım</span>
       </li>
-      @if (showSettingsNav()) {
+      @if (showAdminNav()) {
+        <li nz-menu-item routerLink="/users" routerLinkActive="ant-menu-item-selected">
+          <nz-icon nzType="user" />
+          <span>Kullanıcılar</span>
+        </li>
         <li nz-menu-item routerLink="/settings" routerLinkActive="ant-menu-item-selected">
           <nz-icon nzType="setting" />
           <span>Ayarlar</span>

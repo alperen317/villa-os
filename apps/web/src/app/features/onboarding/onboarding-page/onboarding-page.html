@@ -1,0 +1,81 @@
+<div class="onboarding-page">
+  <div class="onboarding-brand">
+    <div class="onboarding-logo">
+      @if (settingsStore.logoUrl(); as logoUrl) {
+        <img [src]="logoUrl" [alt]="settingsStore.companyName()" class="onboarding-logo-image" />
+      } @else {
+        VOS
+      }
+    </div>
+    <h1 class="onboarding-title">{{ settingsStore.companyName() }}</h1>
+    <p class="onboarding-tagline">Hoş geldiniz — ilk yönetici hesabını oluşturun</p>
+  </div>
+
+  <nz-card class="onboarding-card">
+    <form nz-form [formGroup]="form" (ngSubmit)="submit()">
+      <nz-form-item>
+        <nz-form-label nzFor="username" nzNoColon class="sr-only">Kullanıcı adı</nz-form-label>
+        <nz-form-control>
+          <nz-input-group nzPrefixIcon="user">
+            <input
+              id="username"
+              type="text"
+              nz-input
+              formControlName="username"
+              placeholder="Kullanıcı adı"
+              autocomplete="username"
+            />
+          </nz-input-group>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzFor="password" nzNoColon class="sr-only">Şifre</nz-form-label>
+        <nz-form-control>
+          <nz-input-group nzPrefixIcon="lock">
+            <input
+              id="password"
+              type="password"
+              nz-input
+              formControlName="password"
+              placeholder="Şifre (en az 8 karakter)"
+              autocomplete="new-password"
+            />
+          </nz-input-group>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzFor="confirmPassword" nzNoColon class="sr-only">Şifre (tekrar)</nz-form-label>
+        <nz-form-control>
+          <nz-input-group nzPrefixIcon="lock">
+            <input
+              id="confirmPassword"
+              type="password"
+              nz-input
+              formControlName="confirmPassword"
+              placeholder="Şifre (tekrar)"
+              autocomplete="new-password"
+            />
+          </nz-input-group>
+        </nz-form-control>
+      </nz-form-item>
+
+      @if (errorMessage(); as message) {
+        <nz-alert nzType="error" [nzMessage]="message" nzShowIcon class="form-alert"></nz-alert>
+      }
+
+      <button
+        nz-button
+        nzType="primary"
+        nzBlock
+        nzSize="large"
+        type="submit"
+        [nzLoading]="loading()"
+        [disabled]="form.invalid"
+      >
+        Kurulumu Tamamla
+      </button>
+    </form>
+  </nz-card>
+</div>

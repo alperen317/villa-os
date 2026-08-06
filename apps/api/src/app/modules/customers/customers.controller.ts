@@ -14,12 +14,12 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermission } from '../permissions/decorators/require-permission.decorator';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { ListCustomersQueryDto } from './dto/list-customers-query.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { CustomersService } from './customers.service';
-import { Customer, UserRole } from '../../../generated/prisma/client';
+import { Customer } from '../../../generated/prisma/client';
 
 @ApiTags('customers')
 @Controller('customers')
@@ -27,13 +27,14 @@ export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
   @Post()
-  @Roles(UserRole.Administrator, UserRole.Operations)
+  @RequirePermission('customers.write')
   @ApiOperation({ summary: 'Create a customer profile (FR-501)' })
   create(@Body() dto: CreateCustomerDto): Promise<Customer> {
     return this.customersService.create(dto);
   }
 
   @Get()
+  @RequirePermission('customers.read')
   @ApiOperation({ summary: 'List customers (paginated, optionally filtered by ?search=)' })
   async findAll(
     @Query() query: ListCustomersQueryDto,
@@ -45,13 +46,14 @@ export class CustomersController {
   }
 
   @Get(':id')
+  @RequirePermission('customers.read')
   @ApiOperation({ summary: 'Get a single customer' })
   findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Customer> {
     return this.customersService.findOneOrThrow(id);
   }
 
   @Patch(':id')
-  @Roles(UserRole.Administrator, UserRole.Operations)
+  @RequirePermission('customers.write')
   @ApiOperation({ summary: 'Edit a customer profile' })
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -61,7 +63,7 @@ export class CustomersController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.Administrator)
+  @RequirePermission('customers.delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Soft-delete a customer' })
   async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {

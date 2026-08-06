@@ -203,6 +203,7 @@ model User {
   username     String   @unique
   passwordHash String   @map("password_hash")
   role         UserRole
+  isActive     Boolean  @default(true) @map("is_active")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -236,4 +237,15 @@ model ReservationDocument {
 
   @@index([reservationId])
   @@map("reservation_documents")
+}
+
+model RolePermission {
+  id            String   @id @default(uuid()) @db.Uuid
+  role          UserRole
+  permissionKey String   @map("permission_key")
+  allowed       Boolean  @default(false)
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@unique([role, permissionKey])
+  @@map("role_permissions")
 }

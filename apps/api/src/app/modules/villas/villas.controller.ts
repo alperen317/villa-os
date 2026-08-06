@@ -14,12 +14,12 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermission } from '../permissions/decorators/require-permission.decorator';
 import { CreateVillaDto } from './dto/create-villa.dto';
 import { ListVillasQueryDto } from './dto/list-villas-query.dto';
 import { UpdateVillaDto } from './dto/update-villa.dto';
 import { VillasService, VillaWithMaintenanceFlag } from './villas.service';
-import { UserRole, Villa, VillaStatus } from '../../../generated/prisma/client';
+import { Villa, VillaStatus } from '../../../generated/prisma/client';
 
 @ApiTags('villas')
 @Controller('villas')
@@ -27,13 +27,14 @@ export class VillasController {
   constructor(private readonly villasService: VillasService) {}
 
   @Post()
-  @Roles(UserRole.Administrator)
+  @RequirePermission('villas.write')
   @ApiOperation({ summary: 'Create a villa (FR-101)' })
   create(@Body() dto: CreateVillaDto): Promise<Villa> {
     return this.villasService.create(dto);
   }
 
   @Get()
+  @RequirePermission('villas.read')
   @ApiOperation({ summary: 'List villas (paginated)' })
   async findAll(
     @Query() query: ListVillasQueryDto,
@@ -45,34 +46,35 @@ export class VillasController {
   }
 
   @Get(':id')
+  @RequirePermission('villas.read')
   @ApiOperation({ summary: 'Get a single villa' })
   findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Villa> {
     return this.villasService.findOneOrThrow(id);
   }
 
   @Patch(':id')
-  @Roles(UserRole.Administrator)
+  @RequirePermission('villas.write')
   @ApiOperation({ summary: 'Edit villa information (FR-102)' })
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateVillaDto): Promise<Villa> {
     return this.villasService.update(id, dto);
   }
 
   @Post(':id/activate')
-  @Roles(UserRole.Administrator)
+  @RequirePermission('villas.write')
   @ApiOperation({ summary: 'Activate a villa (FR-103)' })
   activate(@Param('id', ParseUUIDPipe) id: string): Promise<Villa> {
     return this.villasService.setStatus(id, VillaStatus.Active);
   }
 
   @Post(':id/deactivate')
-  @Roles(UserRole.Administrator)
+  @RequirePermission('villas.write')
   @ApiOperation({ summary: 'Deactivate a villa (FR-103)' })
   deactivate(@Param('id', ParseUUIDPipe) id: string): Promise<Villa> {
     return this.villasService.setStatus(id, VillaStatus.Inactive);
   }
 
   @Delete(':id')
-  @Roles(UserRole.Administrator)
+  @RequirePermission('villas.write')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Soft-delete a villa' })
   async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {

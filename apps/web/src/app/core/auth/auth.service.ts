@@ -28,6 +28,21 @@ export class AuthService {
     await this.loadCurrentUser();
   }
 
+  async checkOnboardingStatus(): Promise<boolean> {
+    const result = await firstValueFrom(
+      this.http.get<{ needsOnboarding: boolean }>(`${API_BASE_URL}/auth/onboarding-status`),
+    );
+    return result.needsOnboarding;
+  }
+
+  async completeOnboarding(username: string, password: string): Promise<void> {
+    const tokens = await firstValueFrom(
+      this.http.post<TokenPair>(`${API_BASE_URL}/auth/onboarding`, { username, password }),
+    );
+    this.setTokens(tokens);
+    await this.loadCurrentUser();
+  }
+
   async logout(): Promise<void> {
     const refreshToken = this.refreshToken();
     this.clearSession();

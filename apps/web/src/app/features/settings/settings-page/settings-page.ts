@@ -6,6 +6,8 @@ import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzTabsModule } from 'ng-zorro-antd/tabs';
+import { PermissionsTab } from '../permissions-tab/permissions-tab';
 import { SettingsStore } from '../settings.store';
 import { THEME_PRESETS, ThemePreset } from '../theme-presets';
 
@@ -23,6 +25,8 @@ const HEX_COLOR_PATTERN = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
     NzFormModule,
     NzIconModule,
     NzInputModule,
+    NzTabsModule,
+    PermissionsTab,
   ],
   templateUrl: './settings-page.html',
   styleUrl: './settings-page.scss',

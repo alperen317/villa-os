@@ -1,3 +1,4 @@
+import { ConflictException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -21,6 +22,7 @@ function buildUser(overrides: Partial<User> = {}): User {
     username: 'admin',
     passwordHash: 'hashed-password',
     role: 'Administrator' as UserRole,
+    isActive: true,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
@@ -29,13 +31,13 @@ function buildUser(overrides: Partial<User> = {}): User {
 
 describe('AuthService', () => {
   let service: AuthService;
-  let prisma: { user: { findUnique: jest.Mock } };
+  let prisma: { user: { findUnique: jest.Mock; count: jest.Mock; create: jest.Mock } };
   let jwtService: { sign: jest.Mock; verify: jest.Mock };
   let redis: { get: jest.Mock; set: jest.Mock; del: jest.Mock };
   let configService: ConfigService;
 
   beforeEach(() => {
-    prisma = { user: { findUnique: jest.fn() } };
+    prisma = { user: { findUnique: jest.fn(), count: jest.fn(), create: jest.fn() } };
     jwtService = { sign: jest.fn(), verify: jest.fn() };
     redis = { get: jest.fn(), set: jest.fn(), del: jest.fn() };
     configService = { getOrThrow: (key: string) => CONFIG[key] } as unknown as ConfigService;
@@ -73,6 +75,61 @@ describe('AuthService', () => {
       await expect(service.validateCredentials('admin', 'correct-password')).resolves.toEqual(
         user,
       );
+    });
+
+    it('throws InvalidCredentialsException when the user is deactivated', async () => {
+      const user = buildUser({
+        passwordHash: await bcrypt.hash('correct-password', 10),
+        isActive: false,
+      });
+      prisma.user.findUnique.mockResolvedValue(user);
+
+      await expect(service.validateCredentials('admin', 'correct-password')).rejects.toThrow(
+        InvalidCredentialsException,
+      );
+    });
+  });
+
+  describe('hasAnyUsers', () => {
+    it('returns false when the users table is empty', async () => {
+      prisma.user.count.mockResolvedValue(0);
+
+      await expect(service.hasAnyUsers()).resolves.toBe(false);
+    });
+
+    it('returns true when at least one user exists', async () => {
+      prisma.user.count.mockResolvedValue(1);
+
+      await expect(service.hasAnyUsers()).resolves.toBe(true);
+    });
+  });
+
+  describe('completeOnboarding', () => {
+    it('creates an Administrator and issues tokens when no users exist yet', async () => {
+      prisma.user.count.mockResolvedValue(0);
+      const createdUser = buildUser({ username: 'first-admin' });
+      prisma.user.create.mockResolvedValue(createdUser);
+      jwtService.sign.mockReturnValueOnce('access.jwt').mockReturnValueOnce('refresh.jwt');
+
+      const tokens = await service.completeOnboarding({
+        username: 'first-admin',
+        password: 'a-strong-password',
+      });
+
+      expect(prisma.user.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ username: 'first-admin', role: 'Administrator', isActive: true }),
+        }),
+      );
+      expect(tokens).toEqual({ accessToken: 'access.jwt', refreshToken: 'refresh.jwt' });
+    });
+
+    it('rejects with a ConflictException when a user already exists', async () => {
+      prisma.user.count.mockResolvedValue(1);
+
+      await expect(
+        service.completeOnboarding({ username: 'someone', password: 'a-strong-password' }),
+      ).rejects.toThrow(ConflictException);
     });
   });
 

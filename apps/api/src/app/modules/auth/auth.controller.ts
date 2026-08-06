@@ -2,6 +2,7 @@ import { BadRequestException, Body, Controller, Get, Headers, HttpCode, HttpStat
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService, TokenPair } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { OnboardingDto } from './dto/onboarding.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
@@ -36,6 +37,23 @@ export class AuthController {
   @ApiOperation({ summary: 'Revoke a refresh token' })
   async logout(@Body() dto: RefreshTokenDto): Promise<void> {
     await this.authService.logout(dto.refreshToken);
+  }
+
+  @Public()
+  @Get('onboarding-status')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Whether the system has no users yet and needs first-admin onboarding' })
+  async onboardingStatus(): Promise<{ needsOnboarding: boolean }> {
+    const hasAnyUsers = await this.authService.hasAnyUsers();
+    return { needsOnboarding: !hasAnyUsers };
+  }
+
+  @Public()
+  @Post('onboarding')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Create the first Administrator account when no users exist yet' })
+  completeOnboarding(@Body() dto: OnboardingDto): Promise<TokenPair> {
+    return this.authService.completeOnboarding(dto);
   }
 
   @Get('me')

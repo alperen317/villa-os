@@ -11,14 +11,33 @@ export const authGuard: CanActivateFn = () => {
   return inject(Router).createUrlTree(['/login']);
 };
 
-/** Keeps an already-authenticated user off the login screen (e.g. opened in a new tab). */
-export const guestGuard: CanActivateFn = () => {
+/**
+ * Keeps an already-authenticated user off the login screen (e.g. opened in a new tab),
+ * and sends a fresh install (no users yet) to onboarding instead of an unusable login form.
+ */
+export const guestGuard: CanActivateFn = async () => {
   const authService = inject(AuthService);
-  if (!authService.isAuthenticated()) {
-    return true;
+  const router = inject(Router); // must be injected before any `await` — inject() needs the active injection context
+
+  if (authService.isAuthenticated()) {
+    return router.createUrlTree(['/dashboard']);
   }
 
-  return inject(Router).createUrlTree(['/dashboard']);
+  const needsOnboarding = await authService.checkOnboardingStatus();
+  return needsOnboarding ? router.createUrlTree(['/onboarding']) : true;
+};
+
+/** Restricts the first-admin setup screen to systems that don't have any users yet. */
+export const onboardingGuard: CanActivateFn = async () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.isAuthenticated()) {
+    return router.createUrlTree(['/dashboard']);
+  }
+
+  const needsOnboarding = await authService.checkOnboardingStatus();
+  return needsOnboarding ? true : router.createUrlTree(['/login']);
 };
 
 /**
@@ -28,6 +47,8 @@ export const guestGuard: CanActivateFn = () => {
  */
 export const adminGuard: CanActivateFn = async () => {
   const authService = inject(AuthService);
+  const router = inject(Router);
+
   if (!authService.currentUser()) {
     await authService.loadCurrentUser();
   }
@@ -36,5 +57,5 @@ export const adminGuard: CanActivateFn = async () => {
     return true;
   }
 
-  return inject(Router).createUrlTree(['/dashboard']);
+  return router.createUrlTree(['/dashboard']);
 };
