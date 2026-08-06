@@ -1,12 +1,14 @@
 import {
   ApplicationConfig,
   inject,
+  isDevMode,
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideServiceWorker } from '@angular/service-worker';
 import { provideNzI18n, tr_TR } from 'ng-zorro-antd/i18n';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
 import { provideNzNativeDateAdapter } from 'ng-zorro-antd/core/time';
@@ -19,6 +21,7 @@ import {
   ClearOutline,
   ClockCircleOutline,
   CloseCircleOutline,
+  CloseOutline,
   DashboardOutline,
   DeleteOutline,
   DollarOutline,
@@ -31,12 +34,14 @@ import {
   LogoutOutline,
   MenuFoldOutline,
   MenuUnfoldOutline,
+  MobileOutline,
   MoreOutline,
   PictureOutline,
   PlusOutline,
   RightOutline,
   SearchOutline,
   SettingOutline,
+  SyncOutline,
   TeamOutline,
   ToolOutline,
   UploadOutline,
@@ -44,6 +49,7 @@ import {
 } from '@ant-design/icons-angular/icons';
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { SyncQueueStore } from './core/sync/sync-queue.store';
 import { SettingsStore } from './features/settings/settings.store';
 
 export const appConfig: ApplicationConfig = {
@@ -56,6 +62,17 @@ export const appConfig: ApplicationConfig = {
     provideNzNativeDateAdapter(),
     provideCharts(withDefaultRegisterables()),
     provideAppInitializer(() => inject(SettingsStore).ensureLoaded()),
+    provideAppInitializer(() => {
+      const syncQueueStore = inject(SyncQueueStore);
+      window.addEventListener('online', () => syncQueueStore.replay());
+      return syncQueueStore.initialize().then(() => {
+        void syncQueueStore.replay();
+      });
+    }),
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
     provideNzIcons([
       UserOutline,
       LockOutline,
@@ -86,6 +103,9 @@ export const appConfig: ApplicationConfig = {
       PictureOutline,
       UploadOutline,
       CheckOutline,
+      SyncOutline,
+      MobileOutline,
+      CloseOutline,
     ]),
   ],
 };

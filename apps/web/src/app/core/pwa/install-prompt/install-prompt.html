@@ -1,0 +1,21 @@
+@if (visible()) {
+  <div class="pwa-install-banner">
+    <nz-icon nzType="mobile" class="banner-icon" />
+    <div class="banner-text">
+      <strong>Villa OS'u ana ekranınıza ekleyin</strong>
+      @if (mode() === 'ios') {
+        <span>Paylaş simgesine, ardından "Ana Ekrana Ekle" seçeneğine dokunun.</span>
+      } @else {
+        <span>Hızlı erişim için uygulamayı telefonunuza yükleyin.</span>
+      }
+    </div>
+    <div class="banner-actions">
+      @if (mode() === 'android') {
+        <button nz-button nzType="primary" nzSize="small" (click)="install()">Yükle</button>
+      }
+      <button nz-button nzType="text" nzSize="small" aria-label="Kapat" (click)="dismiss()">
+        <nz-icon nzType="close" />
+      </button>
+    </div>
+  </div>
+}

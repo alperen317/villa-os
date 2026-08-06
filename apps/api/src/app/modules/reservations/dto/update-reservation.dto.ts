@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsDateString, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export class UpdateReservationDto {
   @IsOptional()
@@ -11,4 +11,13 @@ export class UpdateReservationDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  /**
+   * updatedAt the client last read before editing. If it no longer matches the
+   * stored record, someone else changed it in between — reject as a conflict
+   * instead of silently overwriting (needed for offline-queued edits).
+   */
+  @IsOptional()
+  @IsDateString()
+  expectedUpdatedAt?: string;
 }

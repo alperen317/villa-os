@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -22,6 +22,8 @@ import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Customer } from '../../../core/models/customer.model';
+import { SyncOutboxItem, UpdateReservationPayload } from '../../../core/sync/sync-queue.model';
+import { SyncQueueStore } from '../../../core/sync/sync-queue.store';
 import {
   PAYMENT_METHOD_LABELS,
   PaymentMethod,
@@ -31,6 +33,7 @@ import {
   RESERVATION_NEXT_ACTIONS,
   RESERVATION_STATUS_COLORS,
   RESERVATION_STATUS_LABELS,
+  CreateReservationInput,
   Reservation,
   ReservationStatus,
 } from '../../../core/models/reservation.model';
@@ -79,6 +82,7 @@ export class ReservationList implements OnInit {
   private readonly customersService = inject(CustomersService);
   private readonly paymentsService = inject(PaymentsService);
   private readonly authService = inject(AuthService);
+  private readonly syncQueueStore = inject(SyncQueueStore);
   private readonly formBuilder = inject(FormBuilder);
   private readonly message = inject(NzMessageService);
   private readonly route = inject(ActivatedRoute);
@@ -112,11 +116,19 @@ export class ReservationList implements OnInit {
   protected readonly modalSaving = signal(false);
   protected readonly formFloors = signal<Floor[]>([]);
   protected readonly customerOptions = signal<Customer[]>([]);
+  /** ng-zorro's searchable select clears customerOptions right after a selection (its own
+   *  search box reset fires nzOnSearch('')) — capture the name at selection time instead of
+   *  re-deriving it from customerOptions later, e.g. when building the offline queue summary. */
+  private readonly selectedCustomerName = signal<string | null>(null);
   protected readonly showNewCustomerForm = signal(false);
   protected readonly creatingCustomer = signal(false);
 
   protected readonly detailVisible = signal(false);
   protected readonly detailReservation = signal<Reservation | null>(null);
+
+  protected readonly editModalVisible = signal(false);
+  protected readonly editModalSaving = signal(false);
+  protected readonly editingReservation = signal<Reservation | null>(null);
 
   protected readonly paymentsSummary = signal<PaymentsSummary | null>(null);
   protected readonly paymentsLoading = signal(false);
@@ -125,6 +137,10 @@ export class ReservationList implements OnInit {
 
   protected readonly paymentMethodLabels = PAYMENT_METHOD_LABELS;
   protected readonly paymentMethodKeys = Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[];
+
+  protected readonly pendingCreateItems = computed(() =>
+    this.syncQueueStore.items().filter((item) => item.type === 'create-reservation'),
+  );
 
   protected readonly canManagePayments = computed(() => {
     const role = this.authService.currentUser()?.role;
@@ -162,12 +178,31 @@ export class ReservationList implements OnInit {
     phone: [''],
   });
 
+  protected readonly editForm = this.formBuilder.nonNullable.group({
+    guestCount: [1, [Validators.required, Validators.min(1)]],
+    notes: [''],
+  });
+
+  constructor() {
+    effect(() => {
+      const item = this.syncQueueStore.resolveTarget();
+      if (item) {
+        void this.handleResolveTarget(item);
+      }
+    });
+  }
+
   async ngOnInit(): Promise<void> {
     await this.villasStore.ensureLoaded();
     await this.loadPage();
 
     this.form.controls.villaId.valueChanges.subscribe((villaId) => {
       this.onVillaChange(villaId);
+    });
+
+    this.form.controls.customerId.valueChanges.subscribe((customerId) => {
+      const customer = this.customerOptions().find((c) => c.id === customerId);
+      this.selectedCustomerName.set(customer ? `${customer.firstName} ${customer.lastName}` : null);
     });
 
     await this.openDetailFromQueryParam();
@@ -440,6 +475,100 @@ export class ReservationList implements OnInit {
     this.formFloors.set(floors.filter((floor) => floor.rentable));
   }
 
+  /** A conflicted queue item was picked in the sync panel — reopen the matching form pre-filled
+   *  with what the user originally submitted, so they can review and resubmit online. */
+  private async handleResolveTarget(item: SyncOutboxItem): Promise<void> {
+    try {
+      switch (item.type) {
+        case 'create-reservation':
+          await this.resolveCreateConflict(item);
+          break;
+        case 'update-reservation':
+          await this.resolveUpdateConflict(item);
+          break;
+        case 'cancel-reservation':
+          await this.resolveCancelConflict(item);
+          break;
+      }
+    } finally {
+      this.syncQueueStore.clearResolveTarget();
+    }
+  }
+
+  private async resolveCreateConflict(item: SyncOutboxItem): Promise<void> {
+    const payload = item.payload as CreateReservationInput;
+
+    await this.openCreateModal();
+    this.form.patchValue({
+      villaId: payload.villaId,
+      customerId: payload.customerId,
+      dateRange: [new Date(payload.checkIn), new Date(payload.checkOut)],
+      guestCount: payload.guestCount,
+      notes: payload.notes ?? '',
+    });
+    await this.onVillaChange(payload.villaId);
+    this.form.patchValue({ floorId: payload.floorId });
+
+    if (!this.customerOptions().some((customer) => customer.id === payload.customerId)) {
+      try {
+        const customer = await this.customersService.get(payload.customerId);
+        this.customerOptions.set([customer, ...this.customerOptions()]);
+      } catch {
+        // Customer may have been removed since — user can search and reselect.
+      }
+    }
+
+    if (item.conflictingReservationId) {
+      try {
+        const conflicting = await this.reservationsService.get(item.conflictingReservationId);
+        this.message.warning(
+          `Bu tarihler ${conflicting.reservationNumber} numaralı rezervasyon (${conflicting.customer.firstName} ${conflicting.customer.lastName}) ile çakışıyor. Lütfen tarihleri güncelleyin.`,
+        );
+      } catch {
+        this.message.warning('Bu rezervasyon başka bir kayıtla çakışıyor. Lütfen tarihleri kontrol edin.');
+      }
+    } else {
+      this.message.warning('Rezervasyon oluşturulamadı. Bilgileri kontrol edip tekrar deneyin.');
+    }
+  }
+
+  private async resolveUpdateConflict(item: SyncOutboxItem): Promise<void> {
+    const targetId = item.targetReservationId;
+    if (!targetId) {
+      return;
+    }
+
+    try {
+      const reservation = await this.reservationsService.get(targetId);
+      const payload = item.payload as UpdateReservationPayload;
+      this.openEditModal(reservation);
+      this.editForm.patchValue({
+        guestCount: payload.guestCount ?? reservation.guestCount,
+        notes: payload.notes ?? reservation.notes ?? '',
+      });
+      this.message.warning(
+        'Bu rezervasyon aradan başka biri tarafından güncellenmiş. Bilgileri kontrol edip tekrar kaydedin.',
+      );
+    } catch {
+      this.message.error('Rezervasyon bulunamadı, muhtemelen silinmiş.');
+    }
+  }
+
+  private async resolveCancelConflict(item: SyncOutboxItem): Promise<void> {
+    const targetId = item.targetReservationId;
+    if (!targetId) {
+      return;
+    }
+
+    try {
+      const reservation = await this.reservationsService.get(targetId);
+      this.openDetail(reservation);
+      this.message.warning('Rezervasyon iptal edilemedi. Güncel durumunu kontrol edin.');
+    } catch {
+      this.message.error('Rezervasyon bulunamadı, muhtemelen silinmiş.');
+    }
+  }
+
   async onCustomerSearch(term: string): Promise<void> {
     if (!term || term.trim().length < 2) {
       this.customerOptions.set([]);
@@ -483,17 +612,24 @@ export class ReservationList implements OnInit {
 
     this.modalSaving.set(true);
     try {
-      await this.reservationsService.create({
-        customerId: value.customerId,
-        villaId: value.villaId,
-        floorId: value.floorId,
-        checkIn: this.toIsoDate(checkIn),
-        checkOut: this.toIsoDate(checkOut),
-        guestCount: value.guestCount,
-        notes: value.notes || undefined,
-      });
+      const result = await this.reservationsService.create(
+        {
+          customerId: value.customerId,
+          villaId: value.villaId,
+          floorId: value.floorId,
+          checkIn: this.toIsoDate(checkIn),
+          checkOut: this.toIsoDate(checkOut),
+          guestCount: value.guestCount,
+          notes: value.notes || undefined,
+        },
+        this.buildReservationSummary(value.villaId, value.floorId, value.customerId),
+      );
 
-      this.message.success('Rezervasyon oluşturuldu');
+      this.message.success(
+        result.queued
+          ? 'Çevrimdışısınız — rezervasyon bağlantı kurulunca senkronize edilecek'
+          : 'Rezervasyon oluşturuldu',
+      );
       this.modalVisible.set(false);
       await this.loadPage();
       if (this.viewMode() === 'calendar') {
@@ -508,10 +644,76 @@ export class ReservationList implements OnInit {
     }
   }
 
+  canEdit(status: ReservationStatus): boolean {
+    return status !== 'Cancelled' && status !== 'Completed';
+  }
+
+  queueTagFor(reservationId: string): { text: string; color: string } | null {
+    const item = this.syncQueueStore
+      .items()
+      .find((i) => i.targetReservationId === reservationId && i.type !== 'create-reservation');
+    if (!item) {
+      return null;
+    }
+    if (item.status === 'conflict') {
+      return { text: 'Kontrol gerekiyor', color: 'red' };
+    }
+    return {
+      text: item.type === 'cancel-reservation' ? 'İptal bekliyor' : 'Senkronize bekliyor',
+      color: 'blue',
+    };
+  }
+
+  openEditModal(reservation: Reservation): void {
+    this.editingReservation.set(reservation);
+    this.editForm.reset({
+      guestCount: reservation.guestCount,
+      notes: reservation.notes ?? '',
+    });
+    this.detailVisible.set(false);
+    this.editModalVisible.set(true);
+  }
+
+  async saveEdit(): Promise<void> {
+    const reservation = this.editingReservation();
+    if (this.editForm.invalid || !reservation) {
+      return;
+    }
+
+    const value = this.editForm.getRawValue();
+
+    this.editModalSaving.set(true);
+    try {
+      const result = await this.reservationsService.update(reservation, {
+        guestCount: value.guestCount,
+        notes: value.notes || undefined,
+      });
+
+      this.message.success(
+        result.queued
+          ? 'Çevrimdışısınız — değişiklik bağlantı kurulunca senkronize edilecek'
+          : 'Rezervasyon güncellendi',
+      );
+      this.editModalVisible.set(false);
+      await this.loadPage();
+      if (this.viewMode() === 'calendar') {
+        await this.loadCalendarData();
+      }
+    } catch (error) {
+      this.message.error(this.extractErrorMessage(error));
+    } finally {
+      this.editModalSaving.set(false);
+    }
+  }
+
   async runAction(reservation: Reservation, action: string): Promise<void> {
     try {
-      await this.reservationsService.transition(reservation.id, action as ReservationAction);
-      this.message.success('Durum güncellendi');
+      const result = await this.reservationsService.transition(reservation, action as ReservationAction);
+      this.message.success(
+        result.queued
+          ? 'Çevrimdışısınız — işlem bağlantı kurulunca senkronize edilecek'
+          : 'Durum güncellendi',
+      );
       this.detailVisible.set(false);
       await this.loadPage();
       if (this.viewMode() === 'calendar') {
@@ -524,6 +726,18 @@ export class ReservationList implements OnInit {
 
   private stripTime(date: Date): number {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  }
+
+  private buildReservationSummary(villaId: string, floorId: string, customerId: string): string {
+    const villaName = this.villas().find((villa) => villa.id === villaId)?.name ?? 'Villa';
+    const floorName = this.formFloors().find((floor) => floor.id === floorId)?.name;
+    const customerName =
+      this.selectedCustomerName() ??
+      (() => {
+        const customer = this.customerOptions().find((c) => c.id === customerId);
+        return customer ? `${customer.firstName} ${customer.lastName}` : 'Müşteri';
+      })();
+    return floorName ? `${villaName} / ${floorName} · ${customerName}` : `${villaName} · ${customerName}`;
   }
 
   private toIsoDate(date: Date): string {

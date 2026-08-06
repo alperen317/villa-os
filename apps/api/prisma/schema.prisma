@@ -128,6 +128,7 @@ model Reservation {
   totalPrice        Decimal           @map("total_price") @db.Decimal(10, 2)
   status            ReservationStatus @default(Pending)
   notes             String?
+  idempotencyKey    String?           @unique @map("idempotency_key")
   createdAt         DateTime          @default(now()) @map("created_at")
   updatedAt         DateTime          @updatedAt @map("updated_at")
   deletedAt         DateTime?         @map("deleted_at")

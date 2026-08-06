@@ -5,6 +5,7 @@ import { FloorsService } from '../villas/floors.service';
 import { VillasService } from '../villas/villas.service';
 import { ReservationConflictException } from './exceptions/reservation-conflict.exception';
 import { InvalidReservationTransitionException } from './exceptions/invalid-reservation-transition.exception';
+import { ReservationStaleWriteException } from './exceptions/reservation-stale-write.exception';
 import { ReservationsRepository, ReservationWithRelations } from './reservations.repository';
 import { ReservationsService } from './reservations.service';
 import { ReservationStatus } from '../../../generated/prisma/client';
@@ -46,7 +47,13 @@ describe('ReservationsService', () => {
         ReservationsService,
         {
           provide: ReservationsRepository,
-          useValue: { findById: jest.fn(), update: jest.fn(), create: jest.fn(), findConflicting: jest.fn() },
+          useValue: {
+            findById: jest.fn(),
+            update: jest.fn(),
+            create: jest.fn(),
+            findConflicting: jest.fn(),
+            findByIdempotencyKey: jest.fn(),
+          },
         },
         { provide: VillasService, useValue: { findOneOrThrow: jest.fn() } },
         { provide: FloorsService, useValue: { findOneOrThrow: jest.fn() } },
@@ -133,6 +140,85 @@ describe('ReservationsService', () => {
         service.create({ ...dto, checkIn: '2026-08-05', checkOut: '2026-08-01' } as never),
       ).rejects.toThrow();
       expect(reservationsRepository.findConflicting).not.toHaveBeenCalled();
+    });
+
+    it('returns the existing reservation when the idempotency key was already used (replayed request)', async () => {
+      const existing = reservation({ id: 'reservation-existing' });
+      reservationsRepository.findByIdempotencyKey.mockResolvedValue(existing);
+
+      const result = await service.create(dto as never, 'key-1');
+
+      expect(result).toBe(existing);
+      expect(reservationsRepository.create).not.toHaveBeenCalled();
+      expect(villasService.findOneOrThrow).not.toHaveBeenCalled();
+    });
+
+    it('creates a new reservation and stores the idempotency key when it has not been used before', async () => {
+      stubHappyPath();
+      reservationsRepository.findByIdempotencyKey.mockResolvedValue(null);
+      reservationsRepository.findConflicting.mockResolvedValue(null);
+      reservationsRepository.create.mockResolvedValue(reservation());
+
+      await service.create(dto as never, 'key-1');
+
+      expect(reservationsRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ idempotencyKey: 'key-1' }),
+      );
+    });
+  });
+
+  describe('update', () => {
+    it('rejects with a stale-write conflict when expectedUpdatedAt does not match', async () => {
+      const currentUpdatedAt = new Date('2026-08-01T10:00:00.000Z');
+      reservationsRepository.findById.mockResolvedValue(reservation({ updatedAt: currentUpdatedAt }));
+
+      await expect(
+        service.update('reservation-1', {
+          notes: 'updated offline',
+          expectedUpdatedAt: '2026-08-01T09:00:00.000Z',
+        } as never),
+      ).rejects.toThrow(ReservationStaleWriteException);
+      expect(reservationsRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('applies the update when expectedUpdatedAt matches the current record', async () => {
+      const currentUpdatedAt = new Date('2026-08-01T10:00:00.000Z');
+      reservationsRepository.findById.mockResolvedValue(
+        reservation({ updatedAt: currentUpdatedAt, guestCount: 2 }),
+      );
+      floorsService.findOneOrThrow.mockResolvedValue({ capacity: 4 } as never);
+      reservationsRepository.update.mockResolvedValue(reservation({ guestCount: 3 }));
+
+      await service.update('reservation-1', {
+        guestCount: 3,
+        expectedUpdatedAt: currentUpdatedAt.toISOString(),
+      } as never);
+
+      expect(reservationsRepository.update).toHaveBeenCalledWith('reservation-1', {
+        guestCount: 3,
+        notes: undefined,
+      });
+    });
+
+    it('applies the update when expectedUpdatedAt is omitted (no staleness check)', async () => {
+      reservationsRepository.findById.mockResolvedValue(reservation({ guestCount: 2 }));
+      floorsService.findOneOrThrow.mockResolvedValue({ capacity: 4 } as never);
+      reservationsRepository.update.mockResolvedValue(reservation({ guestCount: 3 }));
+
+      await service.update('reservation-1', { guestCount: 3 } as never);
+
+      expect(reservationsRepository.update).toHaveBeenCalledWith('reservation-1', {
+        guestCount: 3,
+        notes: undefined,
+      });
+    });
+
+    it('rejects when the updated guest count exceeds floor capacity', async () => {
+      reservationsRepository.findById.mockResolvedValue(reservation({ guestCount: 2 }));
+      floorsService.findOneOrThrow.mockResolvedValue({ capacity: 2 } as never);
+
+      await expect(service.update('reservation-1', { guestCount: 5 } as never)).rejects.toThrow();
+      expect(reservationsRepository.update).not.toHaveBeenCalled();
     });
   });
 

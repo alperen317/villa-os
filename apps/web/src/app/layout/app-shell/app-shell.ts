@@ -5,6 +5,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { AuthService } from '../../core/auth/auth.service';
+import { SyncQueuePanel } from '../../core/sync/sync-queue-panel/sync-queue-panel';
 import { SettingsStore } from '../../features/settings/settings.store';
 
 const HOUSEKEEPING_NAV_ROLES = new Set(['Administrator', 'Operations', 'Housekeeping']);
@@ -12,7 +13,7 @@ const HOUSEKEEPING_NAV_ROLES = new Set(['Administrator', 'Operations', 'Housekee
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterModule, NzButtonModule, NzIconModule, NzLayoutModule, NzMenuModule],
+  imports: [RouterModule, NzButtonModule, NzIconModule, NzLayoutModule, NzMenuModule, SyncQueuePanel],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
 })

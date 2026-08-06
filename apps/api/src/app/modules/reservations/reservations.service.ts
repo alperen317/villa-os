@@ -11,6 +11,7 @@ import { ListReservationsQueryDto } from './dto/list-reservations-query.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { InvalidReservationTransitionException } from './exceptions/invalid-reservation-transition.exception';
 import { ReservationConflictException } from './exceptions/reservation-conflict.exception';
+import { ReservationStaleWriteException } from './exceptions/reservation-stale-write.exception';
 import { ReservationsRepository, ReservationWithRelations } from './reservations.repository';
 import { ReservationStatus } from '../../../generated/prisma/client';
 
@@ -33,7 +34,14 @@ export class ReservationsService {
     private readonly housekeepingService: HousekeepingService,
   ) {}
 
-  async create(dto: CreateReservationDto): Promise<ReservationWithRelations> {
+  async create(dto: CreateReservationDto, idempotencyKey?: string): Promise<ReservationWithRelations> {
+    if (idempotencyKey) {
+      const existing = await this.reservationsRepository.findByIdempotencyKey(idempotencyKey);
+      if (existing) {
+        return existing;
+      }
+    }
+
     await this.villasService.findOneOrThrow(dto.villaId);
     await this.customersService.findOneOrThrow(dto.customerId);
     const floor = await this.floorsService.findOneOrThrow(dto.villaId, dto.floorId);
@@ -80,6 +88,7 @@ export class ReservationsService {
       guestCount: dto.guestCount,
       totalPrice,
       notes: dto.notes,
+      idempotencyKey,
     });
   }
 
@@ -115,6 +124,13 @@ export class ReservationsService {
   async update(id: string, dto: UpdateReservationDto): Promise<ReservationWithRelations> {
     const reservation = await this.findOneOrThrow(id);
 
+    if (
+      dto.expectedUpdatedAt !== undefined &&
+      new Date(dto.expectedUpdatedAt).getTime() !== reservation.updatedAt.getTime()
+    ) {
+      throw new ReservationStaleWriteException(reservation.updatedAt);
+    }
+
     if (dto.guestCount !== undefined) {
       const floor = await this.floorsService.findOneOrThrow(reservation.villaId, reservation.floorId);
       if (dto.guestCount > floor.capacity) {
@@ -124,7 +140,10 @@ export class ReservationsService {
       }
     }
 
-    return this.reservationsRepository.update(id, dto);
+    return this.reservationsRepository.update(id, {
+      guestCount: dto.guestCount,
+      notes: dto.notes,
+    });
   }
 
   async transition(id: string, target: ReservationStatus): Promise<ReservationWithRelations> {

@@ -36,6 +36,13 @@ export class ReservationsRepository {
     });
   }
 
+  findByIdempotencyKey(idempotencyKey: string): Promise<ReservationWithRelations | null> {
+    return this.prisma.reservation.findFirst({
+      where: { idempotencyKey, deletedAt: null },
+      include: RESERVATION_INCLUDE,
+    });
+  }
+
   findMany(params: {
     skip: number;
     take: number;

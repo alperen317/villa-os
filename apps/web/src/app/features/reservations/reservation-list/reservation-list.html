@@ -135,6 +135,16 @@
         </tr>
       </thead>
       <tbody>
+        @for (item of pendingCreateItems(); track item.id) {
+          <tr class="queue-optimistic-row">
+            <td colspan="8">
+              <span class="optimistic-summary">{{ item.summary }}</span>
+              <nz-tag [nzColor]="item.status === 'conflict' ? 'red' : 'blue'">
+                {{ item.status === 'conflict' ? 'Kontrol gerekiyor' : 'Senkronize bekliyor' }}
+              </nz-tag>
+            </td>
+          </tr>
+        }
         @for (reservation of reservations(); track reservation.id) {
           <tr>
             <td data-label="Rez. No">{{ reservation.reservationNumber }}</td>
@@ -152,14 +162,20 @@
             <td data-label="Tutar">{{ reservation.totalPrice }} ₺</td>
             <td data-label="Durum">
               <nz-tag [nzColor]="statusColors[reservation.status]">{{ statusLabels[reservation.status] }}</nz-tag>
+              @if (queueTagFor(reservation.id); as queueTag) {
+                <nz-tag [nzColor]="queueTag.color">{{ queueTag.text }}</nz-tag>
+              }
             </td>
             <td class="td-actions">
-              @if (nextActions[reservation.status].length > 0) {
+              @if (nextActions[reservation.status].length > 0 || canEdit(reservation.status)) {
                 <button nz-button nzType="text" aria-label="Rezervasyon aksiyonları" nz-dropdown [nzDropdownMenu]="menu">
                   <nz-icon nzType="more" />
                 </button>
                 <nz-dropdown-menu #menu="nzDropdownMenu">
                   <ul nz-menu>
+                    @if (canEdit(reservation.status)) {
+                      <li nz-menu-item (click)="openEditModal(reservation)">Düzenle</li>
+                    }
                     @for (next of nextActions[reservation.status]; track next.action) {
                       <li nz-menu-item (click)="runAction(reservation, next.action)">
                         {{ next.label }}
@@ -433,8 +449,14 @@
             </nz-descriptions-item>
           </nz-descriptions>
 
-          @if (nextActions[reservation.status].length > 0) {
+          @if (nextActions[reservation.status].length > 0 || canEdit(reservation.status)) {
             <div class="detail-actions">
+              @if (canEdit(reservation.status)) {
+                <button nz-button (click)="openEditModal(reservation)">
+                  <nz-icon nzType="edit" />
+                  Düzenle
+                </button>
+              }
               @for (next of nextActions[reservation.status]; track next.action) {
                 <button nz-button (click)="runAction(reservation, next.action)">{{ next.label }}</button>
               }
@@ -554,6 +576,33 @@
         <nz-form-label>Not</nz-form-label>
         <nz-form-control>
           <textarea nz-input formControlName="notes" rows="2"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>
+
+<nz-modal
+  [nzVisible]="editModalVisible()"
+  nzTitle="Rezervasyonu Düzenle"
+  [nzOkLoading]="editModalSaving()"
+  [nzOkDisabled]="editForm.invalid"
+  (nzOnCancel)="editModalVisible.set(false)"
+  (nzOnOk)="saveEdit()"
+>
+  <ng-container *nzModalContent>
+    <form nz-form [formGroup]="editForm">
+      <nz-form-item>
+        <nz-form-label nzRequired>Misafir Sayısı</nz-form-label>
+        <nz-form-control>
+          <nz-input-number formControlName="guestCount" [nzMin]="1" style="width: 100%" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Not</nz-form-label>
+        <nz-form-control>
+          <textarea nz-input formControlName="notes" rows="3"></textarea>
         </nz-form-control>
       </nz-form-item>
     </form>

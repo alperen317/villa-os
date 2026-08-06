@@ -4,6 +4,20 @@
   margin-bottom: 16px;
 }
 
+.queue-optimistic-row {
+  background: #f0f5ff;
+
+  td {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.optimistic-summary {
+  font-weight: 500;
+}
+
 .filter-search {
   width: 220px;
 }

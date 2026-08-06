@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Query, Res } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -21,8 +21,11 @@ export class ReservationsController {
   @Post()
   @Roles(...MUTATE_ROLES)
   @ApiOperation({ summary: 'Create a reservation (FR-301–FR-306, FR-401–FR-404)' })
-  create(@Body() dto: CreateReservationDto): Promise<ReservationWithRelations> {
-    return this.reservationsService.create(dto);
+  create(
+    @Body() dto: CreateReservationDto,
+    @Headers('idempotency-key') idempotencyKey?: string,
+  ): Promise<ReservationWithRelations> {
+    return this.reservationsService.create(dto, idempotencyKey);
   }
 
   @Get()

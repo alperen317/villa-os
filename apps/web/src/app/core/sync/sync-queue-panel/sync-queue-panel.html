@@ -1,0 +1,63 @@
+@if (store.totalCount() > 0) {
+  <button nz-button nzType="text" class="trigger" aria-label="Bekleyen işlemler" (click)="open()">
+    <nz-badge [nzCount]="store.totalCount()" [nzOverflowCount]="99">
+      <nz-icon nzType="clock-circle" />
+    </nz-badge>
+  </button>
+}
+
+<nz-drawer
+  [nzVisible]="visible()"
+  nzTitle="Bekleyen İşlemler"
+  nzWidth="380px"
+  (nzOnClose)="close()"
+>
+  <ng-container *nzDrawerContent>
+    @if (store.sessionExpired()) {
+      <div class="session-banner">Oturum süresi doldu. Tekrar giriş yaptıktan sonra kuyruk otomatik devam eder.</div>
+    }
+
+    @if (store.totalCount() === 0) {
+      <nz-empty nzNotFoundContent="Bekleyen işlem yok" />
+    } @else {
+      <button nz-button nzType="primary" class="retry-all" [nzLoading]="store.syncing()" (click)="retryAll()">
+        <nz-icon nzType="sync" />
+        Tekrar Dene
+      </button>
+
+      <ul class="queue-list">
+        @for (item of store.items(); track item.id) {
+          <li class="queue-item" [class.queue-item--conflict]="item.status === 'conflict'">
+            <div class="queue-item-header">
+              <span class="queue-item-type">{{ operationLabels[item.type] }}</span>
+              @switch (item.status) {
+                @case ('conflict') {
+                  <nz-tag nzColor="red">Kontrol gerekiyor</nz-tag>
+                }
+                @case ('syncing') {
+                  <nz-tag nzColor="processing">Senkronize ediliyor</nz-tag>
+                }
+                @default {
+                  <nz-tag nzColor="blue">Bekliyor</nz-tag>
+                }
+              }
+            </div>
+            <div class="queue-item-summary">{{ item.summary }}</div>
+            @if (item.errorMessage) {
+              <div class="queue-item-error">{{ item.errorMessage }}</div>
+            }
+            <div class="queue-item-footer">
+              <span class="queue-item-time">{{ item.createdAt | date: 'dd.MM.yyyy HH:mm' }}</span>
+              <span class="queue-item-actions">
+                @if (item.status === 'conflict') {
+                  <button nz-button nzType="link" nzSize="small" (click)="resolve(item)">Çöz</button>
+                }
+                <button nz-button nzType="link" nzSize="small" (click)="discard(item)">Vazgeç</button>
+              </span>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </ng-container>
+</nz-drawer>
