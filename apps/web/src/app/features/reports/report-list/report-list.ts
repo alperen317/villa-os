@@ -25,10 +25,13 @@ import {
   RESERVATION_STATUS_COLORS,
   RESERVATION_STATUS_LABELS,
 } from '../../../core/models/reservation.model';
+import { SettingsStore } from '../../settings/settings.store';
 import { VillasStore } from '../../villas/villas.store';
 import { ReportsService } from '../reports.service';
 
-const CHART_COLORS = ['#2f54eb', '#13a8a8', '#fa8c16', '#eb2f96', '#52c41a', '#722ed1'];
+const DEFAULT_ACCENT_COLOR = '#2563eb';
+/** First slot tracks the live brand accent color; the rest stay fixed for category contrast (e.g. the payment-method doughnut). */
+const FIXED_CHART_COLORS = ['#13a8a8', '#fa8c16', '#eb2f96', '#52c41a', '#722ed1'];
 
 type DatePreset = 'today' | 'last7' | 'last30' | 'thisMonth' | 'lastMonth' | 'thisYear';
 
@@ -85,8 +88,15 @@ function toIsoDate(date: Date): string {
 export class ReportList implements OnInit {
   private readonly reportsService = inject(ReportsService);
   private readonly villasStore = inject(VillasStore);
+  private readonly settingsStore = inject(SettingsStore);
   private readonly message = inject(NzMessageService);
   private readonly formBuilder = inject(FormBuilder);
+
+  /** [live brand accent, ...fixed category colors] — recomputes whenever the accent color changes in Settings. */
+  protected readonly chartColors = computed(() => [
+    this.settingsStore.settings()?.accentColor || DEFAULT_ACCENT_COLOR,
+    ...FIXED_CHART_COLORS,
+  ]);
 
   protected readonly statusLabels = RESERVATION_STATUS_LABELS;
   protected readonly statusColors = RESERVATION_STATUS_COLORS;
@@ -118,14 +128,15 @@ export class ReportList implements OnInit {
 
   protected readonly occupancyChartData = computed<ChartConfiguration<'line'>['data']>(() => {
     const report = this.occupancy();
+    const [accent] = this.chartColors();
     return {
       labels: report?.daily.map((point) => point.date) ?? [],
       datasets: [
         {
           label: 'Doluluk (%)',
           data: report?.daily.map((point) => point.occupancyRate) ?? [],
-          borderColor: CHART_COLORS[0],
-          backgroundColor: `${CHART_COLORS[0]}33`,
+          borderColor: accent,
+          backgroundColor: `${accent}33`,
           fill: true,
           tension: 0.3,
         },
@@ -141,7 +152,7 @@ export class ReportList implements OnInit {
         {
           label: 'Gelir',
           data: report?.daily.map((point) => point.amount) ?? [],
-          backgroundColor: CHART_COLORS[1],
+          backgroundColor: this.chartColors()[0],
         },
       ],
     };
@@ -152,7 +163,7 @@ export class ReportList implements OnInit {
     const rows = report?.byMethod ?? [];
     return {
       labels: rows.map((row) => this.paymentMethodLabels[row.method]),
-      datasets: [{ data: rows.map((row) => row.amount), backgroundColor: CHART_COLORS }],
+      datasets: [{ data: rows.map((row) => row.amount), backgroundColor: this.chartColors() }],
     };
   });
 
@@ -165,7 +176,7 @@ export class ReportList implements OnInit {
         {
           label: 'Rezervasyon Sayısı',
           data: rows.map((row) => row.count),
-          backgroundColor: CHART_COLORS[2],
+          backgroundColor: this.chartColors()[0],
         },
       ],
     };
@@ -179,7 +190,7 @@ export class ReportList implements OnInit {
         {
           label: 'Toplam Harcama',
           data: top.map((row) => row.totalSpent),
-          backgroundColor: CHART_COLORS[3],
+          backgroundColor: this.chartColors()[0],
         },
       ],
     };

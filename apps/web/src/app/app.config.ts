@@ -22,6 +22,7 @@ import {
   ClockCircleOutline,
   CloseCircleOutline,
   CloseOutline,
+  CompassOutline,
   DashboardOutline,
   DeleteOutline,
   DollarOutline,
@@ -106,6 +107,7 @@ export const appConfig: ApplicationConfig = {
       SyncOutline,
       MobileOutline,
       CloseOutline,
+      CompassOutline,
     ]),
   ],
 };

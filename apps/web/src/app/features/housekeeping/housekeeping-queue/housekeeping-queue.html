@@ -1,9 +1,9 @@
-<div class="page-header">
+<div class="page-header" id="tour-housekeeping">
   <div>
     <h2 class="page-title">Temizlik Kuyruğu</h2>
     <p class="page-subtitle">Villalardaki temizlik görevlerini durumlarına göre takip et.</p>
   </div>
-  <div class="header-actions">
+  <div class="header-actions" id="tour-housekeeping-actions">
     <nz-select
       [ngModel]="filterVillaId()"
       (ngModelChange)="filterVillaId.set($event); onFilterChange()"

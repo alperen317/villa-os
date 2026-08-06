@@ -68,6 +68,14 @@
   white-space: nowrap;
 }
 
+// Tightly paired so "tour" and "logout" read as one action cluster,
+// visually distinct from the sync panel/user info sitting further left.
+.session-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
 .content {
   padding: 24px 32px;
   background: var(--color-canvas);
@@ -88,7 +96,8 @@
     align-items: center;
   }
 
-  .logout-text {
+  .logout-text,
+  .tour-text {
     display: none;
   }
 

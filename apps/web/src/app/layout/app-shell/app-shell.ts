@@ -6,6 +6,7 @@ import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { AuthService } from '../../core/auth/auth.service';
 import { SyncQueuePanel } from '../../core/sync/sync-queue-panel/sync-queue-panel';
+import { TourService } from '../../core/tour/tour.service';
 import { SettingsStore } from '../../features/settings/settings.store';
 
 const HOUSEKEEPING_NAV_ROLES = new Set(['Administrator', 'Operations', 'Housekeeping']);
@@ -20,6 +21,7 @@ const HOUSEKEEPING_NAV_ROLES = new Set(['Administrator', 'Operations', 'Housekee
 export class AppShell implements OnInit {
   protected readonly authService = inject(AuthService);
   protected readonly settingsStore = inject(SettingsStore);
+  protected readonly tourService = inject(TourService);
   private readonly router = inject(Router);
 
   protected readonly collapsed = signal(false);
@@ -37,6 +39,11 @@ export class AppShell implements OnInit {
   async ngOnInit(): Promise<void> {
     if (!this.authService.currentUser()) {
       await this.authService.loadCurrentUser();
+    }
+
+    const user = this.authService.currentUser();
+    if (user && !this.tourService.hasSeenTour(user.sub)) {
+      void this.tourService.start();
     }
   }
 

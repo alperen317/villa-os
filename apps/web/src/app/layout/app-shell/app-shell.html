@@ -76,10 +76,16 @@
         }
       </span>
       <app-sync-queue-panel />
-      <button nz-button nzType="text" (click)="logout()">
-        <nz-icon nzType="logout" />
-        <span class="logout-text">Çıkış</span>
-      </button>
+      <div class="session-actions">
+        <button nz-button nzType="text" (click)="tourService.start()">
+          <nz-icon nzType="compass" />
+          <span class="tour-text">Turu Başlat</span>
+        </button>
+        <button nz-button nzType="text" (click)="logout()">
+          <nz-icon nzType="logout" />
+          <span class="logout-text">Çıkış</span>
+        </button>
+      </div>
     </nz-header>
 
     <nz-content class="content" id="main-content" tabindex="-1">
