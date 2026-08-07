@@ -1,3 +1,7 @@
+# The browser only ever talks to WEB_PORT: nginx proxies /api and /uploads to
+# the api service, so both ports below can be changed freely without touching
+# application code. API_PORT just exposes the API directly for Swagger and
+# debugging.
 services:
   postgres:
     image: postgres:16-alpine
@@ -40,12 +44,21 @@ services:
       redis:
         condition: service_healthy
     environment:
+      NODE_ENV: production
+      PORT: 3000
       DATABASE_URL: postgresql://${POSTGRES_USER:-villaos}:${POSTGRES_PASSWORD:-villaos}@postgres:5432/${POSTGRES_DB:-villaos}?schema=public
       REDIS_URL: redis://redis:6379
+      # AuthService reads all four with getOrThrow — a missing TTL crashes login.
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change-me}
+      JWT_ACCESS_TTL_SECONDS: ${JWT_ACCESS_TTL_SECONDS:-900}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-too}
+      JWT_REFRESH_TTL_SECONDS: ${JWT_REFRESH_TTL_SECONDS:-604800}
+    volumes:
+      # Uploaded files (logo, etc.) live on disk; without this they vanish on
+      # every container replacement.
+      - api_uploads:/app/uploads
     ports:
-      - '${API_PORT:-3000}:3000'
+      - '${API_PORT:-8084}:3000'
 
   web:
     build:
@@ -55,8 +68,9 @@ services:
     depends_on:
       - api
     ports:
-      - '${WEB_PORT:-4200}:80'
+      - '${WEB_PORT:-8083}:80'
 
 volumes:
   postgres_data:
   redis_data:
+  api_uploads:

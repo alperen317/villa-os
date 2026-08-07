@@ -91,6 +91,44 @@ scripts/
 
 ---
 
+## Running with Docker
+
+Brings up PostgreSQL, Redis, the API and the web app. Requires Docker Desktop.
+
+```bash
+cp docker/.env.example docker/.env   # optional; sane defaults apply without it
+docker compose -f docker/docker-compose.yml up -d --build
+```
+
+| Service | URL |
+|---------|-----|
+| Web app | http://localhost:8083 |
+| API (through the web app) | http://localhost:8083/api/v1 |
+| API (direct) | http://localhost:8084/api/v1 |
+| Swagger | http://localhost:8084/api/docs |
+
+Database migrations are applied automatically each time the API container
+starts. The first user is created through the in-app onboarding screen.
+
+```bash
+docker compose -f docker/docker-compose.yml logs -f api   # follow API logs
+docker compose -f docker/docker-compose.yml down          # stop, keep data
+docker compose -f docker/docker-compose.yml down -v       # stop and wipe data
+```
+
+Ports can be changed via `WEB_PORT` / `API_PORT` in `docker/.env`. The browser
+only ever talks to `WEB_PORT`: nginx proxies `/api` and `/uploads` to the API
+container, so the app is same-origin and no port is baked into the built
+bundle.
+
+### Local development
+
+`nx serve` is unaffected by the Docker ports. The API runs on `3333` and the
+dev-server proxies `/api` and `/uploads` to it via `apps/web/proxy.conf.json`,
+mirroring what nginx does in the container.
+
+---
+
 ## Development Principles
 
 - Domain-Driven Design (DDD)

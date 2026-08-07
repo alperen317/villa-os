@@ -1,0 +1,31 @@
+node_modules
+**/node_modules
+
+# Build output — the image builds its own.
+dist
+**/dist
+out-tsc
+**/out-tsc
+tmp
+test-output
+
+# Tooling caches. .angular and .nx in particular are large and host-specific.
+.angular
+.nx
+.git
+.github
+.vscode
+.idea
+.claude
+.agents
+
+# Runtime state that must not be baked into an image.
+uploads
+apps/api/uploads
+**/.env
+**/.env.*
+!**/.env.example
+
+docs
+*.md
+!README.md
