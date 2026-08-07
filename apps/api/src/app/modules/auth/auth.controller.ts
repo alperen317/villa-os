@@ -6,7 +6,9 @@ import { OnboardingDto } from './dto/onboarding.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
-import { AccessTokenPayload } from './jwt-payload.interface';
+// `import type` is required here: with isolatedModules + emitDecoratorMetadata,
+// a type used in a decorated signature must not look like a runtime import.
+import type { AccessTokenPayload } from './jwt-payload.interface';
 
 @ApiTags('auth')
 @Controller('auth')

@@ -1,6 +1,11 @@
 <nz-layout class="shell">
   @if (mobileNavOpen()) {
-    <div class="sider-backdrop" (click)="mobileNavOpen.set(false)"></div>
+    <button
+      type="button"
+      class="sider-backdrop"
+      aria-label="Menüyü kapat"
+      (click)="mobileNavOpen.set(false)"
+    ></button>
   }
 
   <nz-sider
@@ -17,7 +22,7 @@
         <span>{{ collapsed() ? 'VOS' : settingsStore.companyName() }}</span>
       }
     </div>
-    <ul nz-menu nzTheme="dark" nzMode="inline" (click)="mobileNavOpen.set(false)">
+    <ul nz-menu nzTheme="dark" nzMode="inline">
       <li nz-menu-item routerLink="/dashboard" routerLinkActive="ant-menu-item-selected">
         <nz-icon nzType="dashboard" />
         <span>Dashboard</span>

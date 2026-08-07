@@ -12,7 +12,7 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { AccessTokenPayload } from '../auth/jwt-payload.interface';
+import type { AccessTokenPayload } from '../auth/jwt-payload.interface';
 import { RequirePermission } from '../permissions/decorators/require-permission.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersQueryDto } from './dto/list-users-query.dto';

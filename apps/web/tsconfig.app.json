@@ -1,7 +1,9 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/web-app",
+    "rootDir": "src",
+    "tsBuildInfoFile": "../../dist/out-tsc/web-app/tsconfig.app.tsbuildinfo",
     "types": []
   },
   "include": ["src/**/*.ts"],

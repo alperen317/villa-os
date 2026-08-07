@@ -2,7 +2,9 @@
   "name": "villa-os",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "postinstall": "prisma generate --schema=apps/api/prisma/schema.prisma"
+  },
   "private": true,
   "devDependencies": {
     "@angular-devkit/core": "~22.0.4",

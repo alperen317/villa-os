@@ -1,5 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { filter } from 'rxjs';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
@@ -35,6 +37,18 @@ export class AppShell implements OnInit {
   protected readonly showAdminNav = computed(
     () => this.authService.currentUser()?.role === 'Administrator',
   );
+
+  constructor() {
+    // Close the off-canvas drawer once navigation actually happens, rather than on a click
+    // anywhere in the menu — this also covers keyboard activation and programmatic navigation
+    // (e.g. the guided tour), and keeps the <ul> free of a non-keyboard-accessible handler.
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => this.mobileNavOpen.set(false));
+  }
 
   async ngOnInit(): Promise<void> {
     if (!this.authService.currentUser()) {

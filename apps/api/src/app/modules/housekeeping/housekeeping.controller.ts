@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { AccessTokenPayload } from '../auth/jwt-payload.interface';
+import type { AccessTokenPayload } from '../auth/jwt-payload.interface';
 import { RequirePermission } from '../permissions/decorators/require-permission.decorator';
 import { CreateHousekeepingTaskDto } from './dto/create-housekeeping-task.dto';
 import { ListHousekeepingTasksQueryDto } from './dto/list-housekeeping-tasks-query.dto';

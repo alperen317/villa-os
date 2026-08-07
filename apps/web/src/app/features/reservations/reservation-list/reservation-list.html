@@ -175,10 +175,22 @@
                 <nz-dropdown-menu #menu="nzDropdownMenu">
                   <ul nz-menu>
                     @if (canEdit(reservation.status)) {
-                      <li nz-menu-item (click)="openEditModal(reservation)">Düzenle</li>
+                      <li
+                        nz-menu-item
+                        tabindex="0"
+                        (click)="openEditModal(reservation)"
+                        (keydown.enter)="openEditModal(reservation)"
+                      >
+                        Düzenle
+                      </li>
                     }
                     @for (next of nextActions[reservation.status]; track next.action) {
-                      <li nz-menu-item (click)="runAction(reservation, next.action)">
+                      <li
+                        nz-menu-item
+                        tabindex="0"
+                        (click)="runAction(reservation, next.action)"
+                        (keydown.enter)="runAction(reservation, next.action)"
+                      >
                         {{ next.label }}
                       </li>
                     }

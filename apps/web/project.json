@@ -66,6 +66,19 @@
     "lint": {
       "executor": "@nx/eslint:lint"
     },
+    "typecheck": {
+      "cache": true,
+      "inputs": ["default", "^default"],
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/web",
+        "parallel": false,
+        "commands": [
+          "tsc -p tsconfig.app.json --noEmit",
+          "tsc -p tsconfig.spec.json --noEmit"
+        ]
+      }
+    },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{projectRoot}/test-output/jest/coverage"],

@@ -5,6 +5,9 @@
     "experimentalDecorators": true,
     "moduleResolution": "bundler",
     "module": "preserve",
+    // The Angular compiler rejects `emitDeclarationOnly` (NG4006), so this
+    // project opts out of the workspace's declaration-emit defaults. Its
+    // `typecheck` target runs `tsc --noEmit` instead of `tsc --build`.
     "composite": false,
     "declaration": false,
     "declarationMap": false,
