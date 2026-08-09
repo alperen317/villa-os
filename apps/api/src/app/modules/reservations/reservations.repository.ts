@@ -21,12 +21,35 @@ export type ReservationWithRelations = Prisma.ReservationGetPayload<{
   include: typeof RESERVATION_INCLUDE;
 }>;
 
+/** Either the plain client or one bound to an open transaction. */
+export type ReservationsClient = PrismaService | Prisma.TransactionClient;
+
 @Injectable()
 export class ReservationsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(data: Prisma.ReservationUncheckedCreateInput): Promise<ReservationWithRelations> {
-    return this.prisma.reservation.create({ data, include: RESERVATION_INCLUDE });
+  /**
+   * Serializes reservation writes for a single villa.
+   *
+   * The `reservations_no_overlap_per_unit` EXCLUDE constraint only rejects
+   * overlaps on the *same* unit. The entire-villa-vs-floor rule (FR-401/FR-402)
+   * is expressed in `findConflicting` instead, so without a lock two concurrent
+   * requests — one for the whole villa, one for a single floor — can both pass
+   * the check and both commit, double-booking the villa. The advisory lock is
+   * held until the surrounding transaction ends.
+   */
+  withVillaLock<T>(villaId: string, work: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${villaId})::bigint)`;
+      return work(tx);
+    });
+  }
+
+  create(
+    data: Prisma.ReservationUncheckedCreateInput,
+    client: ReservationsClient = this.prisma,
+  ): Promise<ReservationWithRelations> {
+    return client.reservation.create({ data, include: RESERVATION_INCLUDE });
   }
 
   findById(id: string): Promise<ReservationWithRelations | null> {
@@ -120,7 +143,10 @@ export class ReservationsRepository {
    * Regular floor: conflicts with reservations on the same floor, and with the
    * villa's entire-villa floor (FR-401/FR-402) — but not with other regular floors.
    */
-  findConflicting(params: ConflictCheckParams): Promise<ReservationWithRelations | null> {
+  findConflicting(
+    params: ConflictCheckParams,
+    client: ReservationsClient = this.prisma,
+  ): Promise<ReservationWithRelations | null> {
     const unitFilter: Prisma.ReservationWhereInput = params.isEntireVillaFloor
       ? { floor: { villaId: params.villaId } }
       : {
@@ -130,7 +156,7 @@ export class ReservationsRepository {
           ],
         };
 
-    return this.prisma.reservation.findFirst({
+    return client.reservation.findFirst({
       where: {
         ...unitFilter,
         deletedAt: null,

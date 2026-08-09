@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { MoneyInput, subtractMoney, sumMoney } from '../../common/money';
 import { ReservationsService } from '../reservations/reservations.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { PaymentsRepository } from './payments.repository';
@@ -36,18 +37,18 @@ export class PaymentsService {
     const reservation = await this.reservationsService.findOneOrThrow(reservationId);
     const payments = await this.paymentsRepository.findManyByReservation(reservationId);
 
-    return this.buildSummary(reservationId, Number(reservation.totalPrice), payments);
+    return this.buildSummary(reservationId, reservation.totalPrice, payments);
   }
 
   /** FR-602: outstanding balance = total price minus all recorded payments (can go negative — overpayment, see docs/FEATURES/payments.md). */
-  buildSummary(reservationId: string, totalPrice: number, payments: Payment[]): PaymentsSummary {
-    const totalPaid = payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+  buildSummary(reservationId: string, totalPrice: MoneyInput, payments: Payment[]): PaymentsSummary {
+    const totalPaid = sumMoney(payments.map((payment) => payment.amount));
 
     return {
       reservationId,
-      totalPrice,
+      totalPrice: Number(totalPrice),
       totalPaid,
-      outstandingBalance: totalPrice - totalPaid,
+      outstandingBalance: subtractMoney(totalPrice, totalPaid),
       payments,
     };
   }

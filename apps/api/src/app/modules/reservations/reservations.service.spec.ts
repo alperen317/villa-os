@@ -8,7 +8,7 @@ import { InvalidReservationTransitionException } from './exceptions/invalid-rese
 import { ReservationStaleWriteException } from './exceptions/reservation-stale-write.exception';
 import { ReservationsRepository, ReservationWithRelations } from './reservations.repository';
 import { ReservationsService } from './reservations.service';
-import { ReservationStatus } from '../../../generated/prisma/client';
+import { Prisma, ReservationStatus } from '../../../generated/prisma/client';
 
 function reservation(overrides: Partial<ReservationWithRelations> = {}): ReservationWithRelations {
   return {
@@ -33,6 +33,9 @@ function reservation(overrides: Partial<ReservationWithRelations> = {}): Reserva
   } as ReservationWithRelations;
 }
 
+/** Stand-in for the Prisma transaction client handed to work inside the villa lock. */
+const TRANSACTION_CLIENT = { transaction: 'villa-lock' };
+
 describe('ReservationsService', () => {
   let service: ReservationsService;
   let reservationsRepository: jest.Mocked<ReservationsRepository>;
@@ -53,6 +56,12 @@ describe('ReservationsService', () => {
             create: jest.fn(),
             findConflicting: jest.fn(),
             findByIdempotencyKey: jest.fn(),
+            // Runs the callback inline with a recognisable stand-in for the
+            // transaction client, so tests can assert that the guarded work
+            // really ran against it.
+            withVillaLock: jest.fn((_villaId: string, work: (tx: unknown) => Promise<unknown>) =>
+              work(TRANSACTION_CLIENT),
+            ),
           },
         },
         { provide: VillasService, useValue: { findOneOrThrow: jest.fn() } },
@@ -103,6 +112,7 @@ describe('ReservationsService', () => {
 
       expect(reservationsRepository.findConflicting).toHaveBeenCalledWith(
         expect.objectContaining({ villaId: 'villa-1', floorId: 'floor-1', isEntireVillaFloor: true }),
+        expect.anything(),
       );
     });
 
@@ -122,7 +132,34 @@ describe('ReservationsService', () => {
       await service.create(dto as never);
 
       expect(reservationsRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({ villaId: 'villa-1', floorId: 'floor-1', totalPrice: 4000 }),
+        expect.objectContaining({
+          villaId: 'villa-1',
+          floorId: 'floor-1',
+          // Decimal, not a float: 1000/night × 4 nights.
+          totalPrice: new Prisma.Decimal(4000),
+        }),
+        expect.anything(),
+      );
+    });
+
+    it('runs the conflict check and the insert inside one villa-locked transaction (FR-401/FR-402)', async () => {
+      stubHappyPath();
+      reservationsRepository.findConflicting.mockResolvedValue(null);
+      reservationsRepository.create.mockResolvedValue(reservation());
+
+      await service.create(dto as never);
+
+      // Without the shared lock, a whole-villa booking and a single-floor
+      // booking can both pass the check and both commit — the EXCLUDE
+      // constraint only catches overlaps on the same unit.
+      expect(reservationsRepository.withVillaLock).toHaveBeenCalledWith('villa-1', expect.any(Function));
+      expect(reservationsRepository.findConflicting).toHaveBeenCalledWith(
+        expect.anything(),
+        TRANSACTION_CLIENT,
+      );
+      expect(reservationsRepository.create).toHaveBeenCalledWith(
+        expect.anything(),
+        TRANSACTION_CLIENT,
       );
     });
 
@@ -163,6 +200,7 @@ describe('ReservationsService', () => {
 
       expect(reservationsRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({ idempotencyKey: 'key-1' }),
+        expect.anything(),
       );
     });
   });

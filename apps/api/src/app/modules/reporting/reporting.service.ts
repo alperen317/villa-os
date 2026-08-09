@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { addMoney, sumMoney } from '../../common/money';
 import { ReportingRepository } from './reporting.repository';
 import { ReportQueryDto } from './dto/report-query.dto';
 import { PaymentMethod, ReservationStatus } from '../../../generated/prisma/client';
@@ -203,8 +204,8 @@ export class ReportingService {
 
     for (const payment of payments) {
       const isoDate = toIsoDate(toDateOnly(payment.paymentDate.toISOString()));
-      dailyMap.set(isoDate, (dailyMap.get(isoDate) ?? 0) + payment.amount);
-      methodMap.set(payment.paymentMethod, (methodMap.get(payment.paymentMethod) ?? 0) + payment.amount);
+      dailyMap.set(isoDate, addMoney(dailyMap.get(isoDate) ?? 0, payment.amount));
+      methodMap.set(payment.paymentMethod, addMoney(methodMap.get(payment.paymentMethod) ?? 0, payment.amount));
     }
 
     const daily: RevenueReportDailyPoint[] = enumerateDates(from, to).map((date) => {
@@ -217,7 +218,7 @@ export class ReportingService {
       amount,
     }));
 
-    const totalRevenue = payments.reduce((sum, payment) => sum + payment.amount, 0);
+    const totalRevenue = sumMoney(payments.map((payment) => payment.amount));
 
     return {
       from: query.from,
@@ -292,7 +293,7 @@ export class ReportingService {
       const existing = byCustomer.get(reservation.customerId);
       if (existing) {
         existing.reservationCount += 1;
-        existing.totalSpent += reservation.totalPrice;
+        existing.totalSpent = addMoney(existing.totalSpent, reservation.totalPrice);
         if (reservation.checkIn.toISOString() > existing.lastCheckIn) {
           existing.lastCheckIn = toIsoDate(reservation.checkIn);
         }

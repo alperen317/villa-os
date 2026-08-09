@@ -58,5 +58,18 @@ describe('PaymentsService', () => {
       expect(summary.totalPaid).toBe(1200);
       expect(summary.outstandingBalance).toBe(-200);
     });
+
+    it('keeps fractional instalments exact', () => {
+      // Summing these as floats yields 1000.0000000000001, leaving a fully paid
+      // reservation with a phantom -1.1368683772161603e-13 balance.
+      const summary = service.buildSummary('res-1', 1000, [
+        payment(128.3),
+        payment(435.85),
+        payment(435.85),
+      ]);
+
+      expect(summary.totalPaid).toBe(1000);
+      expect(summary.outstandingBalance).toBe(0);
+    });
   });
 });

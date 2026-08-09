@@ -13,7 +13,7 @@ import { InvalidReservationTransitionException } from './exceptions/invalid-rese
 import { ReservationConflictException } from './exceptions/reservation-conflict.exception';
 import { ReservationStaleWriteException } from './exceptions/reservation-stale-write.exception';
 import { ReservationsRepository, ReservationWithRelations } from './reservations.repository';
-import { ReservationStatus } from '../../../generated/prisma/client';
+import { Prisma, ReservationStatus } from '../../../generated/prisma/client';
 
 const ALLOWED_TRANSITIONS: Record<ReservationStatus, ReservationStatus[]> = {
   Pending: ['Confirmed', 'Cancelled'],
@@ -63,32 +63,43 @@ export class ReservationsService {
       );
     }
 
-    const conflict = await this.reservationsRepository.findConflicting({
-      villaId: dto.villaId,
-      floorId: dto.floorId,
-      isEntireVillaFloor: floor.isEntireVilla,
-      checkIn,
-      checkOut,
-    });
-
-    if (conflict) {
-      throw new ReservationConflictException(conflict.id);
-    }
-
     const nights = this.calculateNights(checkIn, checkOut);
-    const totalPrice = Number(floor.dailyPrice) * nights;
+    const totalPrice = new Prisma.Decimal(floor.dailyPrice).mul(nights);
 
-    return this.reservationsRepository.create({
-      reservationNumber: this.generateReservationNumber(),
-      customerId: dto.customerId,
-      villaId: dto.villaId,
-      floorId: dto.floorId,
-      checkIn,
-      checkOut,
-      guestCount: dto.guestCount,
-      totalPrice,
-      notes: dto.notes,
-      idempotencyKey,
+    // Checking for a conflict and inserting must be atomic: see
+    // ReservationsRepository.withVillaLock for why the EXCLUDE constraint alone
+    // does not cover the entire-villa-vs-floor case.
+    return this.reservationsRepository.withVillaLock(dto.villaId, async (tx) => {
+      const conflict = await this.reservationsRepository.findConflicting(
+        {
+          villaId: dto.villaId,
+          floorId: dto.floorId,
+          isEntireVillaFloor: floor.isEntireVilla,
+          checkIn,
+          checkOut,
+        },
+        tx,
+      );
+
+      if (conflict) {
+        throw new ReservationConflictException(conflict.id);
+      }
+
+      return this.reservationsRepository.create(
+        {
+          reservationNumber: this.generateReservationNumber(),
+          customerId: dto.customerId,
+          villaId: dto.villaId,
+          floorId: dto.floorId,
+          checkIn,
+          checkOut,
+          guestCount: dto.guestCount,
+          totalPrice,
+          notes: dto.notes,
+          idempotencyKey,
+        },
+        tx,
+      );
     });
   }
 
