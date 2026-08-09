@@ -64,6 +64,76 @@
   outline-offset: 1px;
 }
 
+// Mobile calendar. Card-mode day cells are roughly 40px tall, so a day carries one dot per
+// event kind and the readable version lives in .day-detail below the grid.
+.calendar-dots {
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.calendar-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+}
+
+.calendar-dot--in {
+  background: var(--color-success);
+}
+
+.calendar-dot--out {
+  background: var(--color-warning);
+}
+
+.day-detail {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-line);
+}
+
+.day-detail-title {
+  margin: 0 0 var(--space-2);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.day-detail-empty {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.day-detail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  margin-bottom: var(--space-2);
+  padding: 10px var(--space-3);
+  text-align: left;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.day-detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.day-detail-tag {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.day-detail-text {
+  font-size: 13px;
+  color: var(--color-ink);
+}
+
 .detail-descriptions {
   margin-bottom: 16px;
 }
@@ -156,8 +226,12 @@
     justify-content: stretch;
   }
 
+  // `flex: 1` would set flex-basis to 0, and wrapping is decided from the basis — so every
+  // preset stays on one line, clamped at min-content, and overflows the row. `auto` keeps
+  // the label's own width as the basis, so they wrap onto as many lines as they need and
+  // then stretch to fill each one.
   .date-presets button {
-    flex: 1;
+    flex: 1 1 auto;
   }
 
   .availability-form {

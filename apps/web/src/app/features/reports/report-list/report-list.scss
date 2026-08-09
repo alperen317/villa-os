@@ -79,8 +79,10 @@
     justify-content: stretch;
   }
 
+  // flex-basis stays `auto` on purpose: with a 0 basis all six presets are laid out on a
+  // single line regardless of flex-wrap, clamp at min-content and overflow the row.
   .date-presets button {
-    flex: 1;
+    flex: 1 1 auto;
   }
 
   .filter-bar {

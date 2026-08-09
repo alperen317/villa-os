@@ -11,7 +11,6 @@ import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTagModule } from 'ng-zorro-antd/tag';
-import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 import { AuthService } from '../../../core/auth/auth.service';
 import { UserRole } from '../../../core/auth/auth.model';
 import { AppUser } from '../../../core/models/user.model';
@@ -43,7 +42,6 @@ const ROLE_OPTIONS = (Object.keys(ROLE_LABELS) as UserRole[]).map((role) => ({
     NzSelectModule,
     NzTableModule,
     NzTagModule,
-    NzTooltipModule,
   ],
   templateUrl: './user-list.html',
   styleUrl: './user-list.scss',

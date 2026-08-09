@@ -169,7 +169,17 @@
             </td>
             <td class="td-actions">
               @if (nextActions[reservation.status].length > 0 || canEdit(reservation.status)) {
-                <button nz-button nzType="text" aria-label="Rezervasyon aksiyonları" nz-dropdown [nzDropdownMenu]="menu">
+                <!-- nzTrigger defaults to 'hover', which only listens for mouseenter/mouseleave —
+                     on touch there is no hover, so the whole action menu (Düzenle, check-in/out,
+                     iptal) would be unreachable on mobile. Click also gives the overlay a backdrop. -->
+                <button
+                  nz-button
+                  nzType="text"
+                  aria-label="Rezervasyon aksiyonları"
+                  nz-dropdown
+                  nzTrigger="click"
+                  [nzDropdownMenu]="menu"
+                >
                   <nz-icon nzType="more" />
                 </button>
                 <nz-dropdown-menu #menu="nzDropdownMenu">
@@ -216,42 +226,98 @@
   </ng-template>
 } @else if (viewMode() === 'calendar') {
   <div class="page-surface">
-    <nz-calendar [nzFullscreen]="true">
+    <!-- Fullscreen mode squeezes seven columns into a phone's width, leaving the day cells
+         too narrow to render anything readable. Below the breakpoint the calendar drops to
+         card mode (dots per day) and the detail moves to the day panel underneath. -->
+    <nz-calendar
+      [nzFullscreen]="!viewport.isMobile()"
+      [nzValue]="selectedCalendarDate()"
+      (nzSelectChange)="onCalendarSelect($event)"
+    >
       <ng-template nzDateCell let-date>
-        <div class="calendar-cell">
-          @for (reservation of checkInsForDate(date); track reservation.id) {
-            <nz-tag
-              class="calendar-tag"
-              nzColor="green"
-              nz-tooltip
-              role="button"
-              tabindex="0"
-              [attr.aria-label]="'Giriş: ' + reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
-              [nzTooltipTitle]="reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
-              (click)="openDetail(reservation)"
-              (keydown.enter)="openDetail(reservation)"
-            >
-              <nz-icon nzType="login" /> {{ reservation.villa.name }} / {{ reservation.floor.name }} · {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
-            </nz-tag>
-          }
-          @for (reservation of checkOutsForDate(date); track reservation.id) {
-            <nz-tag
-              class="calendar-tag"
-              nzColor="volcano"
-              nz-tooltip
-              role="button"
-              tabindex="0"
-              [attr.aria-label]="'Çıkış: ' + reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
-              [nzTooltipTitle]="reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
-              (click)="openDetail(reservation)"
-              (keydown.enter)="openDetail(reservation)"
-            >
-              <nz-icon nzType="logout" /> {{ reservation.villa.name }} / {{ reservation.floor.name }} · {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
-            </nz-tag>
-          }
-        </div>
+        @if (viewport.isMobile()) {
+          <div class="calendar-dots">
+            @if (checkInsForDate(date).length > 0) {
+              <span class="calendar-dot calendar-dot--in"></span>
+            }
+            @if (checkOutsForDate(date).length > 0) {
+              <span class="calendar-dot calendar-dot--out"></span>
+            }
+          </div>
+        } @else {
+          <div class="calendar-cell">
+            @for (reservation of checkInsForDate(date); track reservation.id) {
+              <nz-tag
+                class="calendar-tag"
+                nzColor="green"
+                nz-tooltip
+                role="button"
+                tabindex="0"
+                [attr.aria-label]="'Giriş: ' + reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
+                [nzTooltipTitle]="reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
+                (click)="openDetail(reservation)"
+                (keydown.enter)="openDetail(reservation)"
+              >
+                <nz-icon nzType="login" /> {{ reservation.villa.name }} / {{ reservation.floor.name }} · {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+              </nz-tag>
+            }
+            @for (reservation of checkOutsForDate(date); track reservation.id) {
+              <nz-tag
+                class="calendar-tag"
+                nzColor="volcano"
+                nz-tooltip
+                role="button"
+                tabindex="0"
+                [attr.aria-label]="'Çıkış: ' + reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
+                [nzTooltipTitle]="reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
+                (click)="openDetail(reservation)"
+                (keydown.enter)="openDetail(reservation)"
+              >
+                <nz-icon nzType="logout" /> {{ reservation.villa.name }} / {{ reservation.floor.name }} · {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+              </nz-tag>
+            }
+          </div>
+        }
       </ng-template>
     </nz-calendar>
+
+    @if (viewport.isMobile()) {
+      <div class="day-detail">
+        <h4 class="day-detail-title">
+          {{ selectedCalendarDate() | date: 'dd.MM.yyyy' }} · giriş ve çıkışlar
+        </h4>
+
+        @if (selectedDayCheckIns().length === 0 && selectedDayCheckOuts().length === 0) {
+          <p class="day-detail-empty">Bu gün için giriş veya çıkış yok.</p>
+        }
+
+        @for (reservation of selectedDayCheckIns(); track reservation.id) {
+          <button type="button" class="day-detail-item" (click)="openDetail(reservation)">
+            <nz-tag nzColor="green" class="day-detail-tag">
+              <nz-icon nzType="login" />
+              Giriş
+            </nz-tag>
+            <span class="day-detail-text">
+              {{ reservation.villa.name }} / {{ reservation.floor.name }} ·
+              {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+            </span>
+          </button>
+        }
+
+        @for (reservation of selectedDayCheckOuts(); track reservation.id) {
+          <button type="button" class="day-detail-item" (click)="openDetail(reservation)">
+            <nz-tag nzColor="volcano" class="day-detail-tag">
+              <nz-icon nzType="logout" />
+              Çıkış
+            </nz-tag>
+            <span class="day-detail-text">
+              {{ reservation.villa.name }} / {{ reservation.floor.name }} ·
+              {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+            </span>
+          </button>
+        }
+      </div>
+    }
   </div>
 } @else {
   <div class="page-surface">

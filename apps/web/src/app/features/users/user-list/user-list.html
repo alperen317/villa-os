@@ -50,15 +50,10 @@
               Şifre Sıfırla
             </button>
             @if (user.isActive && isSelf(user)) {
-              <button
-                nz-button
-                nzType="text"
-                disabled
-                nz-tooltip
-                nzTooltipTitle="Kendi hesabınızı deaktif edemezsiniz"
-              >
-                Pasife Al
-              </button>
+              <!-- Was a disabled button explaining itself through a tooltip, which needs a
+                   hover this row never gets on touch — and a disabled button swallows the
+                   click a tooltip could otherwise open on. Plain visible text instead. -->
+              <span class="self-hint">Kendi hesabınızı deaktif edemezsiniz</span>
             } @else if (user.isActive) {
               <button
                 nz-button

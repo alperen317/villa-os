@@ -21,6 +21,7 @@ import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 import { AuthService } from '../../../core/auth/auth.service';
+import { ViewportService } from '../../../core/layout/viewport.service';
 import { Customer } from '../../../core/models/customer.model';
 import { SyncOutboxItem, UpdateReservationPayload } from '../../../core/sync/sync-queue.model';
 import { SyncQueueStore } from '../../../core/sync/sync-queue.store';
@@ -82,6 +83,7 @@ export class ReservationList implements OnInit {
   private readonly customersService = inject(CustomersService);
   private readonly paymentsService = inject(PaymentsService);
   private readonly authService = inject(AuthService);
+  protected readonly viewport = inject(ViewportService);
   private readonly syncQueueStore = inject(SyncQueueStore);
   private readonly formBuilder = inject(FormBuilder);
   private readonly message = inject(NzMessageService);
@@ -103,6 +105,17 @@ export class ReservationList implements OnInit {
 
   protected readonly calendarReservations = signal<Reservation[]>([]);
   protected readonly calendarLoading = signal(false);
+
+  /** On mobile the calendar renders in card mode, where a day cell only fits a dot per event
+   *  kind. The selected day's arrivals and departures are listed below the grid instead, so
+   *  the detail the fullscreen cells carry on desktop stays reachable. */
+  protected readonly selectedCalendarDate = signal(new Date());
+  protected readonly selectedDayCheckIns = computed(() =>
+    this.checkInsForDate(this.selectedCalendarDate()),
+  );
+  protected readonly selectedDayCheckOuts = computed(() =>
+    this.checkOutsForDate(this.selectedCalendarDate()),
+  );
 
   protected readonly villas = this.villasStore.villas;
   protected readonly filterVillaId = signal<string | null>(null);
@@ -390,6 +403,10 @@ export class ReservationList implements OnInit {
     return this.calendarReservations().filter(
       (reservation) => this.stripTime(new Date(reservation.checkOut)) === day,
     );
+  }
+
+  onCalendarSelect(date: Date): void {
+    this.selectedCalendarDate.set(date);
   }
 
   openDetail(reservation: Reservation): void {

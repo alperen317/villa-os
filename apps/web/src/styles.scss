@@ -205,6 +205,15 @@ body {
   transform: translateX(2px);
 }
 
+// A reveal-on-hover cue never reveals on a touch pointer, which would leave the link
+// looking like plain bold text. Keyed on pointer capability rather than viewport width,
+// since this is about how the device points, not how wide it is.
+@media (hover: none) {
+  .ref-link-icon {
+    opacity: 1;
+  }
+}
+
 // Empty state — used identically across every list page. One definition
 // instead of eight copies means the "nothing here yet" moment stays
 // consistent as the product grows.
@@ -503,10 +512,20 @@ a:hover {
     content: none;
   }
 
-  // The chevron only makes sense as a hover cue on desktop rows; on mobile
-  // the whole stacked card is already the tap target.
+  // Desktop announces "this row navigates" purely through hover — the row tint and the
+  // chevron slide — and touch fires neither, so a stacked card would carry no affordance
+  // at all. Keep the chevron and pair it with its data-label as an explicit link cue.
   .responsive-table .ant-table-content td.td-chevron {
-    display: none !important;
+    justify-content: flex-end;
+    gap: var(--space-1);
+    width: auto;
+    text-align: right !important;
+    color: var(--color-accent);
+  }
+
+  .responsive-table .ant-table-content td.td-chevron::before {
+    font-size: 13px;
+    color: inherit;
   }
 
   .responsive-table .ant-table-pagination {
