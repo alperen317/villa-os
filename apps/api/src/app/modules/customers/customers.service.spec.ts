@@ -1,4 +1,5 @@
-import { NotFoundException } from '@nestjs/common';
+import { expectRejectionCode } from '../../common/errors/expect-error-code';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { Test } from '@nestjs/testing';
 import { CustomersRepository } from './customers.repository';
 import { CustomersService } from './customers.service';
@@ -81,7 +82,7 @@ describe('CustomersService', () => {
     it('throws NotFoundException when the customer does not exist', async () => {
       repository.findById.mockResolvedValue(null);
 
-      await expect(service.findOneOrThrow('missing')).rejects.toThrow(NotFoundException);
+      await expectRejectionCode(service.findOneOrThrow('missing'), ErrorCode.CUSTOMER_NOT_FOUND, 404);
     });
   });
 
@@ -99,7 +100,7 @@ describe('CustomersService', () => {
     it('rejects updating an unknown customer', async () => {
       repository.findById.mockResolvedValue(null);
 
-      await expect(service.update('missing', { phone: '555' })).rejects.toThrow(NotFoundException);
+      await expectRejectionCode(service.update('missing', { phone: '555' }), ErrorCode.CUSTOMER_NOT_FOUND, 404);
       expect(repository.update).not.toHaveBeenCalled();
     });
   });
@@ -116,7 +117,7 @@ describe('CustomersService', () => {
     it('rejects removing an unknown customer', async () => {
       repository.findById.mockResolvedValue(null);
 
-      await expect(service.remove('missing')).rejects.toThrow(NotFoundException);
+      await expectRejectionCode(service.remove('missing'), ErrorCode.CUSTOMER_NOT_FOUND, 404);
       expect(repository.softDelete).not.toHaveBeenCalled();
     });
   });

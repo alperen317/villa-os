@@ -1,9 +1,9 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Patch,
   Post,
   UploadedFile,
@@ -17,6 +17,8 @@ import { UpdateSettingsDto } from './dto/update-settings.dto';
 import { logoUploadOptions } from './logo-upload.config';
 import { SettingsService } from './settings.service';
 import { Settings } from '../../../generated/prisma/client';
+import { AppException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 
 @ApiTags('settings')
 @Controller('settings')
@@ -43,7 +45,11 @@ export class SettingsController {
   @ApiOperation({ summary: 'Upload/replace the company logo' })
   uploadLogo(@UploadedFile() file: Express.Multer.File): Promise<Settings> {
     if (!file) {
-      throw new BadRequestException('Logo dosyası gerekli');
+      throw new AppException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.SETTINGS_LOGO_REQUIRED,
+        'A logo file is required',
+      );
     }
 
     return this.settingsService.updateLogo(`/uploads/logo/${file.filename}`);

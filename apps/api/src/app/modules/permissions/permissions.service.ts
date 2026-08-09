@@ -1,6 +1,8 @@
-import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
+import { HttpStatus, Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { CONFIGURABLE_ROLES, ConfigurableRole, PERMISSION_CATALOG } from './permission-catalog';
+import { AppException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 
 export interface PermissionRow {
   key: string;
@@ -43,7 +45,12 @@ export class PermissionsService implements OnModuleInit {
   async updateMatrix(updates: PermissionUpdateInput[]): Promise<PermissionRow[]> {
     for (const update of updates) {
       if (!CONFIGURABLE_ROLES.includes(update.role as ConfigurableRole)) {
-        throw new BadRequestException(`Rol için izinler değiştirilemez: ${update.role}`);
+        throw new AppException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.ROLE_PERMISSIONS_IMMUTABLE,
+        `Permissions cannot be changed for role ${update.role}`,
+        { role: update.role },
+      );
       }
     }
 
@@ -73,13 +80,14 @@ export class PermissionsService implements OnModuleInit {
     const rows = await this.prisma.rolePermission.findMany();
     for (const row of rows) {
       const role = row.role as ConfigurableRole;
-      if (!nextCache.has(role)) {
+      const permissions = nextCache.get(role);
+      if (!permissions) {
         continue;
       }
       if (row.allowed) {
-        nextCache.get(role)!.add(row.permissionKey);
+        permissions.add(row.permissionKey);
       } else {
-        nextCache.get(role)!.delete(row.permissionKey);
+        permissions.delete(row.permissionKey);
       }
     }
 

@@ -1,9 +1,11 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateFloorDto } from './dto/create-floor.dto';
 import { UpdateFloorDto } from './dto/update-floor.dto';
 import { FloorsRepository, FloorWithVilla } from './floors.repository';
 import { VillasService } from './villas.service';
 import { Floor } from '../../../generated/prisma/client';
+import { AppException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 
 @Injectable()
 export class FloorsService {
@@ -34,7 +36,11 @@ export class FloorsService {
   async findOneOrThrow(villaId: string, id: string): Promise<Floor> {
     const floor = await this.floorsRepository.findById(id);
     if (!floor || floor.villaId !== villaId) {
-      throw new NotFoundException(`Floor ${id} not found for villa ${villaId}`);
+      throw new AppException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.FLOOR_NOT_FOUND,
+        `Floor ${id} not found for villa ${villaId}`,
+      );
     }
 
     return floor;
@@ -58,7 +64,11 @@ export class FloorsService {
   private async assertNoExistingEntireVillaFloor(villaId: string): Promise<void> {
     const existing = await this.floorsRepository.findEntireVillaFloor(villaId);
     if (existing) {
-      throw new ConflictException(`Villa ${villaId} already has an entire-villa floor`);
+      throw new AppException(
+        HttpStatus.CONFLICT,
+        ErrorCode.FLOOR_ENTIRE_VILLA_EXISTS,
+        `Villa ${villaId} already has an entire-villa floor`,
+      );
     }
   }
 }

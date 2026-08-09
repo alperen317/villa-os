@@ -1,4 +1,6 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
+import { expectRejectionCode } from '../../common/errors/expect-error-code';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { Test } from '@nestjs/testing';
 import { FloorsRepository } from './floors.repository';
 import { FloorsService } from './floors.service';
@@ -68,7 +70,11 @@ describe('FloorsService', () => {
     it('rejects creating a floor under an unknown villa', async () => {
       villasService.findOneOrThrow.mockRejectedValue(new NotFoundException());
 
-      await expect(service.create('missing', { name: 'X' } as never)).rejects.toThrow(NotFoundException);
+      // The rejection here comes from the mocked VillasService, so this asserts
+      // that create propagates it rather than any code of its own.
+      await expect(service.create('missing', { name: 'X' } as never)).rejects.toThrow(
+        NotFoundException,
+      );
       expect(repository.create).not.toHaveBeenCalled();
     });
 
@@ -86,9 +92,11 @@ describe('FloorsService', () => {
       villasService.findOneOrThrow.mockResolvedValue({ id: 'villa-1' } as never);
       repository.findEntireVillaFloor.mockResolvedValue(floor({ id: 'floor-existing', isEntireVilla: true }));
 
-      await expect(
+      await expectRejectionCode(
         service.create('villa-1', { name: 'Tüm Villa 2', isEntireVilla: true } as never),
-      ).rejects.toThrow(ConflictException);
+        ErrorCode.FLOOR_ENTIRE_VILLA_EXISTS,
+        409,
+      );
       expect(repository.create).not.toHaveBeenCalled();
     });
   });
@@ -97,13 +105,13 @@ describe('FloorsService', () => {
     it('throws when the floor belongs to a different villa', async () => {
       repository.findById.mockResolvedValue(floor({ villaId: 'other-villa' }));
 
-      await expect(service.findOneOrThrow('villa-1', 'floor-1')).rejects.toThrow(NotFoundException);
+      await expectRejectionCode(service.findOneOrThrow('villa-1', 'floor-1'), ErrorCode.FLOOR_NOT_FOUND, 404);
     });
 
     it('throws when the floor does not exist', async () => {
       repository.findById.mockResolvedValue(null);
 
-      await expect(service.findOneOrThrow('villa-1', 'missing')).rejects.toThrow(NotFoundException);
+      await expectRejectionCode(service.findOneOrThrow('villa-1', 'missing'), ErrorCode.FLOOR_NOT_FOUND, 404);
     });
   });
 
@@ -122,9 +130,11 @@ describe('FloorsService', () => {
       repository.findById.mockResolvedValue(floor({ isEntireVilla: false }));
       repository.findEntireVillaFloor.mockResolvedValue(floor({ id: 'floor-other', isEntireVilla: true }));
 
-      await expect(
+      await expectRejectionCode(
         service.update('villa-1', 'floor-1', { isEntireVilla: true } as never),
-      ).rejects.toThrow(ConflictException);
+        ErrorCode.FLOOR_ENTIRE_VILLA_EXISTS,
+        409,
+      );
       expect(repository.update).not.toHaveBeenCalled();
     });
   });

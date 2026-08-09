@@ -1,4 +1,5 @@
-import { BadRequestException } from '@nestjs/common';
+import { expectRejectionCode } from '../../common/errors/expect-error-code';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { PermissionsService } from './permissions.service';
 
@@ -56,9 +57,11 @@ describe('PermissionsService', () => {
 
   describe('updateMatrix', () => {
     it('rejects attempts to write an Administrator row', async () => {
-      await expect(
+      await expectRejectionCode(
         service.updateMatrix([{ role: 'Administrator', permissionKey: 'villas.write', allowed: true }]),
-      ).rejects.toThrow(BadRequestException);
+        ErrorCode.ROLE_PERMISSIONS_IMMUTABLE,
+        400,
+      );
       expect(prisma.$transaction).not.toHaveBeenCalled();
     });
 

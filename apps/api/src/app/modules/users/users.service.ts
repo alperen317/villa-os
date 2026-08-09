@@ -1,4 +1,6 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { AppException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersQueryDto } from './dto/list-users-query.dto';
@@ -14,7 +16,11 @@ export class UsersService {
   async create(dto: CreateUserDto): Promise<SafeUser> {
     const usernameTaken = await this.usersRepository.usernameExists(dto.username);
     if (usernameTaken) {
-      throw new ConflictException('Bu kullanıcı adı zaten kullanılıyor');
+      throw new AppException(
+        HttpStatus.CONFLICT,
+        ErrorCode.USER_USERNAME_TAKEN,
+        'This username is already taken',
+      );
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
@@ -38,7 +44,7 @@ export class UsersService {
   async findOneOrThrow(id: string): Promise<SafeUser> {
     const user = await this.usersRepository.findById(id);
     if (!user) {
-      throw new NotFoundException(`User ${id} not found`);
+      throw new AppException(HttpStatus.NOT_FOUND, ErrorCode.USER_NOT_FOUND, `User ${id} not found`);
     }
 
     return user;
@@ -54,7 +60,11 @@ export class UsersService {
 
     if (!isActive) {
       if (id === currentUserId) {
-        throw new ForbiddenException('Kendi hesabınızı deaktif edemezsiniz');
+        throw new AppException(
+          HttpStatus.FORBIDDEN,
+          ErrorCode.USER_CANNOT_DEACTIVATE_SELF,
+          'You cannot deactivate your own account',
+        );
       }
 
       if (user.role === UserRole.Administrator) {
@@ -62,7 +72,11 @@ export class UsersService {
           UserRole.Administrator,
         );
         if (activeAdminCount <= 1) {
-          throw new ConflictException('Son aktif yönetici deaktif edilemez');
+          throw new AppException(
+            HttpStatus.CONFLICT,
+            ErrorCode.USER_LAST_ACTIVE_ADMINISTRATOR,
+            'The last active Administrator cannot be deactivated',
+          );
         }
       }
     }

@@ -1,4 +1,5 @@
-import { NotFoundException } from '@nestjs/common';
+import { expectRejectionCode } from '../../common/errors/expect-error-code';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { Test } from '@nestjs/testing';
 import { VillasRepository } from './villas.repository';
 import { VillasService } from './villas.service';
@@ -76,7 +77,7 @@ describe('VillasService', () => {
     it('throws NotFoundException for an unknown villa', async () => {
       repository.findById.mockResolvedValue(null);
 
-      await expect(service.findOneOrThrow('missing')).rejects.toThrow(NotFoundException);
+      await expectRejectionCode(service.findOneOrThrow('missing'), ErrorCode.VILLA_NOT_FOUND, 404);
     });
   });
 
@@ -104,7 +105,7 @@ describe('VillasService', () => {
     it('rejects setting status on an unknown villa', async () => {
       repository.findById.mockResolvedValue(null);
 
-      await expect(service.setStatus('missing', 'Inactive')).rejects.toThrow(NotFoundException);
+      await expectRejectionCode(service.setStatus('missing', 'Inactive'), ErrorCode.VILLA_NOT_FOUND, 404);
       expect(repository.update).not.toHaveBeenCalled();
     });
   });
@@ -121,7 +122,7 @@ describe('VillasService', () => {
     it('rejects removing an unknown villa', async () => {
       repository.findById.mockResolvedValue(null);
 
-      await expect(service.remove('missing')).rejects.toThrow(NotFoundException);
+      await expectRejectionCode(service.remove('missing'), ErrorCode.VILLA_NOT_FOUND, 404);
       expect(repository.softDelete).not.toHaveBeenCalled();
     });
   });

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { VillasService } from '../villas/villas.service';
 import { CreateMaintenanceRecordDto } from './dto/create-maintenance-record.dto';
 import { ListAllMaintenanceRecordsQueryDto } from './dto/list-all-maintenance-records-query.dto';
@@ -6,6 +6,8 @@ import { ListMaintenanceRecordsQueryDto } from './dto/list-maintenance-records-q
 import { InvalidMaintenanceTransitionException } from './exceptions/invalid-maintenance-transition.exception';
 import { MaintenanceRepository, MaintenanceRecordWithVilla } from './maintenance.repository';
 import { MaintenanceRecord, MaintenanceStatus } from '../../../generated/prisma/client';
+import { AppException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 
 @Injectable()
 export class MaintenanceService {
@@ -59,7 +61,11 @@ export class MaintenanceService {
   async findOneOrThrow(villaId: string, id: string): Promise<MaintenanceRecord> {
     const record = await this.maintenanceRepository.findById(id);
     if (!record || record.villaId !== villaId) {
-      throw new NotFoundException(`Maintenance record ${id} not found for villa ${villaId}`);
+      throw new AppException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.MAINTENANCE_RECORD_NOT_FOUND,
+        `Maintenance record ${id} not found for villa ${villaId}`,
+      );
     }
 
     return record;

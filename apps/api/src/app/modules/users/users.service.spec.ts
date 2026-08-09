@@ -1,4 +1,5 @@
-import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { expectRejectionCode } from '../../common/errors/expect-error-code';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { Test } from '@nestjs/testing';
 import { SafeUser, UsersRepository } from './users.repository';
 import { UsersService } from './users.service';
@@ -45,34 +46,40 @@ describe('UsersService', () => {
   });
 
   describe('create', () => {
-    it('throws ConflictException when the username is already taken', async () => {
+    it('rejects a username that is already taken', async () => {
       repository.usernameExists.mockResolvedValue(true);
 
-      await expect(
+      await expectRejectionCode(
         service.create({ username: 'taken', password: 'a-strong-password', role: 'Operations' as never }),
-      ).rejects.toThrow(ConflictException);
+        ErrorCode.USER_USERNAME_TAKEN,
+        409,
+      );
       expect(repository.create).not.toHaveBeenCalled();
     });
   });
 
   describe('setActive', () => {
-    it('throws ForbiddenException when a user tries to deactivate themselves', async () => {
+    it('rejects a user deactivating their own account', async () => {
       const user = safeUser({ id: 'self-1' });
       repository.findById.mockResolvedValue(user);
 
-      await expect(service.setActive('self-1', false, 'self-1')).rejects.toThrow(
-        ForbiddenException,
+      await expectRejectionCode(
+        service.setActive('self-1', false, 'self-1'),
+        ErrorCode.USER_CANNOT_DEACTIVATE_SELF,
+        403,
       );
       expect(repository.setActive).not.toHaveBeenCalled();
     });
 
-    it('throws ConflictException when deactivating the last active Administrator', async () => {
+    it('rejects deactivating the last active Administrator', async () => {
       const admin = safeUser({ id: 'admin-1', role: 'Administrator' as never });
       repository.findById.mockResolvedValue(admin);
       repository.countActiveByRole.mockResolvedValue(1);
 
-      await expect(service.setActive('admin-1', false, 'someone-else')).rejects.toThrow(
-        ConflictException,
+      await expectRejectionCode(
+        service.setActive('admin-1', false, 'someone-else'),
+        ErrorCode.USER_LAST_ACTIVE_ADMINISTRATOR,
+        409,
       );
       expect(repository.setActive).not.toHaveBeenCalled();
     });
@@ -88,11 +95,13 @@ describe('UsersService', () => {
       expect(repository.setActive).toHaveBeenCalledWith('admin-1', false);
     });
 
-    it('throws NotFoundException when the target user does not exist', async () => {
+    it('rejects when the target user does not exist', async () => {
       repository.findById.mockResolvedValue(null);
 
-      await expect(service.setActive('missing', false, 'someone-else')).rejects.toThrow(
-        NotFoundException,
+      await expectRejectionCode(
+        service.setActive('missing', false, 'someone-else'),
+        ErrorCode.USER_NOT_FOUND,
+        404,
       );
     });
   });

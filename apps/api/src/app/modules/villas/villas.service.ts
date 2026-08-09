@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateVillaDto } from './dto/create-villa.dto';
 import { ListVillasQueryDto } from './dto/list-villas-query.dto';
 import { UpdateVillaDto } from './dto/update-villa.dto';
 import { VillasRepository } from './villas.repository';
 import { Villa, VillaStatus } from '../../../generated/prisma/client';
+import { AppException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 
 export interface VillaWithMaintenanceFlag extends Villa {
   hasOpenMaintenance: boolean;
@@ -42,7 +44,7 @@ export class VillasService {
   async findOneOrThrow(id: string): Promise<Villa> {
     const villa = await this.villasRepository.findById(id);
     if (!villa) {
-      throw new NotFoundException(`Villa ${id} not found`);
+      throw new AppException(HttpStatus.NOT_FOUND, ErrorCode.VILLA_NOT_FOUND, `Villa ${id} not found`);
     }
 
     return villa;

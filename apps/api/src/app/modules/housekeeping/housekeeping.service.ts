@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { VillasService } from '../villas/villas.service';
 import { CreateHousekeepingTaskDto } from './dto/create-housekeeping-task.dto';
 import { InvalidHousekeepingTransitionException } from './exceptions/invalid-housekeeping-transition.exception';
 import { HousekeepingRepository, HousekeepingTaskWithRelations } from './housekeeping.repository';
 import { ListHousekeepingTasksQueryDto } from './dto/list-housekeeping-tasks-query.dto';
 import { HousekeepingStatus } from '../../../generated/prisma/client';
+import { AppException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 
 // Pending/InProgress tasks are naturally bounded (they clear out as they're worked),
 // but Completed accumulates forever — cap it to the most recent ones for the queue view.
@@ -59,7 +61,11 @@ export class HousekeepingService {
   async findOneOrThrow(id: string): Promise<HousekeepingTaskWithRelations> {
     const task = await this.housekeepingRepository.findById(id);
     if (!task) {
-      throw new NotFoundException(`Housekeeping task ${id} not found`);
+      throw new AppException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.HOUSEKEEPING_TASK_NOT_FOUND,
+        `Housekeeping task ${id} not found`,
+      );
     }
 
     return task;
