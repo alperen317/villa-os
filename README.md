@@ -34,6 +34,10 @@ Unlike traditional hotel software, this system is designed specifically for busi
 
 ## Documentation
 
+`docs/` is deliberately untracked (see `.gitignore`), so the files below live
+only in a working copy that has them — a fresh clone will not contain them.
+Code comments cite these documents by name for traceability.
+
 | Document | Description |
 |----------|-------------|
 | [`PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md) | Vision, goals and project scope |
@@ -79,14 +83,11 @@ Unlike traditional hotel software, this system is designed specifically for busi
 
 ```text
 apps/
-    web/
-    api/
-packages/
-    shared/
-    ui/
-docs/
-docker/
-scripts/
+    web/            Angular front-end
+    api/            NestJS API, Prisma schema and migrations
+packages/           Shared libraries — reserved, no packages extracted yet
+docker/             Compose file, Dockerfiles, nginx config
+docs/               Design documents (untracked, see above)
 ```
 
 ---
@@ -96,8 +97,16 @@ scripts/
 Brings up PostgreSQL, Redis, the API and the web app. Requires Docker Desktop.
 
 ```bash
-cp docker/.env.example docker/.env   # optional; sane defaults apply without it
+cp docker/.env.example docker/.env   # required: fill in the two JWT secrets
 docker compose -f docker/docker-compose.yml up -d --build
+```
+
+`JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` have no defaults — compose refuses
+to start until both are set, so that no deployment ends up signing tokens with
+a value published in this repository. Generate each with:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
 | Service | URL |
@@ -122,6 +131,25 @@ container, so the app is same-origin and no port is baked into the built
 bundle.
 
 ### Local development
+
+Run the databases in containers and the apps on the host:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d postgres redis
+```
+
+`docker/.env` is needed even for this: compose interpolates the whole file, so
+the api service's required secrets are resolved no matter which services you
+name on the command line.
+
+The API reads `apps/api/.env` (see `apps/api/.env.example`). Note that Redis is
+published on `REDIS_PORT` — `6380` by default, not `6379` — to avoid clashing
+with a Redis already installed on the host. Apply migrations from `apps/api`,
+where `prisma.config.ts` lives:
+
+```bash
+cd apps/api && npx prisma migrate deploy
+```
 
 `nx serve` is unaffected by the Docker ports. The API runs on `3333` and the
 dev-server proxies `/api` and `/uploads` to it via `apps/web/proxy.conf.json`,

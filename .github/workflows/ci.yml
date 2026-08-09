@@ -19,22 +19,20 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e"
+      # Nx Cloud is not set up: nx.json carries no nxCloudId, so the previous
+      # `nx start-ci-run`, `nx record` and `nx fix-ci` steps had nothing to talk
+      # to. Restore them after connecting the workspace with `npx nx connect`.
 
-      # Cache node_modules
+      # Read from .nvmrc so CI, local shells and the Docker images cannot drift
+      # apart. It tracks the Node major the runtime images are built on.
       - uses: actions/setup-node@v5
         with:
-          node-version: 24
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - run: npm ci
 
-      # Prepend any command with "nx record --" to record its logs to Nx Cloud
-      - run: npx nx record -- npx nx format:check --base="remotes/origin/main"
-      - run: npx nx run-many -t lint test build typecheck e2e
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: npx nx fix-ci
-        if: always()
+      - run: npx nx format:check --base="remotes/origin/main"
+      # No e2e project exists yet; listing the target here made it a silent
+      # no-op that read like coverage. Add it back alongside the project.
+      - run: npx nx run-many -t lint test build typecheck
