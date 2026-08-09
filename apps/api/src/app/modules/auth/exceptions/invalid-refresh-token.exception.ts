@@ -1,7 +1,13 @@
-import { UnauthorizedException } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
+import { DomainException } from '../../../common/errors/domain.exception';
+import { ErrorCode } from '../../../common/errors/error-codes';
 
-export class InvalidRefreshTokenException extends UnauthorizedException {
+export class InvalidRefreshTokenException extends DomainException {
   constructor() {
-    super('Refresh token is invalid, expired, or has been revoked');
+    super(
+      HttpStatus.UNAUTHORIZED,
+      ErrorCode.AUTH_INVALID_REFRESH_TOKEN,
+      'Refresh token is invalid, expired, or has been revoked',
+    );
   }
 }

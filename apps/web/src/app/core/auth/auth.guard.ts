@@ -2,13 +2,19 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 
-export const authGuard: CanActivateFn = () => {
+/**
+ * Every guard awaits `ensureSessionLoaded` first: the session is an httpOnly
+ * cookie, so on a fresh page load the app does not know whether it is signed in
+ * until the server says so. The call is shared, so a navigation running several
+ * guards still probes once.
+ */
+export const authGuard: CanActivateFn = async () => {
   const authService = inject(AuthService);
-  if (authService.isAuthenticated()) {
-    return true;
-  }
+  const router = inject(Router); // must be injected before any `await` — inject() needs the active injection context
 
-  return inject(Router).createUrlTree(['/login']);
+  await authService.ensureSessionLoaded();
+
+  return authService.isAuthenticated() ? true : router.createUrlTree(['/login']);
 };
 
 /**
@@ -17,7 +23,9 @@ export const authGuard: CanActivateFn = () => {
  */
 export const guestGuard: CanActivateFn = async () => {
   const authService = inject(AuthService);
-  const router = inject(Router); // must be injected before any `await` — inject() needs the active injection context
+  const router = inject(Router);
+
+  await authService.ensureSessionLoaded();
 
   if (authService.isAuthenticated()) {
     return router.createUrlTree(['/dashboard']);
@@ -32,6 +40,8 @@ export const onboardingGuard: CanActivateFn = async () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
+  await authService.ensureSessionLoaded();
+
   if (authService.isAuthenticated()) {
     return router.createUrlTree(['/dashboard']);
   }
@@ -42,16 +52,14 @@ export const onboardingGuard: CanActivateFn = async () => {
 
 /**
  * Restricts a route to Administrators (e.g. whitelabel/branding settings).
- * Runs before AppShell.ngOnInit, so on a fresh navigation `currentUser` may
- * not be populated yet — load it here rather than assume it's already set.
+ * `ensureSessionLoaded` also populates `currentUser`, so the role is known here
+ * even on a fresh navigation straight into the route.
  */
 export const adminGuard: CanActivateFn = async () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (!authService.currentUser()) {
-    await authService.loadCurrentUser();
-  }
+  await authService.ensureSessionLoaded();
 
   if (authService.currentUser()?.role === 'Administrator') {
     return true;

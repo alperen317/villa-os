@@ -2,30 +2,33 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from '../api-base-url';
-import { CurrentUser, TokenPair } from './auth.model';
+import { CurrentUser } from './auth.model';
 
-const ACCESS_TOKEN_KEY = 'villaos.accessToken';
-const REFRESH_TOKEN_KEY = 'villaos.refreshToken';
-
+/**
+ * The session lives in httpOnly cookies the browser attaches on its own, so
+ * this service never sees a token. That is the point — script on the page
+ * cannot read one either, so an XSS can no longer steal a session and replay it
+ * elsewhere. The consequence is that "am I signed in?" becomes a question only
+ * the server can answer, which is what `ensureSessionLoaded` asks.
+ */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
 
-  readonly accessToken = signal<string | null>(localStorage.getItem(ACCESS_TOKEN_KEY));
-  readonly refreshToken = signal<string | null>(localStorage.getItem(REFRESH_TOKEN_KEY));
   readonly currentUser = signal<CurrentUser | null>(null);
-
-  readonly isAuthenticated = computed(() => this.accessToken() !== null);
+  readonly isAuthenticated = computed(() => this.currentUser() !== null);
 
   /** Shared by concurrent 401s so a burst of requests triggers one refresh, not one each. */
-  private refreshPromise: Promise<string> | null = null;
+  private refreshPromise: Promise<void> | null = null;
+
+  /** Shared by concurrent guards so one navigation probes the session once. */
+  private sessionLoad: Promise<void> | null = null;
 
   async login(username: string, password: string): Promise<void> {
-    const tokens = await firstValueFrom(
-      this.http.post<TokenPair>(`${API_BASE_URL}/auth/login`, { username, password }),
+    const user = await firstValueFrom(
+      this.http.post<CurrentUser>(`${API_BASE_URL}/auth/login`, { username, password }),
     );
-    this.setTokens(tokens);
-    await this.loadCurrentUser();
+    this.adoptSession(user);
   }
 
   async checkOnboardingStatus(): Promise<boolean> {
@@ -36,20 +39,30 @@ export class AuthService {
   }
 
   async completeOnboarding(username: string, password: string): Promise<void> {
-    const tokens = await firstValueFrom(
-      this.http.post<TokenPair>(`${API_BASE_URL}/auth/onboarding`, { username, password }),
+    const user = await firstValueFrom(
+      this.http.post<CurrentUser>(`${API_BASE_URL}/auth/onboarding`, { username, password }),
     );
-    this.setTokens(tokens);
-    await this.loadCurrentUser();
+    this.adoptSession(user);
   }
 
   async logout(): Promise<void> {
-    const refreshToken = this.refreshToken();
     this.clearSession();
+    // No body: the token being revoked is the one in the cookie, and the server
+    // clears both cookies as it goes.
+    await firstValueFrom(this.http.post(`${API_BASE_URL}/auth/logout`, {}));
+  }
 
-    if (refreshToken) {
-      await firstValueFrom(this.http.post(`${API_BASE_URL}/auth/logout`, { refreshToken }));
-    }
+  /**
+   * Resolves once the session state is known. Safe to await repeatedly — the
+   * answer is cached until the session changes.
+   */
+  ensureSessionLoaded(): Promise<void> {
+    this.sessionLoad ??= this.loadCurrentUser().catch(() => {
+      // A 401 here is an answer, not a failure: nobody is signed in.
+      this.currentUser.set(null);
+    });
+
+    return this.sessionLoad;
   }
 
   async loadCurrentUser(): Promise<void> {
@@ -57,7 +70,7 @@ export class AuthService {
     this.currentUser.set(user);
   }
 
-  /** Manual connectivity check: resolves the HTTP status (200 authenticated, 400 otherwise). */
+  /** Manual connectivity check: resolves the HTTP status (200 authenticated, 401 otherwise). */
   async ping(): Promise<number> {
     try {
       const response = await firstValueFrom(
@@ -73,28 +86,13 @@ export class AuthService {
   }
 
   /**
-   * Exchanges the stored refresh token for a new access/refresh pair.
-   * Called by the HTTP interceptor when a request comes back 401.
+   * Rotates the session using the refresh cookie. Called by the HTTP
+   * interceptor when a request comes back 401.
    */
-  refreshAccessToken(): Promise<string> {
-    if (this.refreshPromise) {
-      return this.refreshPromise;
-    }
-
-    const refreshToken = this.refreshToken();
-    if (!refreshToken) {
-      this.clearSession();
-      return Promise.reject(new Error('No refresh token available'));
-    }
-
-    this.refreshPromise = firstValueFrom(
-      this.http.post<TokenPair>(`${API_BASE_URL}/auth/refresh`, { refreshToken }),
-    )
-      .then((tokens) => {
-        this.setTokens(tokens);
-        return tokens.accessToken;
-      })
-      .catch((error) => {
+  refreshSession(): Promise<void> {
+    this.refreshPromise ??= firstValueFrom(this.http.post(`${API_BASE_URL}/auth/refresh`, {}))
+      .then(() => undefined)
+      .catch((error: unknown) => {
         this.clearSession();
         throw error;
       })
@@ -105,19 +103,15 @@ export class AuthService {
     return this.refreshPromise;
   }
 
-  /** Clears local session state without calling the backend (used after a failed refresh). */
+  /** Drops local session state without calling the backend (used after a failed refresh). */
   clearSession(): void {
-    this.accessToken.set(null);
-    this.refreshToken.set(null);
     this.currentUser.set(null);
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    this.sessionLoad = null;
   }
 
-  private setTokens(tokens: TokenPair): void {
-    this.accessToken.set(tokens.accessToken);
-    this.refreshToken.set(tokens.refreshToken);
-    localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
+  private adoptSession(user: CurrentUser): void {
+    this.currentUser.set(user);
+    // Already known — a guard need not ask the server again.
+    this.sessionLoad = Promise.resolve();
   }
 }

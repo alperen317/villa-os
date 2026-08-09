@@ -1,4 +1,5 @@
-import { ConflictException } from '@nestjs/common';
+import { expectRejectionCode } from '../../common/errors/expect-error-code';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -6,7 +7,6 @@ import { PrismaService } from '../../infra/prisma/prisma.service';
 import { RedisService } from '../../infra/redis/redis.service';
 import { AuthService } from './auth.service';
 import { InvalidCredentialsException } from './exceptions/invalid-credentials.exception';
-import { InvalidRefreshTokenException } from './exceptions/invalid-refresh-token.exception';
 import { User, UserRole } from '../../../generated/prisma/client';
 
 const CONFIG: Record<string, string> = {
@@ -31,13 +31,24 @@ function buildUser(overrides: Partial<User> = {}): User {
 
 describe('AuthService', () => {
   let service: AuthService;
-  let prisma: { user: { findUnique: jest.Mock; count: jest.Mock; create: jest.Mock } };
+  let prisma: {
+    user: { findUnique: jest.Mock; count: jest.Mock; create: jest.Mock };
+    $executeRaw: jest.Mock;
+    $transaction: jest.Mock;
+  };
   let jwtService: { sign: jest.Mock; verify: jest.Mock };
   let redis: { get: jest.Mock; set: jest.Mock; del: jest.Mock };
   let configService: ConfigService;
 
   beforeEach(() => {
-    prisma = { user: { findUnique: jest.fn(), count: jest.fn(), create: jest.fn() } };
+    prisma = {
+      user: { findUnique: jest.fn(), count: jest.fn(), create: jest.fn() },
+      $executeRaw: jest.fn(),
+      $transaction: jest.fn(),
+    };
+    // Runs the callback against the same mock: the lock itself is a database
+    // guarantee, so these tests only cover the logic it guards.
+    prisma.$transaction.mockImplementation((work: (tx: unknown) => unknown) => work(prisma));
     jwtService = { sign: jest.fn(), verify: jest.fn() };
     redis = { get: jest.fn(), set: jest.fn(), del: jest.fn() };
     configService = { getOrThrow: (key: string) => CONFIG[key] } as unknown as ConfigService;
@@ -111,7 +122,7 @@ describe('AuthService', () => {
       prisma.user.create.mockResolvedValue(createdUser);
       jwtService.sign.mockReturnValueOnce('access.jwt').mockReturnValueOnce('refresh.jwt');
 
-      const tokens = await service.completeOnboarding({
+      const { tokens, user } = await service.completeOnboarding({
         username: 'first-admin',
         password: 'a-strong-password',
       });
@@ -122,14 +133,31 @@ describe('AuthService', () => {
         }),
       );
       expect(tokens).toEqual({ accessToken: 'access.jwt', refreshToken: 'refresh.jwt' });
+      // The controller needs the user to set cookies and answer with it.
+      expect(user).toBe(createdUser);
     });
 
-    it('rejects with a ConflictException when a user already exists', async () => {
+    it('rejects when a user already exists', async () => {
       prisma.user.count.mockResolvedValue(1);
 
-      await expect(
+      await expectRejectionCode(
         service.completeOnboarding({ username: 'someone', password: 'a-strong-password' }),
-      ).rejects.toThrow(ConflictException);
+        ErrorCode.ONBOARDING_ALREADY_COMPLETED,
+        409,
+      );
+    });
+
+    it('counts and inserts inside one locked transaction', async () => {
+      prisma.user.count.mockResolvedValue(0);
+      prisma.user.create.mockResolvedValue(buildUser());
+      jwtService.sign.mockReturnValue('jwt');
+
+      await service.completeOnboarding({ username: 'first-admin', password: 'a-strong-password' });
+
+      // Otherwise two simultaneous requests both see an empty table and the
+      // system ends up with two "first" Administrators.
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+      expect(prisma.$executeRaw).toHaveBeenCalled();
     });
   });
 
@@ -168,7 +196,7 @@ describe('AuthService', () => {
         throw new Error('jwt expired');
       });
 
-      await expect(service.refresh('bad.token')).rejects.toThrow(InvalidRefreshTokenException);
+      await expectRejectionCode(service.refresh('bad.token'), ErrorCode.AUTH_INVALID_REFRESH_TOKEN, 401);
       expect(redis.get).not.toHaveBeenCalled();
     });
 
@@ -176,14 +204,14 @@ describe('AuthService', () => {
       jwtService.verify.mockReturnValue({ sub: 'user-1', jti: 'jti-1' });
       redis.get.mockResolvedValue(null);
 
-      await expect(service.refresh('token')).rejects.toThrow(InvalidRefreshTokenException);
+      await expectRejectionCode(service.refresh('token'), ErrorCode.AUTH_INVALID_REFRESH_TOKEN, 401);
     });
 
     it('throws InvalidRefreshTokenException when the stored owner does not match the token subject', async () => {
       jwtService.verify.mockReturnValue({ sub: 'user-1', jti: 'jti-1' });
       redis.get.mockResolvedValue('someone-else');
 
-      await expect(service.refresh('token')).rejects.toThrow(InvalidRefreshTokenException);
+      await expectRejectionCode(service.refresh('token'), ErrorCode.AUTH_INVALID_REFRESH_TOKEN, 401);
     });
 
     it('throws InvalidRefreshTokenException when the user no longer exists', async () => {
@@ -191,7 +219,7 @@ describe('AuthService', () => {
       redis.get.mockResolvedValue('user-1');
       prisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.refresh('token')).rejects.toThrow(InvalidRefreshTokenException);
+      await expectRejectionCode(service.refresh('token'), ErrorCode.AUTH_INVALID_REFRESH_TOKEN, 401);
     });
 
     it('rotates the refresh token: deletes the old jti and issues a brand-new pair', async () => {
@@ -217,7 +245,7 @@ describe('AuthService', () => {
       await service.refresh('old.token');
 
       redis.get.mockResolvedValueOnce(null); // simulates the key having been deleted on first use
-      await expect(service.refresh('old.token')).rejects.toThrow(InvalidRefreshTokenException);
+      await expectRejectionCode(service.refresh('old.token'), ErrorCode.AUTH_INVALID_REFRESH_TOKEN, 401);
     });
   });
 
@@ -235,7 +263,7 @@ describe('AuthService', () => {
         throw new Error('malformed');
       });
 
-      await expect(service.logout('garbage')).rejects.toThrow(InvalidRefreshTokenException);
+      await expectRejectionCode(service.logout('garbage'), ErrorCode.AUTH_INVALID_REFRESH_TOKEN, 401);
       expect(redis.del).not.toHaveBeenCalled();
     });
   });

@@ -1,15 +1,18 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { RedisService } from '../../infra/redis/redis.service';
+import { TokenTtl } from './auth-cookies';
 import { OnboardingDto } from './dto/onboarding.dto';
 import { InvalidCredentialsException } from './exceptions/invalid-credentials.exception';
 import { InvalidRefreshTokenException } from './exceptions/invalid-refresh-token.exception';
 import { AccessTokenPayload, RefreshTokenPayload } from './jwt-payload.interface';
 import { User, UserRole } from '../../../generated/prisma/client';
+import { AppException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 
 export interface TokenPair {
   accessToken: string;
@@ -22,6 +25,7 @@ const REFRESH_TOKEN_REDIS_PREFIX = 'refresh-token:';
 export class AuthService {
   private readonly refreshSecret: string;
   private readonly refreshTtlSeconds: number;
+  private readonly accessTtlSeconds: number;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -33,6 +37,12 @@ export class AuthService {
     this.refreshTtlSeconds = Number(
       this.configService.getOrThrow<string>('JWT_REFRESH_TTL_SECONDS'),
     );
+    this.accessTtlSeconds = Number(this.configService.getOrThrow<string>('JWT_ACCESS_TTL_SECONDS'));
+  }
+
+  /** Cookie lifetimes are kept in step with the token lifetimes they carry. */
+  get tokenTtl(): TokenTtl {
+    return { accessSeconds: this.accessTtlSeconds, refreshSeconds: this.refreshTtlSeconds };
   }
 
   async validateCredentials(username: string, password: string): Promise<User> {
@@ -57,23 +67,36 @@ export class AuthService {
     return (await this.prisma.user.count()) > 0;
   }
 
-  async completeOnboarding(dto: OnboardingDto): Promise<TokenPair> {
-    const existingUserCount = await this.prisma.user.count();
-    if (existingUserCount > 0) {
-      throw new ConflictException('Kurulum zaten tamamlanmış');
-    }
-
+  async completeOnboarding(dto: OnboardingDto): Promise<{ tokens: TokenPair; user: User }> {
+    // Hashed before the transaction opens: bcrypt takes long enough that doing
+    // it under the lock would hold every other attempt off for no reason.
     const passwordHash = await bcrypt.hash(dto.password, 10);
-    const user = await this.prisma.user.create({
-      data: {
-        username: dto.username,
-        passwordHash,
-        role: UserRole.Administrator,
-        isActive: true,
-      },
+
+    const user = await this.prisma.$transaction(async (tx) => {
+      // Counting and inserting must be atomic. Two requests arriving together
+      // can otherwise both see an empty table and both create an Administrator
+      // on a system that is supposed to have exactly one first user.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('villa-os:onboarding')::bigint)`;
+
+      if ((await tx.user.count()) > 0) {
+        throw new AppException(
+          HttpStatus.CONFLICT,
+          ErrorCode.ONBOARDING_ALREADY_COMPLETED,
+          'Onboarding has already been completed',
+        );
+      }
+
+      return tx.user.create({
+        data: {
+          username: dto.username,
+          passwordHash,
+          role: UserRole.Administrator,
+          isActive: true,
+        },
+      });
     });
 
-    return this.issueTokens(user);
+    return { tokens: await this.issueTokens(user), user };
   }
 
   async issueTokens(user: User): Promise<TokenPair> {
@@ -121,7 +144,7 @@ export class AuthService {
 
     return this.jwtService.sign(payload, {
       secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
-      expiresIn: Number(this.configService.getOrThrow<string>('JWT_ACCESS_TTL_SECONDS')),
+      expiresIn: this.accessTtlSeconds,
     });
   }
 
