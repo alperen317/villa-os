@@ -8,13 +8,13 @@
       }
     </div>
     <h1 class="onboarding-title">{{ settingsStore.companyName() }}</h1>
-    <p class="onboarding-tagline">Hoş geldiniz — ilk yönetici hesabını oluşturun</p>
+    <p class="onboarding-tagline">{{ 'auth.onboarding.title' | translate }}</p>
   </div>
 
   <nz-card class="onboarding-card">
     <form nz-form [formGroup]="form" (ngSubmit)="submit()">
       <nz-form-item>
-        <nz-form-label nzFor="username" nzNoColon class="sr-only">Kullanıcı adı</nz-form-label>
+        <nz-form-label nzFor="username" nzNoColon class="sr-only">{{ 'auth.onboarding.username' | translate }}</nz-form-label>
         <nz-form-control>
           <nz-input-group nzPrefixIcon="user">
             <input
@@ -22,7 +22,7 @@
               type="text"
               nz-input
               formControlName="username"
-              placeholder="Kullanıcı adı"
+              [placeholder]="'auth.onboarding.usernamePlaceholder' | translate"
               autocomplete="username"
             />
           </nz-input-group>
@@ -30,7 +30,7 @@
       </nz-form-item>
 
       <nz-form-item>
-        <nz-form-label nzFor="password" nzNoColon class="sr-only">Şifre</nz-form-label>
+        <nz-form-label nzFor="password" nzNoColon class="sr-only">{{ 'auth.onboarding.password' | translate }}</nz-form-label>
         <nz-form-control>
           <nz-input-group nzPrefixIcon="lock">
             <input
@@ -38,7 +38,7 @@
               type="password"
               nz-input
               formControlName="password"
-              placeholder="Şifre (en az 8 karakter)"
+              [placeholder]="'auth.onboarding.passwordPlaceholder' | translate"
               autocomplete="new-password"
             />
           </nz-input-group>
@@ -46,7 +46,7 @@
       </nz-form-item>
 
       <nz-form-item>
-        <nz-form-label nzFor="confirmPassword" nzNoColon class="sr-only">Şifre (tekrar)</nz-form-label>
+        <nz-form-label nzFor="confirmPassword" nzNoColon class="sr-only">{{ 'auth.onboarding.passwordConfirm' | translate }}</nz-form-label>
         <nz-form-control>
           <nz-input-group nzPrefixIcon="lock">
             <input
@@ -54,7 +54,7 @@
               type="password"
               nz-input
               formControlName="confirmPassword"
-              placeholder="Şifre (tekrar)"
+              [placeholder]="'auth.onboarding.passwordConfirmPlaceholder' | translate"
               autocomplete="new-password"
             />
           </nz-input-group>

@@ -6,6 +6,7 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
 import { SyncQueuePanel } from '../../core/sync/sync-queue-panel/sync-queue-panel';
 import { TourService } from '../../core/tour/tour.service';
@@ -16,7 +17,7 @@ const HOUSEKEEPING_NAV_ROLES = new Set(['Administrator', 'Operations', 'Housekee
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterModule, NzButtonModule, NzIconModule, NzLayoutModule, NzMenuModule, SyncQueuePanel],
+  imports: [RouterModule, NzButtonModule, NzIconModule, NzLayoutModule, NzMenuModule, SyncQueuePanel, TranslatePipe],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
 })

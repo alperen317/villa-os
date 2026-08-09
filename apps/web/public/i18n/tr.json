@@ -1,0 +1,78 @@
+{
+  "common": {
+    "username": "Kullanıcı adı",
+    "password": "Şifre",
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "retry": "Tekrar dene"
+  },
+  "auth": {
+    "login": {
+      "tagline": "Villa yönetim paneline giriş yap",
+      "usernamePlaceholder": "Kullanıcı adı",
+      "passwordPlaceholder": "Şifre",
+      "submit": "Giriş yap",
+      "failed": "Kullanıcı adı veya şifre hatalı",
+      "throttled": "Çok fazla deneme yapıldı. Bir dakika sonra tekrar deneyin."
+    },
+    "onboarding": {
+      "title": "Hoş geldiniz — ilk yönetici hesabını oluşturun",
+      "username": "Kullanıcı adı",
+      "usernamePlaceholder": "Kullanıcı adı",
+      "password": "Şifre",
+      "passwordPlaceholder": "Şifre (en az 8 karakter)",
+      "passwordConfirm": "Şifre (tekrar)",
+      "passwordConfirmPlaceholder": "Şifre (tekrar)",
+      "submit": "Kurulumu tamamla",
+      "failed": "Kurulum tamamlanamadı, tekrar deneyin"
+    }
+  },
+  "shell": {
+    "dashboard": "Dashboard",
+    "villas": "Villalar",
+    "reservations": "Rezervasyonlar",
+    "customers": "Müşteriler",
+    "housekeeping": "Temizlik",
+    "maintenance": "Bakım",
+    "reports": "Raporlar",
+    "users": "Kullanıcılar",
+    "settings": "Ayarlar",
+    "startTour": "Turu Başlat",
+    "logout": "Çıkış"
+  },
+  "error": {
+    "unknown": "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.",
+    "network": "Sunucuya ulaşılamıyor. Bağlantınızı kontrol edin.",
+    "AUTH_INVALID_CREDENTIALS": "Kullanıcı adı veya şifre hatalı",
+    "AUTH_INVALID_REFRESH_TOKEN": "Oturumunuz sona erdi. Lütfen tekrar giriş yapın.",
+    "AUTH_NO_SESSION": "Oturum bulunamadı. Lütfen giriş yapın.",
+    "AUTH_SESSION_EXPIRED": "Oturumunuz sona erdi. Lütfen tekrar giriş yapın.",
+    "ONBOARDING_ALREADY_COMPLETED": "Kurulum zaten tamamlanmış",
+    "USER_NOT_FOUND": "Kullanıcı bulunamadı",
+    "USER_USERNAME_TAKEN": "Bu kullanıcı adı zaten kullanılıyor",
+    "USER_CANNOT_DEACTIVATE_SELF": "Kendi hesabınızı deaktif edemezsiniz",
+    "USER_LAST_ACTIVE_ADMINISTRATOR": "Son aktif yönetici deaktif edilemez",
+    "ROLE_PERMISSIONS_IMMUTABLE": "Bu rolün izinleri değiştirilemez",
+    "VILLA_NOT_FOUND": "Villa bulunamadı",
+    "FLOOR_NOT_FOUND": "Kat bulunamadı",
+    "FLOOR_ENTIRE_VILLA_EXISTS": "Bu villada zaten bir “tüm villa” katı var",
+    "FLOOR_NOT_RENTABLE": "Bu kat kiralamaya kapalı",
+    "CUSTOMER_NOT_FOUND": "Müşteri bulunamadı",
+    "RESERVATION_NOT_FOUND": "Rezervasyon bulunamadı",
+    "RESERVATION_CONFLICT": "Seçilen tarihler bu villa/kat için mevcut bir rezervasyonla çakışıyor",
+    "RESERVATION_INVALID_TRANSITION": "Rezervasyon bu duruma geçirilemez",
+    "RESERVATION_STALE_WRITE": "Bu rezervasyon siz açtıktan sonra başkası tarafından değiştirildi",
+    "RESERVATION_INVALID_DATE_RANGE": "Çıkış tarihi giriş tarihinden sonra olmalı",
+    "RESERVATION_GUEST_COUNT_EXCEEDS_CAPACITY": "Misafir sayısı kat kapasitesini aşıyor",
+    "HOUSEKEEPING_TASK_NOT_FOUND": "Temizlik görevi bulunamadı",
+    "HOUSEKEEPING_INVALID_TRANSITION": "Temizlik görevi bu duruma geçirilemez",
+    "MAINTENANCE_RECORD_NOT_FOUND": "Bakım kaydı bulunamadı",
+    "MAINTENANCE_INVALID_TRANSITION": "Bakım kaydı bu duruma geçirilemez",
+    "SETTINGS_LOGO_REQUIRED": "Logo dosyası gerekli",
+    "CONSTRAINT_CONFLICT": "Bu işlem mevcut bir kayıtla çakışıyor",
+    "CONSTRAINT_INVALID_VALUES": "Gönderilen değerler geçerli bir kombinasyon değil",
+    "RECORD_ALREADY_EXISTS": "Bu değerlere sahip bir kayıt zaten var",
+    "RECORD_NOT_FOUND": "Kayıt artık mevcut değil",
+    "RECORD_REFERENCE_MISSING": "Var olmayan bir kayda referans veriliyor"
+  }
+}

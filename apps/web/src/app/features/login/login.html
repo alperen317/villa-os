@@ -8,13 +8,13 @@
       }
     </div>
     <h1 class="login-title">{{ settingsStore.companyName() }}</h1>
-    <p class="login-tagline">Villa yönetim paneline giriş yap</p>
+    <p class="login-tagline">{{ 'auth.login.tagline' | translate }}</p>
   </div>
 
   <nz-card class="login-card">
     <form nz-form [formGroup]="form" (ngSubmit)="submit()">
       <nz-form-item>
-        <nz-form-label nzFor="username" nzNoColon class="sr-only">Kullanıcı adı</nz-form-label>
+        <nz-form-label nzFor="username" nzNoColon class="sr-only">{{ 'common.username' | translate }}</nz-form-label>
         <nz-form-control>
           <nz-input-group nzPrefixIcon="user">
             <input
@@ -22,7 +22,7 @@
               type="text"
               nz-input
               formControlName="username"
-              placeholder="Kullanıcı adı"
+              [placeholder]="'auth.login.usernamePlaceholder' | translate"
               autocomplete="username"
             />
           </nz-input-group>
@@ -30,7 +30,7 @@
       </nz-form-item>
 
       <nz-form-item>
-        <nz-form-label nzFor="password" nzNoColon class="sr-only">Şifre</nz-form-label>
+        <nz-form-label nzFor="password" nzNoColon class="sr-only">{{ 'common.password' | translate }}</nz-form-label>
         <nz-form-control>
           <nz-input-group nzPrefixIcon="lock">
             <input
@@ -38,7 +38,7 @@
               type="password"
               nz-input
               formControlName="password"
-              placeholder="Şifre"
+              [placeholder]="'auth.login.passwordPlaceholder' | translate"
               autocomplete="current-password"
             />
           </nz-input-group>
@@ -58,7 +58,7 @@
         [nzLoading]="loading()"
         [disabled]="form.invalid"
       >
-        Giriş yap
+        {{ 'auth.login.submit' | translate }}
       </button>
     </form>
   </nz-card>

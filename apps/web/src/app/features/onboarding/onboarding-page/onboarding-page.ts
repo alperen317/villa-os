@@ -13,7 +13,9 @@ import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../../core/auth/auth.service';
+import { ApiErrorService } from '../../../core/i18n/api-error.service';
 import { SettingsStore } from '../../settings/settings.store';
 
 function passwordsMatchValidator(group: AbstractControl): ValidationErrors | null {
@@ -26,6 +28,7 @@ function passwordsMatchValidator(group: AbstractControl): ValidationErrors | nul
   selector: 'app-onboarding-page',
   standalone: true,
   imports: [
+    TranslatePipe,
     ReactiveFormsModule,
     NzAlertModule,
     NzButtonModule,
@@ -41,6 +44,7 @@ export class OnboardingPage {
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly apiError = inject(ApiErrorService);
   protected readonly settingsStore = inject(SettingsStore);
 
   protected readonly loading = signal(false);
@@ -68,8 +72,8 @@ export class OnboardingPage {
     try {
       await this.authService.completeOnboarding(username, password);
       await this.router.navigateByUrl('/dashboard');
-    } catch {
-      this.errorMessage.set('Kurulum tamamlanamadı, tekrar deneyin');
+    } catch (error) {
+      this.errorMessage.set(this.apiError.message(error));
     } finally {
       this.loading.set(false);
     }

@@ -8,13 +8,16 @@ import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
+import { ApiErrorService } from '../../core/i18n/api-error.service';
 import { SettingsStore } from '../settings/settings.store';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [
+    TranslatePipe,
     ReactiveFormsModule,
     NzAlertModule,
     NzButtonModule,
@@ -31,6 +34,7 @@ export class Login {
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly apiError = inject(ApiErrorService);
   protected readonly settingsStore = inject(SettingsStore);
 
   protected readonly loading = signal(false);
@@ -54,8 +58,10 @@ export class Login {
     try {
       await this.authService.login(username, password);
       await this.router.navigateByUrl('/dashboard');
-    } catch {
-      this.errorMessage.set('Kullanıcı adı veya şifre hatalı');
+    } catch (error) {
+      // Distinguishes bad credentials from a rate-limited address — telling the
+      // user to wait a minute is very different advice from "check your password".
+      this.errorMessage.set(this.apiError.message(error));
     } finally {
       this.loading.set(false);
     }

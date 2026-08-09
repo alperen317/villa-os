@@ -1,0 +1,78 @@
+{
+  "common": {
+    "username": "Username",
+    "password": "Password",
+    "cancel": "Cancel",
+    "save": "Save",
+    "retry": "Try again"
+  },
+  "auth": {
+    "login": {
+      "tagline": "Sign in to the villa management panel",
+      "usernamePlaceholder": "Username",
+      "passwordPlaceholder": "Password",
+      "submit": "Sign in",
+      "failed": "Incorrect username or password",
+      "throttled": "Too many attempts. Try again in a minute."
+    },
+    "onboarding": {
+      "title": "Welcome — create the first administrator account",
+      "username": "Username",
+      "usernamePlaceholder": "Username",
+      "password": "Password",
+      "passwordPlaceholder": "Password (at least 8 characters)",
+      "passwordConfirm": "Password (again)",
+      "passwordConfirmPlaceholder": "Password (again)",
+      "submit": "Finish setup",
+      "failed": "Setup could not be completed, please try again"
+    }
+  },
+  "shell": {
+    "dashboard": "Dashboard",
+    "villas": "Villas",
+    "reservations": "Reservations",
+    "customers": "Customers",
+    "housekeeping": "Housekeeping",
+    "maintenance": "Maintenance",
+    "reports": "Reports",
+    "users": "Users",
+    "settings": "Settings",
+    "startTour": "Start tour",
+    "logout": "Sign out"
+  },
+  "error": {
+    "unknown": "Something went wrong. Please try again.",
+    "network": "The server cannot be reached. Check your connection.",
+    "AUTH_INVALID_CREDENTIALS": "Incorrect username or password",
+    "AUTH_INVALID_REFRESH_TOKEN": "Your session has ended. Please sign in again.",
+    "AUTH_NO_SESSION": "No session found. Please sign in.",
+    "AUTH_SESSION_EXPIRED": "Your session has ended. Please sign in again.",
+    "ONBOARDING_ALREADY_COMPLETED": "Setup has already been completed",
+    "USER_NOT_FOUND": "User not found",
+    "USER_USERNAME_TAKEN": "This username is already taken",
+    "USER_CANNOT_DEACTIVATE_SELF": "You cannot deactivate your own account",
+    "USER_LAST_ACTIVE_ADMINISTRATOR": "The last active administrator cannot be deactivated",
+    "ROLE_PERMISSIONS_IMMUTABLE": "Permissions for this role cannot be changed",
+    "VILLA_NOT_FOUND": "Villa not found",
+    "FLOOR_NOT_FOUND": "Floor not found",
+    "FLOOR_ENTIRE_VILLA_EXISTS": "This villa already has an “entire villa” floor",
+    "FLOOR_NOT_RENTABLE": "This floor is not available to rent",
+    "CUSTOMER_NOT_FOUND": "Customer not found",
+    "RESERVATION_NOT_FOUND": "Reservation not found",
+    "RESERVATION_CONFLICT": "These dates conflict with an existing reservation for this villa/floor",
+    "RESERVATION_INVALID_TRANSITION": "The reservation cannot move to that status",
+    "RESERVATION_STALE_WRITE": "Someone else changed this reservation after you opened it",
+    "RESERVATION_INVALID_DATE_RANGE": "Check-out must be after check-in",
+    "RESERVATION_GUEST_COUNT_EXCEEDS_CAPACITY": "The guest count exceeds the floor capacity",
+    "HOUSEKEEPING_TASK_NOT_FOUND": "Housekeeping task not found",
+    "HOUSEKEEPING_INVALID_TRANSITION": "The housekeeping task cannot move to that status",
+    "MAINTENANCE_RECORD_NOT_FOUND": "Maintenance record not found",
+    "MAINTENANCE_INVALID_TRANSITION": "The maintenance record cannot move to that status",
+    "SETTINGS_LOGO_REQUIRED": "A logo file is required",
+    "CONSTRAINT_CONFLICT": "This clashes with a record that already exists",
+    "CONSTRAINT_INVALID_VALUES": "The submitted values are not a valid combination",
+    "RECORD_ALREADY_EXISTS": "A record with these values already exists",
+    "RECORD_NOT_FOUND": "The record no longer exists",
+    "RECORD_REFERENCE_MISSING": "This refers to a record that does not exist"
+  }
+}
