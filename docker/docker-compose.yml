@@ -54,16 +54,37 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-villaos}:${POSTGRES_PASSWORD:-villaos}@postgres:5432/${POSTGRES_DB:-villaos}?schema=public
       REDIS_URL: redis://redis:6379
       # AuthService reads all four with getOrThrow — a missing TTL crashes login.
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change-me}
+      # The secrets have no default on purpose: a fallback value ships the same
+      # signing key to every deployment, letting anyone mint an Administrator
+      # access token. `:?` makes compose refuse to start until they are set.
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?missing — copy docker/.env.example to docker/.env and set a generated value}
       JWT_ACCESS_TTL_SECONDS: ${JWT_ACCESS_TTL_SECONDS:-900}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-too}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?missing — copy docker/.env.example to docker/.env and set a generated value}
       JWT_REFRESH_TTL_SECONDS: ${JWT_REFRESH_TTL_SECONDS:-604800}
     volumes:
       # Uploaded files (logo, etc.) live on disk; without this they vanish on
       # every container replacement.
       - api_uploads:/app/uploads
     ports:
-      - '${API_PORT:-8084}:3000'
+      # Loopback-only, same reasoning as postgres and redis above: the web
+      # container reaches the API over the compose network, so this mapping is
+      # only for Swagger and debugging from the host. Publishing it on 0.0.0.0
+      # would expose the API — and its docs — to the internet on a server.
+      - '127.0.0.1:${API_PORT:-8084}:3000'
+    healthcheck:
+      # node rather than curl/wget: neither is installed in the slim runtime
+      # image, and Node 22 has fetch built in.
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   web:
     build:
@@ -71,7 +92,8 @@ services:
       dockerfile: docker/web.Dockerfile
     restart: unless-stopped
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     ports:
       - '${WEB_PORT:-8083}:80'
 
