@@ -1,3 +1,11 @@
+// Inter is bundled rather than fetched from fonts.googleapis.com. The Angular builder
+// inlines remote font stylesheets at build time, which made the build fail outright — with
+// "Inlining of fonts failed" — whenever that host was unreachable; a build should not need
+// the internet. Self-hosting also drops two cross-origin round trips from first paint.
+//
+// The variable cut, not the four static weights, because the type scale asks for 650 (see
+// .page-title) and a static family has to snap that to 600 or 700.
+@import '@fontsource-variable/inter';
 @import 'driver.js/dist/driver.css';
 
 html,
@@ -65,6 +73,7 @@ body {
 
 body {
   font-family:
+    'Inter Variable',
     'Inter',
     -apple-system,
     BlinkMacSystemFont,
