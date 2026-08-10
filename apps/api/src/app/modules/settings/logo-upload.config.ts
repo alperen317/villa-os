@@ -13,12 +13,29 @@ import { LOGO_UPLOAD_DIR } from '../../infra/uploads/uploads-path';
  * `image/png` can't land on disk as `evil.html` and come back out of /uploads as a document.
  * (The stored name itself is a UUID, so the client never influences the path either.)
  */
-const ALLOWED_TYPES = new Map([
+export const ALLOWED_LOGO_TYPES = new Map([
   ['image/png', '.png'],
   ['image/jpeg', '.jpg'],
   ['image/svg+xml', '.svg'],
   ['image/webp', '.webp'],
 ]);
+
+/** The name an accepted upload is stored under. Exported so the rule above is testable. */
+export function logoFilename(mimetype: string): string {
+  return `${randomUUID()}${ALLOWED_LOGO_TYPES.get(mimetype) ?? ''}`;
+}
+
+export function acceptLogoUpload(
+  _req: unknown,
+  file: Express.Multer.File,
+  callback: (error: Error | null, accept: boolean) => void,
+): void {
+  if (!ALLOWED_LOGO_TYPES.has(file.mimetype)) {
+    callback(new BadRequestException('Sadece PNG, JPEG, SVG veya WEBP dosyaları yüklenebilir'), false);
+    return;
+  }
+  callback(null, true);
+}
 
 export const logoUploadOptions = {
   storage: diskStorage({
@@ -27,15 +44,9 @@ export const logoUploadOptions = {
       callback(null, LOGO_UPLOAD_DIR);
     },
     filename: (_req, file, callback) => {
-      callback(null, `${randomUUID()}${ALLOWED_TYPES.get(file.mimetype) ?? ''}`);
+      callback(null, logoFilename(file.mimetype));
     },
   }),
-  fileFilter: (_req: unknown, file: Express.Multer.File, callback: (error: Error | null, accept: boolean) => void) => {
-    if (!ALLOWED_TYPES.has(file.mimetype)) {
-      callback(new BadRequestException('Sadece PNG, JPEG, SVG veya WEBP dosyaları yüklenebilir'), false);
-      return;
-    }
-    callback(null, true);
-  },
+  fileFilter: acceptLogoUpload,
   limits: { fileSize: 2 * 1024 * 1024 },
 };
