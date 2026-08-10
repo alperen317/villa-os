@@ -56,41 +56,62 @@
   </div>
 
   <form nz-form [formGroup]="filterForm" class="filter-bar">
-  <nz-form-item>
-    <nz-form-control>
-      <nz-range-picker formControlName="dateRange" class="date-range-picker" />
-    </nz-form-control>
-  </nz-form-item>
+    <nz-form-item>
+      <nz-form-control>
+        <nz-range-picker formControlName="dateRange" class="date-range-picker" />
+      </nz-form-control>
+    </nz-form-item>
 
-  <nz-form-item>
-    <nz-form-control>
-      <nz-select formControlName="villaId" nzAllowClear nzPlaceHolder="Tüm villalar" class="filter-select">
-        @for (villa of villas(); track villa.id) {
+    <nz-form-item>
+      <nz-form-control>
+        <nz-select
+          formControlName="villaId"
+          nzAllowClear
+          nzPlaceHolder="Tüm villalar"
+          class="filter-select"
+        >
+          @for (villa of villas(); track villa.id) {
           <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
-        }
-      </nz-select>
-    </nz-form-control>
-  </nz-form-item>
+          }
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
 
-  <button nz-button nzType="primary" [nzLoading]="loading()" (click)="onFilterApply()">Uygula</button>
-</form>
+    <button nz-button nzType="primary" [nzLoading]="loading()" (click)="onFilterApply()">
+      Uygula
+    </button>
+  </form>
 
-<nz-tabs [nzSelectedIndex]="tabIndex()" (nzSelectedIndexChange)="onTabIndexChange($event)">
-  <nz-tab nzTitle="Doluluk">
-    @if (loading() && !occupancy()) {
+  <nz-tabs [nzSelectedIndex]="tabIndex()" (nzSelectedIndexChange)="onTabIndexChange($event)">
+    <nz-tab nzTitle="Doluluk">
+      @if (loading() && !occupancy()) {
       <nz-skeleton [nzActive]="true" />
-    } @else if (occupancy(); as report) {
+      } @else if (occupancy(); as report) {
       <div class="stat-row">
-        <nz-statistic nzTitle="Genel Doluluk Oranı" [nzValue]="report.overallOccupancyRate" nzSuffix="%" />
+        <nz-statistic
+          nzTitle="Genel Doluluk Oranı"
+          [nzValue]="report.overallOccupancyRate"
+          nzSuffix="%"
+        />
         <nz-statistic nzTitle="Dolu Gece Sayısı" [nzValue]="report.totalOccupiedNights" />
         <nz-statistic nzTitle="Toplam Müsait Gece" [nzValue]="report.totalAvailableNights" />
       </div>
 
       <div class="chart-box">
-        <canvas baseChart type="line" [data]="occupancyChartData()" [options]="chartOptions"></canvas>
+        <canvas
+          baseChart
+          type="line"
+          [data]="occupancyChartData()"
+          [options]="chartOptions"
+        ></canvas>
       </div>
 
-      <nz-table class="responsive-table" [nzData]="report.villas" [nzPageSize]="10" [nzHideOnSinglePage]="true">
+      <nz-table
+        class="responsive-table"
+        [nzData]="report.villas"
+        [nzPageSize]="10"
+        [nzHideOnSinglePage]="true"
+      >
         <thead>
           <tr>
             <th>Villa</th>
@@ -101,22 +122,22 @@
         </thead>
         <tbody>
           @for (villa of report.villas; track villa.villaId) {
-            <tr>
-              <td data-label="Villa">{{ villa.villaName }}</td>
-              <td data-label="Dolu Gece">{{ villa.occupiedNights }}</td>
-              <td data-label="Müsait Gece">{{ villa.availableNights }}</td>
-              <td data-label="Doluluk Oranı">%{{ villa.occupancyRate }}</td>
-            </tr>
+          <tr>
+            <td data-label="Villa">{{ villa.villaName }}</td>
+            <td data-label="Dolu Gece">{{ villa.occupiedNights }}</td>
+            <td data-label="Müsait Gece">{{ villa.availableNights }}</td>
+            <td data-label="Doluluk Oranı">%{{ villa.occupancyRate }}</td>
+          </tr>
           }
         </tbody>
       </nz-table>
-    }
-  </nz-tab>
+      }
+    </nz-tab>
 
-  <nz-tab nzTitle="Gelir">
-    @if (loading() && !revenue()) {
+    <nz-tab nzTitle="Gelir">
+      @if (loading() && !revenue()) {
       <nz-skeleton [nzActive]="true" />
-    } @else if (revenue(); as report) {
+      } @else if (revenue(); as report) {
       <div class="stat-row">
         <nz-statistic nzTitle="Toplam Gelir" [nzValue]="currency(report.totalRevenue)" />
         <nz-statistic nzTitle="Ödeme Sayısı" [nzValue]="report.paymentCount" />
@@ -124,14 +145,29 @@
 
       <div class="chart-row">
         <div class="chart-box">
-          <canvas baseChart type="bar" [data]="revenueDailyChartData()" [options]="chartOptions"></canvas>
+          <canvas
+            baseChart
+            type="bar"
+            [data]="revenueDailyChartData()"
+            [options]="chartOptions"
+          ></canvas>
         </div>
         <div class="chart-box chart-box--small">
-          <canvas baseChart type="doughnut" [data]="revenueMethodChartData()" [options]="chartOptions"></canvas>
+          <canvas
+            baseChart
+            type="doughnut"
+            [data]="revenueMethodChartData()"
+            [options]="chartOptions"
+          ></canvas>
         </div>
       </div>
 
-      <nz-table class="responsive-table" [nzData]="report.payments" [nzPageSize]="10" [nzHideOnSinglePage]="true">
+      <nz-table
+        class="responsive-table"
+        [nzData]="report.payments"
+        [nzPageSize]="10"
+        [nzHideOnSinglePage]="true"
+      >
         <thead>
           <tr>
             <th>Tarih</th>
@@ -143,34 +179,48 @@
         </thead>
         <tbody>
           @for (payment of report.payments; track payment.id) {
-            <tr>
-              <td data-label="Tarih">{{ payment.paymentDate | date: 'dd.MM.yyyy' }}</td>
-              <td data-label="Villa">{{ payment.villaName }}</td>
-              <td data-label="Rezervasyon">{{ payment.reservationNumber }}</td>
-              <td data-label="Yöntem">{{ paymentMethodLabels[payment.paymentMethod] }}</td>
-              <td data-label="Tutar">{{ currency(payment.amount) }}</td>
-            </tr>
+          <tr>
+            <td data-label="Tarih">{{ payment.paymentDate | date: 'dd.MM.yyyy' }}</td>
+            <td data-label="Villa">{{ payment.villaName }}</td>
+            <td data-label="Rezervasyon">{{ payment.reservationNumber }}</td>
+            <td data-label="Yöntem">{{ paymentMethodLabels[payment.paymentMethod] }}</td>
+            <td data-label="Tutar">{{ currency(payment.amount) }}</td>
+          </tr>
           }
         </tbody>
       </nz-table>
-    }
-  </nz-tab>
+      }
+    </nz-tab>
 
-  <nz-tab nzTitle="Rezervasyonlar">
-    @if (loading() && !reservationsReport()) {
+    <nz-tab nzTitle="Rezervasyonlar">
+      @if (loading() && !reservationsReport()) {
       <nz-skeleton [nzActive]="true" />
-    } @else if (reservationsReport(); as report) {
+      } @else if (reservationsReport(); as report) {
       <div class="stat-row">
         <nz-statistic nzTitle="Toplam Rezervasyon" [nzValue]="report.totalReservations" />
         <nz-statistic nzTitle="Toplam Misafir-Gece" [nzValue]="report.totalGuestNights" />
-        <nz-statistic nzTitle="Ortalama Konaklama" [nzValue]="report.averageLengthOfStay" nzSuffix=" gece" />
+        <nz-statistic
+          nzTitle="Ortalama Konaklama"
+          [nzValue]="report.averageLengthOfStay"
+          nzSuffix=" gece"
+        />
       </div>
 
       <div class="chart-box">
-        <canvas baseChart type="bar" [data]="reservationsStatusChartData()" [options]="chartOptions"></canvas>
+        <canvas
+          baseChart
+          type="bar"
+          [data]="reservationsStatusChartData()"
+          [options]="chartOptions"
+        ></canvas>
       </div>
 
-      <nz-table class="responsive-table" [nzData]="report.reservations" [nzPageSize]="10" [nzHideOnSinglePage]="true">
+      <nz-table
+        class="responsive-table"
+        [nzData]="report.reservations"
+        [nzPageSize]="10"
+        [nzHideOnSinglePage]="true"
+      >
         <thead>
           <tr>
             <th>Rezervasyon No</th>
@@ -186,38 +236,53 @@
         </thead>
         <tbody>
           @for (reservation of report.reservations; track reservation.id) {
-            <tr>
-              <td data-label="Rezervasyon No">{{ reservation.reservationNumber }}</td>
-              <td data-label="Villa">{{ reservation.villaName }}</td>
-              <td data-label="Müşteri">{{ reservation.customerName }}</td>
-              <td data-label="Giriş">{{ reservation.checkIn | date: 'dd.MM.yyyy' : 'UTC' }}</td>
-              <td data-label="Çıkış">{{ reservation.checkOut | date: 'dd.MM.yyyy' : 'UTC' }}</td>
-              <td data-label="Gece">{{ reservation.nights }}</td>
-              <td data-label="Misafir">{{ reservation.guestCount }}</td>
-              <td data-label="Tutar">{{ currency(reservation.totalPrice) }}</td>
-              <td data-label="Durum">
-                <nz-tag [nzColor]="statusColors[reservation.status]">{{ statusLabels[reservation.status] }}</nz-tag>
-              </td>
-            </tr>
+          <tr>
+            <td data-label="Rezervasyon No">{{ reservation.reservationNumber }}</td>
+            <td data-label="Villa">{{ reservation.villaName }}</td>
+            <td data-label="Müşteri">{{ reservation.customerName }}</td>
+            <td data-label="Giriş">{{ reservation.checkIn | date: 'dd.MM.yyyy' : 'UTC' }}</td>
+            <td data-label="Çıkış">{{ reservation.checkOut | date: 'dd.MM.yyyy' : 'UTC' }}</td>
+            <td data-label="Gece">{{ reservation.nights }}</td>
+            <td data-label="Misafir">{{ reservation.guestCount }}</td>
+            <td data-label="Tutar">{{ currency(reservation.totalPrice) }}</td>
+            <td data-label="Durum">
+              <nz-tag [nzColor]="statusColors[reservation.status]"
+                >{{ statusLabels[reservation.status] }}</nz-tag
+              >
+            </td>
+          </tr>
           }
         </tbody>
       </nz-table>
-    }
-  </nz-tab>
+      }
+    </nz-tab>
 
-  <nz-tab nzTitle="Müşteriler">
-    @if (loading() && !customers()) {
+    <nz-tab nzTitle="Müşteriler">
+      @if (loading() && !customers()) {
       <nz-skeleton [nzActive]="true" />
-    } @else if (customers(); as report) {
+      } @else if (customers(); as report) {
       <div class="stat-row">
-        <nz-statistic nzTitle="Rapor Aralığındaki Müşteri Sayısı" [nzValue]="report.totalCustomers" />
+        <nz-statistic
+          nzTitle="Rapor Aralığındaki Müşteri Sayısı"
+          [nzValue]="report.totalCustomers"
+        />
       </div>
 
       <div class="chart-box">
-        <canvas baseChart type="bar" [data]="customersChartData()" [options]="chartOptions"></canvas>
+        <canvas
+          baseChart
+          type="bar"
+          [data]="customersChartData()"
+          [options]="chartOptions"
+        ></canvas>
       </div>
 
-      <nz-table class="responsive-table" [nzData]="report.customers" [nzPageSize]="10" [nzHideOnSinglePage]="true">
+      <nz-table
+        class="responsive-table"
+        [nzData]="report.customers"
+        [nzPageSize]="10"
+        [nzHideOnSinglePage]="true"
+      >
         <thead>
           <tr>
             <th>Müşteri</th>
@@ -228,16 +293,16 @@
         </thead>
         <tbody>
           @for (customer of report.customers; track customer.customerId) {
-            <tr>
-              <td data-label="Müşteri">{{ customer.customerName }}</td>
-              <td data-label="Rezervasyon Sayısı">{{ customer.reservationCount }}</td>
-              <td data-label="Toplam Harcama">{{ currency(customer.totalSpent) }}</td>
-              <td data-label="Son Giriş">{{ customer.lastCheckIn | date: 'dd.MM.yyyy' }}</td>
-            </tr>
+          <tr>
+            <td data-label="Müşteri">{{ customer.customerName }}</td>
+            <td data-label="Rezervasyon Sayısı">{{ customer.reservationCount }}</td>
+            <td data-label="Toplam Harcama">{{ currency(customer.totalSpent) }}</td>
+            <td data-label="Son Giriş">{{ customer.lastCheckIn | date: 'dd.MM.yyyy' }}</td>
+          </tr>
           }
         </tbody>
       </nz-table>
-    }
-  </nz-tab>
+      }
+    </nz-tab>
   </nz-tabs>
 </div>

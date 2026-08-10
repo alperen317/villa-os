@@ -8,32 +8,27 @@
 </div>
 
 @if (errorMessage(); as message) {
-  <nz-alert nzType="error" [nzMessage]="message" nzShowIcon class="error-alert"></nz-alert>
+<nz-alert nzType="error" [nzMessage]="message" nzShowIcon class="error-alert"></nz-alert>
 }
 
 <div class="stats-grid" id="tour-dashboard-stats">
-  @if (statsLoading()) {
-    @for (i of [1, 2, 3, 4]; track i) {
-      <div class="page-surface stat-card stat-card--loading" aria-hidden="true">
-        <div class="skeleton-block skeleton-icon"></div>
-        <div class="skeleton-lines">
-          <div class="skeleton-block skeleton-line skeleton-line--value"></div>
-          <div class="skeleton-block skeleton-line skeleton-line--label"></div>
-        </div>
-      </div>
-    }
-  } @else {
-    @for (stat of stats(); track stat.label) {
-      <a [routerLink]="stat.link" [queryParams]="stat.queryParams" class="page-surface stat-card">
-        <nz-icon [nzType]="stat.icon" class="stat-icon" />
-        <div>
-          <div class="stat-value">{{ stat.value }}</div>
-          <div class="stat-label">{{ stat.label }}</div>
-        </div>
-      </a>
-    }
-  }
+  @if (statsLoading()) { @for (i of [1, 2, 3, 4]; track i) {
+  <div class="page-surface stat-card stat-card--loading" aria-hidden="true">
+    <div class="skeleton-block skeleton-icon"></div>
+    <div class="skeleton-lines">
+      <div class="skeleton-block skeleton-line skeleton-line--value"></div>
+      <div class="skeleton-block skeleton-line skeleton-line--label"></div>
+    </div>
+  </div>
+  } } @else { @for (stat of stats(); track stat.label) {
+  <a [routerLink]="stat.link" [queryParams]="stat.queryParams" class="page-surface stat-card">
+    <nz-icon [nzType]="stat.icon" class="stat-icon" />
+    <div>
+      <div class="stat-value">{{ stat.value }}</div>
+      <div class="stat-label">{{ stat.label }}</div>
+    </div>
+  </a>
+  } }
 </div>
 
 <app-report-list />
-

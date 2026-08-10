@@ -94,9 +94,11 @@ describe('auth cookies', () => {
 
   describe('readAccessToken', () => {
     it('prefers the cookie', () => {
-      expect(readAccessToken(requestWith({ [ACCESS_TOKEN_COOKIE]: 'from-cookie' }, 'Bearer from-header'))).toBe(
-        'from-cookie',
-      );
+      expect(
+        readAccessToken(
+          requestWith({ [ACCESS_TOKEN_COOKIE]: 'from-cookie' }, 'Bearer from-header'),
+        ),
+      ).toBe('from-cookie');
     });
 
     it('falls back to the Authorization header so Swagger still works', () => {
@@ -114,7 +116,9 @@ describe('auth cookies', () => {
 
   describe('readRefreshToken', () => {
     it('reads only the cookie — a refresh token is never accepted from a header', () => {
-      expect(readRefreshToken(requestWith({ [REFRESH_TOKEN_COOKIE]: 'refresh.jwt' }))).toBe('refresh.jwt');
+      expect(readRefreshToken(requestWith({ [REFRESH_TOKEN_COOKIE]: 'refresh.jwt' }))).toBe(
+        'refresh.jwt',
+      );
       expect(readRefreshToken(requestWith({}, 'Bearer refresh.jwt'))).toBeUndefined();
     });
   });

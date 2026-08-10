@@ -12,7 +12,7 @@
       class="filter-select"
     >
       @for (villa of villas(); track villa.id) {
-        <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+      <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
       }
     </nz-select>
     <nz-select
@@ -23,7 +23,7 @@
       class="filter-select"
     >
       @for (status of statusKeys; track status) {
-        <nz-option [nzValue]="status" [nzLabel]="statusLabels[status]" />
+      <nz-option [nzValue]="status" [nzLabel]="statusLabels[status]" />
       }
     </nz-select>
     <button nz-button nzType="primary" (click)="openCreateModal()">
@@ -58,50 +58,50 @@
     </thead>
     <tbody>
       @for (record of records(); track record.id) {
-        <tr>
-          <td data-label="Villa">
-            <a [routerLink]="['/villas', record.villa.id]" class="ref-link">
-              {{ record.villa.name }}
-              <nz-icon nzType="right" class="ref-link-icon" />
-            </a>
-          </td>
-          <td data-label="Başlık" class="td-block">
-            {{ record.title }}
-            @if (record.description) {
-              <div class="record-description">{{ record.description }}</div>
-            }
-          </td>
-          <td data-label="Öncelik">
-            <nz-tag [nzColor]="priorityColors[record.priority]">{{ priorityLabels[record.priority] }}</nz-tag>
-          </td>
-          <td data-label="Açıldı">{{ record.openedAt | date: 'dd.MM.yyyy' }}</td>
-          <td data-label="Durum">
-            <nz-tag [nzColor]="statusColors[record.status]">{{ statusLabels[record.status] }}</nz-tag>
-          </td>
-          <td class="td-actions">
-            @if (record.status === 'Open') {
-              <button
-                nz-button
-                nzSize="small"
-                [nzLoading]="actingRecordId() === record.id"
-                (click)="start(record)"
-              >
-                Başlat
-              </button>
-            }
-            @if (record.status === 'InProgress') {
-              <button
-                nz-button
-                nzSize="small"
-                nzType="primary"
-                [nzLoading]="actingRecordId() === record.id"
-                (click)="complete(record)"
-              >
-                Tamamlandı Olarak İşaretle
-              </button>
-            }
-          </td>
-        </tr>
+      <tr>
+        <td data-label="Villa">
+          <a [routerLink]="['/villas', record.villa.id]" class="ref-link">
+            {{ record.villa.name }}
+            <nz-icon nzType="right" class="ref-link-icon" />
+          </a>
+        </td>
+        <td data-label="Başlık" class="td-block">
+          {{ record.title }} @if (record.description) {
+          <div class="record-description">{{ record.description }}</div>
+          }
+        </td>
+        <td data-label="Öncelik">
+          <nz-tag [nzColor]="priorityColors[record.priority]"
+            >{{ priorityLabels[record.priority] }}</nz-tag
+          >
+        </td>
+        <td data-label="Açıldı">{{ record.openedAt | date: 'dd.MM.yyyy' }}</td>
+        <td data-label="Durum">
+          <nz-tag [nzColor]="statusColors[record.status]">{{ statusLabels[record.status] }}</nz-tag>
+        </td>
+        <td class="td-actions">
+          @if (record.status === 'Open') {
+          <button
+            nz-button
+            nzSize="small"
+            [nzLoading]="actingRecordId() === record.id"
+            (click)="start(record)"
+          >
+            Başlat
+          </button>
+          } @if (record.status === 'InProgress') {
+          <button
+            nz-button
+            nzSize="small"
+            nzType="primary"
+            [nzLoading]="actingRecordId() === record.id"
+            (click)="complete(record)"
+          >
+            Tamamlandı Olarak İşaretle
+          </button>
+          }
+        </td>
+      </tr>
       }
     </tbody>
   </nz-table>
@@ -129,7 +129,7 @@
         <nz-form-control>
           <nz-select formControlName="villaId" nzPlaceHolder="Villa seç">
             @for (villa of villas(); track villa.id) {
-              <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+            <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
             }
           </nz-select>
         </nz-form-control>
@@ -147,7 +147,7 @@
         <nz-form-control>
           <nz-select formControlName="priority">
             @for (priority of priorityKeys; track priority) {
-              <nz-option [nzValue]="priority" [nzLabel]="priorityLabels[priority]" />
+            <nz-option [nzValue]="priority" [nzLabel]="priorityLabels[priority]" />
             }
           </nz-select>
         </nz-form-control>

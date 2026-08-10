@@ -36,7 +36,10 @@ export class ReservationsService {
     private readonly housekeepingService: HousekeepingService,
   ) {}
 
-  async create(dto: CreateReservationDto, idempotencyKey?: string): Promise<ReservationWithRelations> {
+  async create(
+    dto: CreateReservationDto,
+    idempotencyKey?: string,
+  ): Promise<ReservationWithRelations> {
     // A cheap pre-check outside the lock: the overwhelmingly common retry is a sequential
     // one, and answering it here costs a single indexed read instead of a lock acquisition.
     // The authoritative check is repeated inside the lock below, which is what makes
@@ -161,7 +164,10 @@ export class ReservationsService {
     }
 
     if (dto.guestCount !== undefined) {
-      const floor = await this.floorsService.findOneOrThrow(reservation.villaId, reservation.floorId);
+      const floor = await this.floorsService.findOneOrThrow(
+        reservation.villaId,
+        reservation.floorId,
+      );
       if (dto.guestCount > floor.capacity) {
         throw new BadRequestException(
           `Guest count ${dto.guestCount} exceeds floor capacity ${floor.capacity}`,

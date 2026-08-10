@@ -13,7 +13,10 @@ export class MaintenanceRecordsController {
 
   @Get()
   @RequirePermission('maintenance.read')
-  @ApiOperation({ summary: 'List maintenance records across all villas (paginated, filterable by villaId/status/priority)' })
+  @ApiOperation({
+    summary:
+      'List maintenance records across all villas (paginated, filterable by villaId/status/priority)',
+  })
   async findAll(
     @Query() query: ListAllMaintenanceRecordsQueryDto,
     @Res({ passthrough: true }) res: Response,

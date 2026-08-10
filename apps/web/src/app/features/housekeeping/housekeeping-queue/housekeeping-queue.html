@@ -12,98 +12,88 @@
       class="filter-select"
     >
       @for (villa of villas(); track villa.id) {
-        <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+      <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
       }
     </nz-select>
     @if (canManage()) {
-      <button nz-button nzType="primary" (click)="openCreateModal()">
-        <nz-icon nzType="plus" />
-        Yeni Görev
-      </button>
+    <button nz-button nzType="primary" (click)="openCreateModal()">
+      <nz-icon nzType="plus" />
+      Yeni Görev
+    </button>
     }
   </div>
 </div>
 
 @if (loading()) {
-  <nz-skeleton [nzActive]="true" />
+<nz-skeleton [nzActive]="true" />
 } @else {
-  <div class="board">
-    @for (column of columns; track column.status) {
-      <div class="board-column">
-        <div class="board-column-header">
-          <span>{{ column.title }}</span>
-          <span class="board-column-count">{{ tasksForStatus(column.status).length }}</span>
-        </div>
+<div class="board">
+  @for (column of columns; track column.status) {
+  <div class="board-column">
+    <div class="board-column-header">
+      <span>{{ column.title }}</span>
+      <span class="board-column-count">{{ tasksForStatus(column.status).length }}</span>
+    </div>
 
-        @if (tasksForStatus(column.status).length === 0) {
-          <nz-empty nzNotFoundContent="Görev yok" />
-        }
+    @if (tasksForStatus(column.status).length === 0) {
+    <nz-empty nzNotFoundContent="Görev yok" />
+    } @for (task of tasksForStatus(column.status); track task.id) {
+    <nz-card class="task-card" [nzTitle]="villaTitle">
+      <ng-template #villaTitle>
+        <span class="task-villa-title">
+          <nz-icon nzType="home" />
+          {{ task.villa.name }}
+        </span>
+      </ng-template>
 
-        @for (task of tasksForStatus(column.status); track task.id) {
-          <nz-card class="task-card" [nzTitle]="villaTitle">
-            <ng-template #villaTitle>
-              <span class="task-villa-title">
-                <nz-icon nzType="home" />
-                {{ task.villa.name }}
-              </span>
-            </ng-template>
-
-            @if (task.reservation) {
-              <a
-                class="task-reservation ref-link"
-                [routerLink]="['/reservations']"
-                [queryParams]="{ res: task.reservation.id }"
-              >
-                {{ task.reservation.reservationNumber }}
-                <nz-icon nzType="right" class="ref-link-icon" />
-              </a>
-              <p class="task-meta">
-                {{ task.reservation.floor.isEntireVilla ? 'Tüm Villa' : task.reservation.floor.name }}
-              </p>
-            } @else {
-              <p class="task-reservation task-reservation--adhoc">Rezervasyonsuz görev</p>
-            }
-            @if (task.notes) {
-              <p class="task-meta">{{ task.notes }}</p>
-            }
-
-            @if (task.assignedUser) {
-              <p class="task-meta"><nz-icon nzType="user" /> {{ task.assignedUser.username }}</p>
-            }
-            @if (task.startedAt) {
-              <p class="task-meta">Başladı: {{ task.startedAt | date: 'short' }}</p>
-            }
-            @if (task.completedAt) {
-              <p class="task-meta">Bitti: {{ task.completedAt | date: 'short' }}</p>
-            }
-
-            @if (canManage() && task.status === 'Pending') {
-              <button
-                nz-button
-                nzType="primary"
-                nzSize="small"
-                [nzLoading]="actingTaskId() === task.id"
-                (click)="start(task)"
-              >
-                Temizliğe Başla
-              </button>
-            }
-            @if (canManage() && task.status === 'InProgress') {
-              <button
-                nz-button
-                nzType="primary"
-                nzSize="small"
-                [nzLoading]="actingTaskId() === task.id"
-                (click)="complete(task)"
-              >
-                Tamamlandı Olarak İşaretle
-              </button>
-            }
-          </nz-card>
-        }
-      </div>
+      @if (task.reservation) {
+      <a
+        class="task-reservation ref-link"
+        [routerLink]="['/reservations']"
+        [queryParams]="{ res: task.reservation.id }"
+      >
+        {{ task.reservation.reservationNumber }}
+        <nz-icon nzType="right" class="ref-link-icon" />
+      </a>
+      <p class="task-meta">
+        {{ task.reservation.floor.isEntireVilla ? 'Tüm Villa' : task.reservation.floor.name }}
+      </p>
+      } @else {
+      <p class="task-reservation task-reservation--adhoc">Rezervasyonsuz görev</p>
+      } @if (task.notes) {
+      <p class="task-meta">{{ task.notes }}</p>
+      } @if (task.assignedUser) {
+      <p class="task-meta"><nz-icon nzType="user" /> {{ task.assignedUser.username }}</p>
+      } @if (task.startedAt) {
+      <p class="task-meta">Başladı: {{ task.startedAt | date: 'short' }}</p>
+      } @if (task.completedAt) {
+      <p class="task-meta">Bitti: {{ task.completedAt | date: 'short' }}</p>
+      } @if (canManage() && task.status === 'Pending') {
+      <button
+        nz-button
+        nzType="primary"
+        nzSize="small"
+        [nzLoading]="actingTaskId() === task.id"
+        (click)="start(task)"
+      >
+        Temizliğe Başla
+      </button>
+      } @if (canManage() && task.status === 'InProgress') {
+      <button
+        nz-button
+        nzType="primary"
+        nzSize="small"
+        [nzLoading]="actingTaskId() === task.id"
+        (click)="complete(task)"
+      >
+        Tamamlandı Olarak İşaretle
+      </button>
+      }
+    </nz-card>
     }
   </div>
+  }
+</div>
 }
 
 <nz-modal
@@ -121,7 +111,7 @@
         <nz-form-control>
           <nz-select formControlName="villaId" nzPlaceHolder="Villa seç">
             @for (villa of villas(); track villa.id) {
-              <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+            <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
             }
           </nz-select>
         </nz-form-control>
@@ -130,7 +120,12 @@
       <nz-form-item>
         <nz-form-label>Not</nz-form-label>
         <nz-form-control>
-          <textarea nz-input formControlName="notes" rows="3" placeholder="ör. Sezon öncesi genel temizlik"></textarea>
+          <textarea
+            nz-input
+            formControlName="notes"
+            rows="3"
+            placeholder="ör. Sezon öncesi genel temizlik"
+          ></textarea>
         </nz-form-control>
       </nz-form-item>
     </form>

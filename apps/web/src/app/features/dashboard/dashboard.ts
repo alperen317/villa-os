@@ -78,8 +78,18 @@ export class Dashboard implements OnInit {
           link: '/villas',
           queryParams: { arrivingToday: 'true' },
         },
-        { label: 'Bugünkü Çıkışlar', value: String(summary.todayDepartures), icon: 'logout', link: '/reservations' },
-        { label: 'Şu An Konaklayan', value: String(summary.currentGuests), icon: 'user', link: '/reservations' },
+        {
+          label: 'Bugünkü Çıkışlar',
+          value: String(summary.todayDepartures),
+          icon: 'logout',
+          link: '/reservations',
+        },
+        {
+          label: 'Şu An Konaklayan',
+          value: String(summary.currentGuests),
+          icon: 'user',
+          link: '/reservations',
+        },
         {
           label: 'Doluluk Oranı',
           value: `%${summary.occupancyRate} (${summary.occupiedVillas}/${summary.totalActiveVillas})`,
@@ -92,8 +102,18 @@ export class Dashboard implements OnInit {
           icon: 'dollar',
           link: '/reservations',
         },
-        { label: 'Bekleyen Temizlik', value: String(summary.openCleaningTasks), icon: 'clear', link: '/housekeeping' },
-        { label: 'Bekleyen Bakım', value: String(summary.openMaintenanceTasks), icon: 'tool', link: '/villas' },
+        {
+          label: 'Bekleyen Temizlik',
+          value: String(summary.openCleaningTasks),
+          icon: 'clear',
+          link: '/housekeeping',
+        },
+        {
+          label: 'Bekleyen Bakım',
+          value: String(summary.openMaintenanceTasks),
+          icon: 'tool',
+          link: '/villas',
+        },
       ]);
     } finally {
       this.statsLoading.set(false);

@@ -83,9 +83,7 @@ describe('AuthService', () => {
       const user = buildUser({ passwordHash: await bcrypt.hash('correct-password', 10) });
       prisma.user.findUnique.mockResolvedValue(user);
 
-      await expect(service.validateCredentials('admin', 'correct-password')).resolves.toEqual(
-        user,
-      );
+      await expect(service.validateCredentials('admin', 'correct-password')).resolves.toEqual(user);
     });
 
     it('throws InvalidCredentialsException when the user is deactivated', async () => {
@@ -129,7 +127,11 @@ describe('AuthService', () => {
 
       expect(prisma.user.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ username: 'first-admin', role: 'Administrator', isActive: true }),
+          data: expect.objectContaining({
+            username: 'first-admin',
+            role: 'Administrator',
+            isActive: true,
+          }),
         }),
       );
       expect(tokens).toEqual({ accessToken: 'access.jwt', refreshToken: 'refresh.jwt' });
@@ -196,7 +198,11 @@ describe('AuthService', () => {
         throw new Error('jwt expired');
       });
 
-      await expectRejectionCode(service.refresh('bad.token'), ErrorCode.AUTH_INVALID_REFRESH_TOKEN, 401);
+      await expectRejectionCode(
+        service.refresh('bad.token'),
+        ErrorCode.AUTH_INVALID_REFRESH_TOKEN,
+        401,
+      );
       expect(redis.get).not.toHaveBeenCalled();
     });
 
@@ -204,14 +210,22 @@ describe('AuthService', () => {
       jwtService.verify.mockReturnValue({ sub: 'user-1', jti: 'jti-1' });
       redis.get.mockResolvedValue(null);
 
-      await expectRejectionCode(service.refresh('token'), ErrorCode.AUTH_INVALID_REFRESH_TOKEN, 401);
+      await expectRejectionCode(
+        service.refresh('token'),
+        ErrorCode.AUTH_INVALID_REFRESH_TOKEN,
+        401,
+      );
     });
 
     it('throws InvalidRefreshTokenException when the stored owner does not match the token subject', async () => {
       jwtService.verify.mockReturnValue({ sub: 'user-1', jti: 'jti-1' });
       redis.get.mockResolvedValue('someone-else');
 
-      await expectRejectionCode(service.refresh('token'), ErrorCode.AUTH_INVALID_REFRESH_TOKEN, 401);
+      await expectRejectionCode(
+        service.refresh('token'),
+        ErrorCode.AUTH_INVALID_REFRESH_TOKEN,
+        401,
+      );
     });
 
     it('throws InvalidRefreshTokenException when the user no longer exists', async () => {
@@ -219,7 +233,11 @@ describe('AuthService', () => {
       redis.get.mockResolvedValue('user-1');
       prisma.user.findUnique.mockResolvedValue(null);
 
-      await expectRejectionCode(service.refresh('token'), ErrorCode.AUTH_INVALID_REFRESH_TOKEN, 401);
+      await expectRejectionCode(
+        service.refresh('token'),
+        ErrorCode.AUTH_INVALID_REFRESH_TOKEN,
+        401,
+      );
     });
 
     it('rotates the refresh token: deletes the old jti and issues a brand-new pair', async () => {
@@ -245,7 +263,11 @@ describe('AuthService', () => {
       await service.refresh('old.token');
 
       redis.get.mockResolvedValueOnce(null); // simulates the key having been deleted on first use
-      await expectRejectionCode(service.refresh('old.token'), ErrorCode.AUTH_INVALID_REFRESH_TOKEN, 401);
+      await expectRejectionCode(
+        service.refresh('old.token'),
+        ErrorCode.AUTH_INVALID_REFRESH_TOKEN,
+        401,
+      );
     });
   });
 
@@ -263,7 +285,11 @@ describe('AuthService', () => {
         throw new Error('malformed');
       });
 
-      await expectRejectionCode(service.logout('garbage'), ErrorCode.AUTH_INVALID_REFRESH_TOKEN, 401);
+      await expectRejectionCode(
+        service.logout('garbage'),
+        ErrorCode.AUTH_INVALID_REFRESH_TOKEN,
+        401,
+      );
       expect(redis.del).not.toHaveBeenCalled();
     });
   });

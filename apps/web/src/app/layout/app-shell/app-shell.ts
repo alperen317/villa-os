@@ -17,7 +17,15 @@ const HOUSEKEEPING_NAV_ROLES = new Set(['Administrator', 'Operations', 'Housekee
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterModule, NzButtonModule, NzIconModule, NzLayoutModule, NzMenuModule, SyncQueuePanel, TranslatePipe],
+  imports: [
+    RouterModule,
+    NzButtonModule,
+    NzIconModule,
+    NzLayoutModule,
+    NzMenuModule,
+    SyncQueuePanel,
+    TranslatePipe,
+  ],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
 })

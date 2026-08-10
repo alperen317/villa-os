@@ -10,15 +10,15 @@
 </div>
 
 @if (arrivingTodayFilter()) {
-  <div class="filter-banner">
-    <nz-tag nzColor="blue">
-      <nz-icon nzType="login" />
-      Bugün girişi olan villalar
-    </nz-tag>
-    <button nz-button nzType="text" nzSize="small" (click)="clearArrivingTodayFilter()">
-      Filtreyi Temizle
-    </button>
-  </div>
+<div class="filter-banner">
+  <nz-tag nzColor="blue">
+    <nz-icon nzType="login" />
+    Bugün girişi olan villalar
+  </nz-tag>
+  <button nz-button nzType="text" nzSize="small" (click)="clearArrivingTodayFilter()">
+    Filtreyi Temizle
+  </button>
+</div>
 }
 
 <div class="page-surface">
@@ -45,51 +45,58 @@
     </thead>
     <tbody>
       @for (villa of villas(); track villa.id) {
-        <tr class="clickable-row" (click)="goToDetail(villa)">
-          <td data-label="Ad">
-            <a [routerLink]="['/villas', villa.id]" (click)="$event.stopPropagation()">{{ villa.name }}</a>
-            @if (villa.hasOpenMaintenance) {
-              <nz-tag class="maintenance-badge" nzColor="orange" nz-tooltip nzTooltipTitle="Açık bakım kaydı var">
-                <nz-icon nzType="tool" />
-                Bakımda
-              </nz-tag>
-            }
-          </td>
-          <td data-label="Durum">
-            <nz-tag [nzColor]="villa.status === 'Active' ? 'green' : 'default'">
-              {{ villa.status === 'Active' ? 'Aktif' : 'Pasif' }}
-            </nz-tag>
-          </td>
-          <td data-label="Adres">{{ villa.address || '-' }}</td>
-          <td class="actions td-actions">
-            <button
-              nz-button
-              nzType="text"
-              aria-label="Villayı düzenle"
-              (click)="$event.stopPropagation(); openEditModal(villa)"
-            >
-              <nz-icon nzType="edit" />
-            </button>
-            <button nz-button nzType="text" (click)="$event.stopPropagation(); toggleStatus(villa)">
-              {{ villa.status === 'Active' ? 'Pasife Al' : 'Aktif Et' }}
-            </button>
-            <button
-              nz-button
-              nzType="text"
-              nzDanger
-              aria-label="Villayı sil"
-              nz-popconfirm
-              nzPopconfirmTitle="Bu villayı silmek istediğine emin misin?"
-              (click)="$event.stopPropagation()"
-              (nzOnConfirm)="remove(villa)"
-            >
-              <nz-icon nzType="delete" />
-            </button>
-          </td>
-          <td class="td-chevron" data-label="Detay">
-            <nz-icon nzType="right" />
-          </td>
-        </tr>
+      <tr class="clickable-row" (click)="goToDetail(villa)">
+        <td data-label="Ad">
+          <a [routerLink]="['/villas', villa.id]" (click)="$event.stopPropagation()"
+            >{{ villa.name }}</a
+          >
+          @if (villa.hasOpenMaintenance) {
+          <nz-tag
+            class="maintenance-badge"
+            nzColor="orange"
+            nz-tooltip
+            nzTooltipTitle="Açık bakım kaydı var"
+          >
+            <nz-icon nzType="tool" />
+            Bakımda
+          </nz-tag>
+          }
+        </td>
+        <td data-label="Durum">
+          <nz-tag [nzColor]="villa.status === 'Active' ? 'green' : 'default'">
+            {{ villa.status === 'Active' ? 'Aktif' : 'Pasif' }}
+          </nz-tag>
+        </td>
+        <td data-label="Adres">{{ villa.address || '-' }}</td>
+        <td class="actions td-actions">
+          <button
+            nz-button
+            nzType="text"
+            aria-label="Villayı düzenle"
+            (click)="$event.stopPropagation(); openEditModal(villa)"
+          >
+            <nz-icon nzType="edit" />
+          </button>
+          <button nz-button nzType="text" (click)="$event.stopPropagation(); toggleStatus(villa)">
+            {{ villa.status === 'Active' ? 'Pasife Al' : 'Aktif Et' }}
+          </button>
+          <button
+            nz-button
+            nzType="text"
+            nzDanger
+            aria-label="Villayı sil"
+            nz-popconfirm
+            nzPopconfirmTitle="Bu villayı silmek istediğine emin misin?"
+            (click)="$event.stopPropagation()"
+            (nzOnConfirm)="remove(villa)"
+          >
+            <nz-icon nzType="delete" />
+          </button>
+        </td>
+        <td class="td-chevron" data-label="Detay">
+          <nz-icon nzType="right" />
+        </td>
+      </tr>
       }
     </tbody>
   </nz-table>

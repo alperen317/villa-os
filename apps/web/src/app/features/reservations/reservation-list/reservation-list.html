@@ -11,13 +11,13 @@
 
 <div class="filters">
   @if (viewMode() === 'list') {
-    <input
-      nz-input
-      [ngModel]="filterSearch()"
-      (ngModelChange)="onSearchChange($event)"
-      placeholder="Müşteri veya rez. no ara"
-      class="filter-search"
-    />
+  <input
+    nz-input
+    [ngModel]="filterSearch()"
+    (ngModelChange)="onSearchChange($event)"
+    placeholder="Müşteri veya rez. no ara"
+    class="filter-search"
+  />
   }
 
   <nz-select
@@ -28,7 +28,7 @@
     class="filter-select"
   >
     @for (villa of villas(); track villa.id) {
-      <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+    <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
     }
   </nz-select>
 
@@ -40,7 +40,7 @@
     class="filter-select"
   >
     @for (status of statusKeys; track status) {
-      <nz-option [nzValue]="status" [nzLabel]="statusLabels[status]" />
+    <nz-option [nzValue]="status" [nzLabel]="statusLabels[status]" />
     }
   </nz-select>
 
@@ -58,357 +58,362 @@
 </div>
 
 @if (viewMode() === 'list') {
-  <div class="date-filter-bar">
-    <nz-range-picker
-      [ngModel]="filterDateRange()"
-      (ngModelChange)="onDateRangeChange($event)"
-      nzAllowClear
-      class="date-range-picker"
-    />
+<div class="date-filter-bar">
+  <nz-range-picker
+    [ngModel]="filterDateRange()"
+    (ngModelChange)="onDateRangeChange($event)"
+    nzAllowClear
+    class="date-range-picker"
+  />
 
-    <div class="date-presets">
-      <button
-        nz-button
-        nzSize="small"
-        [nzType]="filterDatePreset() === 'today' ? 'primary' : 'default'"
-        (click)="setDatePreset('today')"
-      >
-        Bugün
-      </button>
-      <button
-        nz-button
-        nzSize="small"
-        [nzType]="filterDatePreset() === 'tomorrow' ? 'primary' : 'default'"
-        (click)="setDatePreset('tomorrow')"
-      >
-        Yarın
-      </button>
-      <button
-        nz-button
-        nzSize="small"
-        [nzType]="filterDatePreset() === 'week' ? 'primary' : 'default'"
-        (click)="setDatePreset('week')"
-      >
-        Bu Hafta
-      </button>
-      <button
-        nz-button
-        nzSize="small"
-        [nzType]="filterDatePreset() === 'month' ? 'primary' : 'default'"
-        (click)="setDatePreset('month')"
-      >
-        Bu Ay
-      </button>
-      @if (filterDateRange()) {
-        <button nz-button nzSize="small" nzType="text" (click)="clearDateFilter()">
-          <nz-icon nzType="close" />
-          Temizle
-        </button>
-      }
-    </div>
-  </div>
-}
-
-@if (viewMode() === 'list') {
-  <div class="page-surface">
-    <nz-table
-      class="responsive-table"
-      [nzData]="reservations()"
-      [nzFrontPagination]="false"
-      [nzTotal]="total()"
-      [nzPageIndex]="pageIndex()"
-      [nzPageSize]="pageSize()"
-      [nzHideOnSinglePage]="true"
-      [nzLoading]="loading()"
-      [nzNoResult]="emptyReservations"
-      (nzPageIndexChange)="onPageIndexChange($event)"
+  <div class="date-presets">
+    <button
+      nz-button
+      nzSize="small"
+      [nzType]="filterDatePreset() === 'today' ? 'primary' : 'default'"
+      (click)="setDatePreset('today')"
     >
-      <thead>
-        <tr>
-          <th>Rez. No</th>
-          <th>Villa / Kat</th>
-          <th>Müşteri</th>
-          <th>Giriş - Çıkış</th>
-          <th>Misafir</th>
-          <th>Tutar</th>
-          <th>Durum</th>
-          <th>Aksiyonlar</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of pendingCreateItems(); track item.id) {
-          <tr class="queue-optimistic-row">
-            <td colspan="8">
-              <span class="optimistic-summary">{{ item.summary }}</span>
-              <nz-tag [nzColor]="item.status === 'conflict' ? 'red' : 'blue'">
-                {{ item.status === 'conflict' ? 'Kontrol gerekiyor' : 'Senkronize bekliyor' }}
-              </nz-tag>
-            </td>
-          </tr>
-        }
-        @for (reservation of reservations(); track reservation.id) {
-          <tr>
-            <td data-label="Rez. No">{{ reservation.reservationNumber }}</td>
-            <td data-label="Villa / Kat">{{ reservation.villa.name }} / {{ reservation.floor.name }}</td>
-            <td data-label="Müşteri">
-              <a [routerLink]="['/customers', reservation.customerId]" class="ref-link">
-                {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
-                <nz-icon nzType="right" class="ref-link-icon" />
-              </a>
-            </td>
-            <td data-label="Giriş - Çıkış">
-              {{ reservation.checkIn | date: 'dd.MM.yyyy' : 'UTC' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' : 'UTC' }}
-            </td>
-            <td data-label="Misafir">{{ reservation.guestCount }}</td>
-            <td data-label="Tutar">{{ reservation.totalPrice }} ₺</td>
-            <td data-label="Durum">
-              <nz-tag [nzColor]="statusColors[reservation.status]">{{ statusLabels[reservation.status] }}</nz-tag>
-              @if (queueTagFor(reservation.id); as queueTag) {
-                <nz-tag [nzColor]="queueTag.color">{{ queueTag.text }}</nz-tag>
-              }
-            </td>
-            <td class="td-actions">
-              @if (nextActions[reservation.status].length > 0 || canEdit(reservation.status)) {
-                <!-- nzTrigger defaults to 'hover', which only listens for mouseenter/mouseleave —
+      Bugün
+    </button>
+    <button
+      nz-button
+      nzSize="small"
+      [nzType]="filterDatePreset() === 'tomorrow' ? 'primary' : 'default'"
+      (click)="setDatePreset('tomorrow')"
+    >
+      Yarın
+    </button>
+    <button
+      nz-button
+      nzSize="small"
+      [nzType]="filterDatePreset() === 'week' ? 'primary' : 'default'"
+      (click)="setDatePreset('week')"
+    >
+      Bu Hafta
+    </button>
+    <button
+      nz-button
+      nzSize="small"
+      [nzType]="filterDatePreset() === 'month' ? 'primary' : 'default'"
+      (click)="setDatePreset('month')"
+    >
+      Bu Ay
+    </button>
+    @if (filterDateRange()) {
+    <button nz-button nzSize="small" nzType="text" (click)="clearDateFilter()">
+      <nz-icon nzType="close" />
+      Temizle
+    </button>
+    }
+  </div>
+</div>
+} @if (viewMode() === 'list') {
+<div class="page-surface">
+  <nz-table
+    class="responsive-table"
+    [nzData]="reservations()"
+    [nzFrontPagination]="false"
+    [nzTotal]="total()"
+    [nzPageIndex]="pageIndex()"
+    [nzPageSize]="pageSize()"
+    [nzHideOnSinglePage]="true"
+    [nzLoading]="loading()"
+    [nzNoResult]="emptyReservations"
+    (nzPageIndexChange)="onPageIndexChange($event)"
+  >
+    <thead>
+      <tr>
+        <th>Rez. No</th>
+        <th>Villa / Kat</th>
+        <th>Müşteri</th>
+        <th>Giriş - Çıkış</th>
+        <th>Misafir</th>
+        <th>Tutar</th>
+        <th>Durum</th>
+        <th>Aksiyonlar</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of pendingCreateItems(); track item.id) {
+      <tr class="queue-optimistic-row">
+        <td colspan="8">
+          <span class="optimistic-summary">{{ item.summary }}</span>
+          <nz-tag [nzColor]="item.status === 'conflict' ? 'red' : 'blue'">
+            {{ item.status === 'conflict' ? 'Kontrol gerekiyor' : 'Senkronize bekliyor' }}
+          </nz-tag>
+        </td>
+      </tr>
+      } @for (reservation of reservations(); track reservation.id) {
+      <tr>
+        <td data-label="Rez. No">{{ reservation.reservationNumber }}</td>
+        <td data-label="Villa / Kat">
+          {{ reservation.villa.name }} / {{ reservation.floor.name }}
+        </td>
+        <td data-label="Müşteri">
+          <a [routerLink]="['/customers', reservation.customerId]" class="ref-link">
+            {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+            <nz-icon nzType="right" class="ref-link-icon" />
+          </a>
+        </td>
+        <td data-label="Giriş - Çıkış">
+          {{ reservation.checkIn | date: 'dd.MM.yyyy' : 'UTC' }} - {{ reservation.checkOut | date:
+          'dd.MM.yyyy' : 'UTC' }}
+        </td>
+        <td data-label="Misafir">{{ reservation.guestCount }}</td>
+        <td data-label="Tutar">{{ reservation.totalPrice }} ₺</td>
+        <td data-label="Durum">
+          <nz-tag [nzColor]="statusColors[reservation.status]"
+            >{{ statusLabels[reservation.status] }}</nz-tag
+          >
+          @if (queueTagFor(reservation.id); as queueTag) {
+          <nz-tag [nzColor]="queueTag.color">{{ queueTag.text }}</nz-tag>
+          }
+        </td>
+        <td class="td-actions">
+          @if (nextActions[reservation.status].length > 0 || canEdit(reservation.status)) {
+          <!-- nzTrigger defaults to 'hover', which only listens for mouseenter/mouseleave —
                      on touch there is no hover, so the whole action menu (Düzenle, check-in/out,
                      iptal) would be unreachable on mobile. Click also gives the overlay a backdrop. -->
-                <button
-                  nz-button
-                  nzType="text"
-                  aria-label="Rezervasyon aksiyonları"
-                  nz-dropdown
-                  nzTrigger="click"
-                  [nzDropdownMenu]="menu"
-                >
-                  <nz-icon nzType="more" />
-                </button>
-                <nz-dropdown-menu #menu="nzDropdownMenu">
-                  <ul nz-menu>
-                    @if (canEdit(reservation.status)) {
-                      <li
-                        nz-menu-item
-                        tabindex="0"
-                        (click)="openEditModal(reservation)"
-                        (keydown.enter)="openEditModal(reservation)"
-                      >
-                        Düzenle
-                      </li>
-                    }
-                    @for (next of nextActions[reservation.status]; track next.action) {
-                      <li
-                        nz-menu-item
-                        tabindex="0"
-                        (click)="runAction(reservation, next.action)"
-                        (keydown.enter)="runAction(reservation, next.action)"
-                      >
-                        {{ next.label }}
-                      </li>
-                    }
-                  </ul>
-                </nz-dropdown-menu>
-              }
-              @if (canDelete()) {
-                <button
-                  nz-button
-                  nzType="text"
-                  nzDanger
-                  aria-label="Rezervasyonu sil"
-                  nz-popconfirm
-                  nzPopconfirmTitle="Bu rezervasyonu silmek istediğine emin misin? Misafir vazgeçtiyse silmek yerine iptal et."
-                  (nzOnConfirm)="remove(reservation)"
-                >
-                  <nz-icon nzType="delete" />
-                </button>
-              }
-            </td>
-          </tr>
-        }
-      </tbody>
-    </nz-table>
-  </div>
-
-  <ng-template #emptyReservations>
-    <div class="empty-state">
-      <nz-icon nzType="calendar" class="empty-icon" />
-      <p>Henüz rezervasyon yok.</p>
-      <button nz-button nzType="primary" (click)="openCreateModal()">
-        <nz-icon nzType="plus" />
-        İlk Rezervasyonu Oluştur
-      </button>
-    </div>
-  </ng-template>
-} @else if (viewMode() === 'calendar') {
-  <div class="page-surface">
-    <!-- Fullscreen mode squeezes seven columns into a phone's width, leaving the day cells
-         too narrow to render anything readable. Below the breakpoint the calendar drops to
-         card mode (dots per day) and the detail moves to the day panel underneath. -->
-    <nz-calendar
-      [nzFullscreen]="!viewport.isMobile()"
-      [nzValue]="activeCalendarDate()"
-      (nzSelectChange)="onCalendarSelect($event)"
-    >
-      <ng-template nzDateCell let-date>
-        @if (viewport.isMobile()) {
-          <div class="calendar-dots">
-            @if (checkInsForDate(date).length > 0) {
-              <span class="calendar-dot calendar-dot--in"></span>
-            }
-            @if (checkOutsForDate(date).length > 0) {
-              <span class="calendar-dot calendar-dot--out"></span>
-            }
-          </div>
-        } @else {
-          <div class="calendar-cell">
-            @for (reservation of checkInsForDate(date); track reservation.id) {
-              <nz-tag
-                class="calendar-tag"
-                nzColor="green"
-                nz-tooltip
-                role="button"
-                tabindex="0"
-                [attr.aria-label]="'Giriş: ' + reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
-                [nzTooltipTitle]="reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
-                (click)="openDetail(reservation)"
-                (keydown.enter)="openDetail(reservation)"
-              >
-                <nz-icon nzType="login" /> {{ reservation.villa.name }} / {{ reservation.floor.name }} · {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
-              </nz-tag>
-            }
-            @for (reservation of checkOutsForDate(date); track reservation.id) {
-              <nz-tag
-                class="calendar-tag"
-                nzColor="volcano"
-                nz-tooltip
-                role="button"
-                tabindex="0"
-                [attr.aria-label]="'Çıkış: ' + reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
-                [nzTooltipTitle]="reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
-                (click)="openDetail(reservation)"
-                (keydown.enter)="openDetail(reservation)"
-              >
-                <nz-icon nzType="logout" /> {{ reservation.villa.name }} / {{ reservation.floor.name }} · {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
-              </nz-tag>
-            }
-          </div>
-        }
-      </ng-template>
-    </nz-calendar>
-
-    @if (viewport.isMobile()) {
-      <div class="day-detail">
-        <h4 class="day-detail-title">
-          {{ selectedCalendarDate() | date: 'dd.MM.yyyy' }} · giriş ve çıkışlar
-        </h4>
-
-        @if (selectedDayCheckIns().length === 0 && selectedDayCheckOuts().length === 0) {
-          <p class="day-detail-empty">Bu gün için giriş veya çıkış yok.</p>
-        }
-
-        @for (reservation of selectedDayCheckIns(); track reservation.id) {
-          <button type="button" class="day-detail-item" (click)="openDetail(reservation)">
-            <nz-tag nzColor="green" class="day-detail-tag">
-              <nz-icon nzType="login" />
-              Giriş
-            </nz-tag>
-            <span class="day-detail-text">
-              {{ reservation.villa.name }} / {{ reservation.floor.name }} ·
-              {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
-            </span>
-          </button>
-        }
-
-        @for (reservation of selectedDayCheckOuts(); track reservation.id) {
-          <button type="button" class="day-detail-item" (click)="openDetail(reservation)">
-            <nz-tag nzColor="volcano" class="day-detail-tag">
-              <nz-icon nzType="logout" />
-              Çıkış
-            </nz-tag>
-            <span class="day-detail-text">
-              {{ reservation.villa.name }} / {{ reservation.floor.name }} ·
-              {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
-            </span>
-          </button>
-        }
-      </div>
-    }
-  </div>
-} @else {
-  <div class="page-surface">
-    <form nz-form [formGroup]="availabilityForm" class="availability-form" (ngSubmit)="searchAvailability()">
-      <nz-form-item>
-        <nz-form-label nzRequired>Tarih Aralığı</nz-form-label>
-        <nz-form-control>
-          <nz-range-picker formControlName="dateRange" style="width: 280px" />
-        </nz-form-control>
-      </nz-form-item>
-
-      <nz-form-item>
-        <nz-form-label>Villa</nz-form-label>
-        <nz-form-control>
-          <nz-select formControlName="villaId" nzAllowClear nzPlaceHolder="Tüm villalar" style="width: 200px">
-            @for (villa of villas(); track villa.id) {
-              <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
-            }
-          </nz-select>
-        </nz-form-control>
-      </nz-form-item>
-
-      <nz-form-item class="availability-submit">
-        <nz-form-label class="sr-only">Ara</nz-form-label>
-        <nz-form-control>
           <button
             nz-button
-            nzType="primary"
-            type="submit"
-            [nzLoading]="availabilitySearching()"
-            [disabled]="availabilityForm.invalid"
+            nzType="text"
+            aria-label="Rezervasyon aksiyonları"
+            nz-dropdown
+            nzTrigger="click"
+            [nzDropdownMenu]="menu"
           >
-            <nz-icon nzType="search" />
-            Ara
+            <nz-icon nzType="more" />
           </button>
-        </nz-form-control>
-      </nz-form-item>
-    </form>
-
-    @if (availabilityResults(); as results) {
-      @if (results.length === 0) {
-        <div class="empty-state">
-          <nz-icon nzType="close-circle" class="empty-icon" />
-          <p>Bu tarih aralığında uygun boş yer bulunamadı.</p>
-        </div>
-      } @else {
-        <nz-table class="responsive-table" [nzData]="results" [nzShowPagination]="false">
-          <thead>
-            <tr>
-              <th>Villa</th>
-              <th>Kat</th>
-              <th>Kapasite</th>
-              <th>Günlük Fiyat</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (floor of results; track floor.id) {
-              <tr>
-                <td data-label="Villa">{{ floor.villa.name }}</td>
-                <td data-label="Kat">
-                  {{ floor.name }}
-                  @if (floor.isEntireVilla) {
-                    <nz-tag nzColor="blue">Tüm Villa</nz-tag>
-                  }
-                </td>
-                <td data-label="Kapasite">{{ floor.capacity }} kişi</td>
-                <td data-label="Günlük Fiyat">{{ floor.dailyPrice }} ₺</td>
-                <td class="td-actions">
-                  <button nz-button nzType="link" (click)="bookFromAvailability(floor)">Rezervasyon Oluştur</button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </nz-table>
+          <nz-dropdown-menu #menu="nzDropdownMenu">
+            <ul nz-menu>
+              @if (canEdit(reservation.status)) {
+              <li
+                nz-menu-item
+                tabindex="0"
+                (click)="openEditModal(reservation)"
+                (keydown.enter)="openEditModal(reservation)"
+              >
+                Düzenle
+              </li>
+              } @for (next of nextActions[reservation.status]; track next.action) {
+              <li
+                nz-menu-item
+                tabindex="0"
+                (click)="runAction(reservation, next.action)"
+                (keydown.enter)="runAction(reservation, next.action)"
+              >
+                {{ next.label }}
+              </li>
+              }
+            </ul>
+          </nz-dropdown-menu>
+          } @if (canDelete()) {
+          <button
+            nz-button
+            nzType="text"
+            nzDanger
+            aria-label="Rezervasyonu sil"
+            nz-popconfirm
+            nzPopconfirmTitle="Bu rezervasyonu silmek istediğine emin misin? Misafir vazgeçtiyse silmek yerine iptal et."
+            (nzOnConfirm)="remove(reservation)"
+          >
+            <nz-icon nzType="delete" />
+          </button>
+          }
+        </td>
+      </tr>
       }
+    </tbody>
+  </nz-table>
+</div>
+
+<ng-template #emptyReservations>
+  <div class="empty-state">
+    <nz-icon nzType="calendar" class="empty-icon" />
+    <p>Henüz rezervasyon yok.</p>
+    <button nz-button nzType="primary" (click)="openCreateModal()">
+      <nz-icon nzType="plus" />
+      İlk Rezervasyonu Oluştur
+    </button>
+  </div>
+</ng-template>
+} @else if (viewMode() === 'calendar') {
+<div class="page-surface">
+  <!-- Fullscreen mode squeezes seven columns into a phone's width, leaving the day cells
+         too narrow to render anything readable. Below the breakpoint the calendar drops to
+         card mode (dots per day) and the detail moves to the day panel underneath. -->
+  <nz-calendar
+    [nzFullscreen]="!viewport.isMobile()"
+    [nzValue]="activeCalendarDate()"
+    (nzSelectChange)="onCalendarSelect($event)"
+  >
+    <ng-template nzDateCell let-date>
+      @if (viewport.isMobile()) {
+      <div class="calendar-dots">
+        @if (checkInsForDate(date).length > 0) {
+        <span class="calendar-dot calendar-dot--in"></span>
+        } @if (checkOutsForDate(date).length > 0) {
+        <span class="calendar-dot calendar-dot--out"></span>
+        }
+      </div>
+      } @else {
+      <div class="calendar-cell">
+        @for (reservation of checkInsForDate(date); track reservation.id) {
+        <nz-tag
+          class="calendar-tag"
+          nzColor="green"
+          nz-tooltip
+          role="button"
+          tabindex="0"
+          [attr.aria-label]="'Giriş: ' + reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
+          [nzTooltipTitle]="reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
+          (click)="openDetail(reservation)"
+          (keydown.enter)="openDetail(reservation)"
+        >
+          <nz-icon nzType="login" /> {{ reservation.villa.name }} / {{ reservation.floor.name }} ·
+          {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+        </nz-tag>
+        } @for (reservation of checkOutsForDate(date); track reservation.id) {
+        <nz-tag
+          class="calendar-tag"
+          nzColor="volcano"
+          nz-tooltip
+          role="button"
+          tabindex="0"
+          [attr.aria-label]="'Çıkış: ' + reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
+          [nzTooltipTitle]="reservation.villa.name + ' / ' + reservation.floor.name + ' · ' + reservation.customer.firstName + ' ' + reservation.customer.lastName"
+          (click)="openDetail(reservation)"
+          (keydown.enter)="openDetail(reservation)"
+        >
+          <nz-icon nzType="logout" /> {{ reservation.villa.name }} / {{ reservation.floor.name }} ·
+          {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+        </nz-tag>
+        }
+      </div>
+      }
+    </ng-template>
+  </nz-calendar>
+
+  @if (viewport.isMobile()) {
+  <div class="day-detail">
+    <h4 class="day-detail-title">
+      {{ selectedCalendarDate() | date: 'dd.MM.yyyy' }} · giriş ve çıkışlar
+    </h4>
+
+    @if (selectedDayCheckIns().length === 0 && selectedDayCheckOuts().length === 0) {
+    <p class="day-detail-empty">Bu gün için giriş veya çıkış yok.</p>
+    } @for (reservation of selectedDayCheckIns(); track reservation.id) {
+    <button type="button" class="day-detail-item" (click)="openDetail(reservation)">
+      <nz-tag nzColor="green" class="day-detail-tag">
+        <nz-icon nzType="login" />
+        Giriş
+      </nz-tag>
+      <span class="day-detail-text">
+        {{ reservation.villa.name }} / {{ reservation.floor.name }} · {{
+        reservation.customer.firstName }} {{ reservation.customer.lastName }}
+      </span>
+    </button>
+    } @for (reservation of selectedDayCheckOuts(); track reservation.id) {
+    <button type="button" class="day-detail-item" (click)="openDetail(reservation)">
+      <nz-tag nzColor="volcano" class="day-detail-tag">
+        <nz-icon nzType="logout" />
+        Çıkış
+      </nz-tag>
+      <span class="day-detail-text">
+        {{ reservation.villa.name }} / {{ reservation.floor.name }} · {{
+        reservation.customer.firstName }} {{ reservation.customer.lastName }}
+      </span>
+    </button>
     }
   </div>
+  }
+</div>
+} @else {
+<div class="page-surface">
+  <form
+    nz-form
+    [formGroup]="availabilityForm"
+    class="availability-form"
+    (ngSubmit)="searchAvailability()"
+  >
+    <nz-form-item>
+      <nz-form-label nzRequired>Tarih Aralığı</nz-form-label>
+      <nz-form-control>
+        <nz-range-picker formControlName="dateRange" style="width: 280px" />
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label>Villa</nz-form-label>
+      <nz-form-control>
+        <nz-select
+          formControlName="villaId"
+          nzAllowClear
+          nzPlaceHolder="Tüm villalar"
+          style="width: 200px"
+        >
+          @for (villa of villas(); track villa.id) {
+          <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+          }
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item class="availability-submit">
+      <nz-form-label class="sr-only">Ara</nz-form-label>
+      <nz-form-control>
+        <button
+          nz-button
+          nzType="primary"
+          type="submit"
+          [nzLoading]="availabilitySearching()"
+          [disabled]="availabilityForm.invalid"
+        >
+          <nz-icon nzType="search" />
+          Ara
+        </button>
+      </nz-form-control>
+    </nz-form-item>
+  </form>
+
+  @if (availabilityResults(); as results) { @if (results.length === 0) {
+  <div class="empty-state">
+    <nz-icon nzType="close-circle" class="empty-icon" />
+    <p>Bu tarih aralığında uygun boş yer bulunamadı.</p>
+  </div>
+  } @else {
+  <nz-table class="responsive-table" [nzData]="results" [nzShowPagination]="false">
+    <thead>
+      <tr>
+        <th>Villa</th>
+        <th>Kat</th>
+        <th>Kapasite</th>
+        <th>Günlük Fiyat</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (floor of results; track floor.id) {
+      <tr>
+        <td data-label="Villa">{{ floor.villa.name }}</td>
+        <td data-label="Kat">
+          {{ floor.name }} @if (floor.isEntireVilla) {
+          <nz-tag nzColor="blue">Tüm Villa</nz-tag>
+          }
+        </td>
+        <td data-label="Kapasite">{{ floor.capacity }} kişi</td>
+        <td data-label="Günlük Fiyat">{{ floor.dailyPrice }} ₺</td>
+        <td class="td-actions">
+          <button nz-button nzType="link" (click)="bookFromAvailability(floor)">
+            Rezervasyon Oluştur
+          </button>
+        </td>
+      </tr>
+      }
+    </tbody>
+  </nz-table>
+  } }
+</div>
 }
 
 <nz-modal
@@ -427,7 +432,7 @@
         <nz-form-control>
           <nz-select formControlName="villaId" nzPlaceHolder="Villa seçin">
             @for (villa of villas(); track villa.id) {
-              <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+            <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
             }
           </nz-select>
         </nz-form-control>
@@ -438,7 +443,10 @@
         <nz-form-control>
           <nz-select formControlName="floorId" nzPlaceHolder="Kat seçin">
             @for (floor of formFloors(); track floor.id) {
-              <nz-option [nzValue]="floor.id" [nzLabel]="floor.name + ' (' + floor.dailyPrice + ' ₺/gece)'" />
+            <nz-option
+              [nzValue]="floor.id"
+              [nzLabel]="floor.name + ' (' + floor.dailyPrice + ' ₺/gece)'"
+            />
             }
           </nz-select>
         </nz-form-control>
@@ -468,10 +476,10 @@
             (nzOnSearch)="onCustomerSearch($event)"
           >
             @for (customer of customerOptions(); track customer.id) {
-              <nz-option
-                [nzValue]="customer.id"
-                [nzLabel]="customer.firstName + ' ' + customer.lastName + (customer.phone ? ' · ' + customer.phone : '')"
-              />
+            <nz-option
+              [nzValue]="customer.id"
+              [nzLabel]="customer.firstName + ' ' + customer.lastName + (customer.phone ? ' · ' + customer.phone : '')"
+            />
             }
           </nz-select>
           <button nz-button nzType="link" type="button" (click)="toggleNewCustomerForm()">
@@ -479,23 +487,28 @@
           </button>
 
           @if (showNewCustomerForm()) {
-            <div class="inline-customer-form">
-              <form nz-form [formGroup]="newCustomerForm">
-                <input nz-input formControlName="firstName" placeholder="Ad" class="mb" />
-                <input nz-input formControlName="lastName" placeholder="Soyad" class="mb" />
-                <input nz-input formControlName="phone" placeholder="Telefon (opsiyonel)" class="mb" />
-                <button
-                  nz-button
-                  nzType="dashed"
-                  type="button"
-                  [nzLoading]="creatingCustomer()"
-                  [disabled]="newCustomerForm.invalid"
-                  (click)="createCustomerInline()"
-                >
-                  Müşteriyi Oluştur ve Seç
-                </button>
-              </form>
-            </div>
+          <div class="inline-customer-form">
+            <form nz-form [formGroup]="newCustomerForm">
+              <input nz-input formControlName="firstName" placeholder="Ad" class="mb" />
+              <input nz-input formControlName="lastName" placeholder="Soyad" class="mb" />
+              <input
+                nz-input
+                formControlName="phone"
+                placeholder="Telefon (opsiyonel)"
+                class="mb"
+              />
+              <button
+                nz-button
+                nzType="dashed"
+                type="button"
+                [nzLoading]="creatingCustomer()"
+                [disabled]="newCustomerForm.invalid"
+                (click)="createCustomerInline()"
+              >
+                Müşteriyi Oluştur ve Seç
+              </button>
+            </form>
+          </div>
           }
         </nz-form-control>
       </nz-form-item>
@@ -518,106 +531,121 @@
 >
   <ng-container *nzModalContent>
     @if (detailReservation(); as reservation) {
-      <nz-tabs>
-        <nz-tab nzTitle="Detaylar">
-          <nz-descriptions [nzColumn]="1" nzBordered [nzSize]="'small'" class="detail-descriptions">
-            <nz-descriptions-item nzTitle="Rez. No">{{ reservation.reservationNumber }}</nz-descriptions-item>
-            <nz-descriptions-item nzTitle="Villa / Kat">
-              {{ reservation.villa.name }} / {{ reservation.floor.name }}
-            </nz-descriptions-item>
-            <nz-descriptions-item nzTitle="Müşteri">
-              <a [routerLink]="['/customers', reservation.customerId]" class="ref-link" (click)="detailVisible.set(false)">
-                {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
-                <nz-icon nzType="right" class="ref-link-icon" />
-              </a>
-            </nz-descriptions-item>
-            <nz-descriptions-item nzTitle="Giriş - Çıkış">
-              {{ reservation.checkIn | date: 'dd.MM.yyyy' : 'UTC' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' : 'UTC' }}
-            </nz-descriptions-item>
-            <nz-descriptions-item nzTitle="Misafir">{{ reservation.guestCount }}</nz-descriptions-item>
-            <nz-descriptions-item nzTitle="Tutar">{{ reservation.totalPrice }} ₺</nz-descriptions-item>
-            <nz-descriptions-item nzTitle="Durum">
-              <nz-tag [nzColor]="statusColors[reservation.status]">{{ statusLabels[reservation.status] }}</nz-tag>
-            </nz-descriptions-item>
-          </nz-descriptions>
+    <nz-tabs>
+      <nz-tab nzTitle="Detaylar">
+        <nz-descriptions [nzColumn]="1" nzBordered [nzSize]="'small'" class="detail-descriptions">
+          <nz-descriptions-item nzTitle="Rez. No"
+            >{{ reservation.reservationNumber }}</nz-descriptions-item
+          >
+          <nz-descriptions-item nzTitle="Villa / Kat">
+            {{ reservation.villa.name }} / {{ reservation.floor.name }}
+          </nz-descriptions-item>
+          <nz-descriptions-item nzTitle="Müşteri">
+            <a
+              [routerLink]="['/customers', reservation.customerId]"
+              class="ref-link"
+              (click)="detailVisible.set(false)"
+            >
+              {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+              <nz-icon nzType="right" class="ref-link-icon" />
+            </a>
+          </nz-descriptions-item>
+          <nz-descriptions-item nzTitle="Giriş - Çıkış">
+            {{ reservation.checkIn | date: 'dd.MM.yyyy' : 'UTC' }} - {{ reservation.checkOut | date:
+            'dd.MM.yyyy' : 'UTC' }}
+          </nz-descriptions-item>
+          <nz-descriptions-item nzTitle="Misafir"
+            >{{ reservation.guestCount }}</nz-descriptions-item
+          >
+          <nz-descriptions-item nzTitle="Tutar"
+            >{{ reservation.totalPrice }} ₺</nz-descriptions-item
+          >
+          <nz-descriptions-item nzTitle="Durum">
+            <nz-tag [nzColor]="statusColors[reservation.status]"
+              >{{ statusLabels[reservation.status] }}</nz-tag
+            >
+          </nz-descriptions-item>
+        </nz-descriptions>
 
-          @if (nextActions[reservation.status].length > 0 || canEdit(reservation.status)) {
-            <div class="detail-actions">
-              @if (canEdit(reservation.status)) {
-                <button nz-button (click)="openEditModal(reservation)">
-                  <nz-icon nzType="edit" />
-                  Düzenle
-                </button>
-              }
-              @for (next of nextActions[reservation.status]; track next.action) {
-                <button nz-button (click)="runAction(reservation, next.action)">{{ next.label }}</button>
-              }
-            </div>
+        @if (nextActions[reservation.status].length > 0 || canEdit(reservation.status)) {
+        <div class="detail-actions">
+          @if (canEdit(reservation.status)) {
+          <button nz-button (click)="openEditModal(reservation)">
+            <nz-icon nzType="edit" />
+            Düzenle
+          </button>
+          } @for (next of nextActions[reservation.status]; track next.action) {
+          <button nz-button (click)="runAction(reservation, next.action)">{{ next.label }}</button>
           }
-        </nz-tab>
+        </div>
+        }
+      </nz-tab>
 
-        <nz-tab nzTitle="Ödemeler">
-          @if (paymentsLoading()) {
-            <nz-skeleton [nzActive]="true" />
-          } @else if (paymentsSummary(); as summary) {
-            <div class="balance-summary">
-              <div class="balance-item">
-                <span class="balance-label">Toplam Tutar</span>
-                <span class="balance-value">{{ summary.totalPrice }} ₺</span>
-              </div>
-              <div class="balance-item">
-                <span class="balance-label">Ödenen</span>
-                <span class="balance-value">{{ summary.totalPaid }} ₺</span>
-              </div>
-              <div class="balance-item" [class.balance-overpaid]="summary.outstandingBalance < 0">
-                <span class="balance-label">
-                  {{ summary.outstandingBalance < 0 ? 'Fazla Ödeme' : 'Kalan Bakiye' }}
-                </span>
-                <span class="balance-value">
-                  {{ summary.outstandingBalance < 0 ? -summary.outstandingBalance : summary.outstandingBalance }} ₺
-                </span>
-              </div>
-            </div>
+      <nz-tab nzTitle="Ödemeler">
+        @if (paymentsLoading()) {
+        <nz-skeleton [nzActive]="true" />
+        } @else if (paymentsSummary(); as summary) {
+        <div class="balance-summary">
+          <div class="balance-item">
+            <span class="balance-label">Toplam Tutar</span>
+            <span class="balance-value">{{ summary.totalPrice }} ₺</span>
+          </div>
+          <div class="balance-item">
+            <span class="balance-label">Ödenen</span>
+            <span class="balance-value">{{ summary.totalPaid }} ₺</span>
+          </div>
+          <div class="balance-item" [class.balance-overpaid]="summary.outstandingBalance < 0">
+            <span class="balance-label">
+              {{ summary.outstandingBalance < 0 ? 'Fazla Ödeme' : 'Kalan Bakiye' }}
+            </span>
+            <span class="balance-value">
+              {{ summary.outstandingBalance < 0 ? -summary.outstandingBalance :
+              summary.outstandingBalance }} ₺
+            </span>
+          </div>
+        </div>
 
-            @if (canManagePayments()) {
-              <button nz-button nzType="dashed" class="add-payment-btn" (click)="openAddPaymentModal()">
-                <nz-icon nzType="plus" />
-                Ödeme Ekle
-              </button>
+        @if (canManagePayments()) {
+        <button nz-button nzType="dashed" class="add-payment-btn" (click)="openAddPaymentModal()">
+          <nz-icon nzType="plus" />
+          Ödeme Ekle
+        </button>
+        } @if (summary.payments.length === 0) {
+        <div class="empty-state">
+          <nz-icon nzType="clock-circle" class="empty-icon" />
+          <p>Henüz ödeme kaydedilmedi.</p>
+        </div>
+        } @else {
+        <nz-table
+          class="responsive-table"
+          [nzData]="summary.payments"
+          [nzShowPagination]="false"
+          [nzSize]="'small'"
+        >
+          <thead>
+            <tr>
+              <th>Tarih</th>
+              <th>Tutar</th>
+              <th>Yöntem</th>
+              <th>Referans</th>
+              <th>Not</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (payment of summary.payments; track payment.id) {
+            <tr>
+              <td data-label="Tarih">{{ payment.paymentDate | date: 'dd.MM.yyyy' }}</td>
+              <td data-label="Tutar">{{ payment.amount }} ₺</td>
+              <td data-label="Yöntem">{{ paymentMethodLabels[payment.paymentMethod] }}</td>
+              <td data-label="Referans">{{ payment.referenceNumber || '-' }}</td>
+              <td data-label="Not">{{ payment.notes || '-' }}</td>
+            </tr>
             }
-
-            @if (summary.payments.length === 0) {
-              <div class="empty-state">
-                <nz-icon nzType="clock-circle" class="empty-icon" />
-                <p>Henüz ödeme kaydedilmedi.</p>
-              </div>
-            } @else {
-              <nz-table class="responsive-table" [nzData]="summary.payments" [nzShowPagination]="false" [nzSize]="'small'">
-                <thead>
-                  <tr>
-                    <th>Tarih</th>
-                    <th>Tutar</th>
-                    <th>Yöntem</th>
-                    <th>Referans</th>
-                    <th>Not</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (payment of summary.payments; track payment.id) {
-                    <tr>
-                      <td data-label="Tarih">{{ payment.paymentDate | date: 'dd.MM.yyyy' }}</td>
-                      <td data-label="Tutar">{{ payment.amount }} ₺</td>
-                      <td data-label="Yöntem">{{ paymentMethodLabels[payment.paymentMethod] }}</td>
-                      <td data-label="Referans">{{ payment.referenceNumber || '-' }}</td>
-                      <td data-label="Not">{{ payment.notes || '-' }}</td>
-                    </tr>
-                  }
-                </tbody>
-              </nz-table>
-            }
-          }
-        </nz-tab>
-      </nz-tabs>
+          </tbody>
+        </nz-table>
+        } }
+      </nz-tab>
+    </nz-tabs>
     }
   </ng-container>
 </nz-modal>
@@ -635,7 +663,12 @@
       <nz-form-item>
         <nz-form-label nzRequired>Tutar</nz-form-label>
         <nz-form-control>
-          <nz-input-number formControlName="amount" [nzMin]="0.01" [nzStep]="0.01" style="width: 100%" />
+          <nz-input-number
+            formControlName="amount"
+            [nzMin]="0.01"
+            [nzStep]="0.01"
+            style="width: 100%"
+          />
         </nz-form-control>
       </nz-form-item>
 
@@ -644,7 +677,7 @@
         <nz-form-control>
           <nz-select formControlName="paymentMethod">
             @for (method of paymentMethodKeys; track method) {
-              <nz-option [nzValue]="method" [nzLabel]="paymentMethodLabels[method]" />
+            <nz-option [nzValue]="method" [nzLabel]="paymentMethodLabels[method]" />
             }
           </nz-select>
         </nz-form-control>

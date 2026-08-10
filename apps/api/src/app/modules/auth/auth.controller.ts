@@ -5,7 +5,12 @@ import { Throttle } from '@nestjs/throttler';
 // emitDecoratorMetadata require not to look like runtime imports.
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
-import { clearAuthCookies, readAccessToken, readRefreshToken, setAuthCookies } from './auth-cookies';
+import {
+  clearAuthCookies,
+  readAccessToken,
+  readRefreshToken,
+  setAuthCookies,
+} from './auth-cookies';
 import { LoginDto } from './dto/login.dto';
 import { OnboardingDto } from './dto/onboarding.dto';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -79,7 +84,10 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Revoke the session and clear its cookies' })
-  async logout(@Req() request: Request, @Res({ passthrough: true }) response: Response): Promise<void> {
+  async logout(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<void> {
     const refreshToken = readRefreshToken(request);
 
     // Clear unconditionally: logging out must end the session on this browser
@@ -130,8 +138,13 @@ export class AuthController {
   @Public()
   @Get('ping')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Connectivity check: 200 when the session cookie is a valid access token' })
-  @ApiResponse({ status: 401, description: 'No session, or the access token is invalid or expired' })
+  @ApiOperation({
+    summary: 'Connectivity check: 200 when the session cookie is a valid access token',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No session, or the access token is invalid or expired',
+  })
   ping(@Req() request: Request): { authenticated: true; user: AccessTokenPayload } {
     const token = readAccessToken(request);
 

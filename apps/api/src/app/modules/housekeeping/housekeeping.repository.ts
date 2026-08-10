@@ -22,7 +22,9 @@ export type HousekeepingTaskWithRelations = Prisma.HousekeepingTaskGetPayload<{
 export class HousekeepingRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(data: Prisma.HousekeepingTaskUncheckedCreateInput): Promise<HousekeepingTaskWithRelations> {
+  create(
+    data: Prisma.HousekeepingTaskUncheckedCreateInput,
+  ): Promise<HousekeepingTaskWithRelations> {
     return this.prisma.housekeepingTask.create({ data, include: HOUSEKEEPING_TASK_INCLUDE });
   }
 

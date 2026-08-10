@@ -27,7 +27,9 @@ export class SettingsController {
 
   @Get()
   @Public()
-  @ApiOperation({ summary: 'Get whitelabel/branding settings (public — needed by the login screen)' })
+  @ApiOperation({
+    summary: 'Get whitelabel/branding settings (public — needed by the login screen)',
+  })
   get(): Promise<Settings> {
     return this.settingsService.getOrCreate();
   }

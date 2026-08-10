@@ -90,7 +90,10 @@ export class CustomerDetail implements OnInit {
   async loadReservations(): Promise<void> {
     this.reservationsLoading.set(true);
     try {
-      const result = await this.reservationsService.list({ customerId: this.customerId, limit: 20 });
+      const result = await this.reservationsService.list({
+        customerId: this.customerId,
+        limit: 20,
+      });
       this.reservations.set(result.data);
     } catch {
       this.message.error('Rezervasyonlar alınamadı');

@@ -3,7 +3,11 @@ import { VillasService } from '../villas/villas.service';
 import { InvalidMaintenanceTransitionException } from './exceptions/invalid-maintenance-transition.exception';
 import { MaintenanceRepository } from './maintenance.repository';
 import { MaintenanceService } from './maintenance.service';
-import { MaintenancePriority, MaintenanceRecord, MaintenanceStatus } from '../../../generated/prisma/client';
+import {
+  MaintenancePriority,
+  MaintenanceRecord,
+  MaintenanceStatus,
+} from '../../../generated/prisma/client';
 
 function record(overrides: Partial<MaintenanceRecord> = {}): MaintenanceRecord {
   return {
@@ -48,7 +52,9 @@ describe('MaintenanceService', () => {
   describe('start', () => {
     it('moves an Open record to InProgress', async () => {
       repository.findById.mockResolvedValue(record());
-      repository.updateFromStatus.mockResolvedValue(record({ status: MaintenanceStatus.InProgress }));
+      repository.updateFromStatus.mockResolvedValue(
+        record({ status: MaintenanceStatus.InProgress }),
+      );
 
       await service.start('villa-1', 'record-1');
 
@@ -81,14 +87,19 @@ describe('MaintenanceService', () => {
   describe('complete', () => {
     it('moves an InProgress record to Completed and stamps completedAt', async () => {
       repository.findById.mockResolvedValue(record({ status: MaintenanceStatus.InProgress }));
-      repository.updateFromStatus.mockResolvedValue(record({ status: MaintenanceStatus.Completed }));
+      repository.updateFromStatus.mockResolvedValue(
+        record({ status: MaintenanceStatus.Completed }),
+      );
 
       await service.complete('villa-1', 'record-1');
 
       expect(repository.updateFromStatus).toHaveBeenCalledWith(
         'record-1',
         MaintenanceStatus.InProgress,
-        expect.objectContaining({ status: MaintenanceStatus.Completed, completedAt: expect.any(Date) }),
+        expect.objectContaining({
+          status: MaintenanceStatus.Completed,
+          completedAt: expect.any(Date),
+        }),
       );
     });
 

@@ -50,7 +50,11 @@ describe('UsersService', () => {
       repository.usernameExists.mockResolvedValue(true);
 
       await expectRejectionCode(
-        service.create({ username: 'taken', password: 'a-strong-password', role: 'Operations' as never }),
+        service.create({
+          username: 'taken',
+          password: 'a-strong-password',
+          role: 'Operations' as never,
+        }),
         ErrorCode.USER_USERNAME_TAKEN,
         409,
       );

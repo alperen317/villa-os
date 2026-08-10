@@ -71,18 +71,12 @@ describe('SettingsService', () => {
 
   describe('updateLogo', () => {
     it('removes the file the previous logo pointed at, so replacing does not leak orphans', async () => {
-      repository.findFirst.mockResolvedValue(
-        settings({ logoPath: '/uploads/logo/old.png' }),
-      );
-      repository.update.mockResolvedValue(
-        settings({ logoPath: '/uploads/logo/new.png' }),
-      );
+      repository.findFirst.mockResolvedValue(settings({ logoPath: '/uploads/logo/old.png' }));
+      repository.update.mockResolvedValue(settings({ logoPath: '/uploads/logo/new.png' }));
 
       await service.updateLogo('/uploads/logo/new.png');
 
-      expect(unlinkSyncMock).toHaveBeenCalledWith(
-        join(UPLOADS_ROOT, 'logo/old.png'),
-      );
+      expect(unlinkSyncMock).toHaveBeenCalledWith(join(UPLOADS_ROOT, 'logo/old.png'));
       expect(repository.update).toHaveBeenCalledWith('settings-1', {
         logoPath: '/uploads/logo/new.png',
       });
@@ -98,9 +92,7 @@ describe('SettingsService', () => {
     });
 
     it('leaves alone a stored path that does not point into the uploads directory', async () => {
-      repository.findFirst.mockResolvedValue(
-        settings({ logoPath: '/etc/passwd' }),
-      );
+      repository.findFirst.mockResolvedValue(settings({ logoPath: '/etc/passwd' }));
       repository.update.mockResolvedValue(settings());
 
       await service.updateLogo('/uploads/logo/new.png');
@@ -109,9 +101,7 @@ describe('SettingsService', () => {
     });
 
     it('does not try to unlink a file that is already gone', async () => {
-      repository.findFirst.mockResolvedValue(
-        settings({ logoPath: '/uploads/logo/old.png' }),
-      );
+      repository.findFirst.mockResolvedValue(settings({ logoPath: '/uploads/logo/old.png' }));
       repository.update.mockResolvedValue(settings());
       existsSyncMock.mockReturnValue(false);
 
@@ -123,16 +113,12 @@ describe('SettingsService', () => {
 
   describe('removeLogo', () => {
     it('clears the column and deletes the file behind it', async () => {
-      repository.findFirst.mockResolvedValue(
-        settings({ logoPath: '/uploads/logo/old.png' }),
-      );
+      repository.findFirst.mockResolvedValue(settings({ logoPath: '/uploads/logo/old.png' }));
       repository.update.mockResolvedValue(settings({ logoPath: null }));
 
       await service.removeLogo();
 
-      expect(unlinkSyncMock).toHaveBeenCalledWith(
-        join(UPLOADS_ROOT, 'logo/old.png'),
-      );
+      expect(unlinkSyncMock).toHaveBeenCalledWith(join(UPLOADS_ROOT, 'logo/old.png'));
       expect(repository.update).toHaveBeenCalledWith('settings-1', {
         logoPath: null,
       });

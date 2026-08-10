@@ -90,7 +90,9 @@ describe('FloorsService', () => {
 
     it('rejects a second entire-villa floor for the same villa', async () => {
       villasService.findOneOrThrow.mockResolvedValue({ id: 'villa-1' } as never);
-      repository.findEntireVillaFloor.mockResolvedValue(floor({ id: 'floor-existing', isEntireVilla: true }));
+      repository.findEntireVillaFloor.mockResolvedValue(
+        floor({ id: 'floor-existing', isEntireVilla: true }),
+      );
 
       await expectRejectionCode(
         service.create('villa-1', { name: 'Tüm Villa 2', isEntireVilla: true } as never),
@@ -105,22 +107,35 @@ describe('FloorsService', () => {
     it('throws when the floor belongs to a different villa', async () => {
       repository.findById.mockResolvedValue(floor({ villaId: 'other-villa' }));
 
-      await expectRejectionCode(service.findOneOrThrow('villa-1', 'floor-1'), ErrorCode.FLOOR_NOT_FOUND, 404);
+      await expectRejectionCode(
+        service.findOneOrThrow('villa-1', 'floor-1'),
+        ErrorCode.FLOOR_NOT_FOUND,
+        404,
+      );
     });
 
     it('throws when the floor does not exist', async () => {
       repository.findById.mockResolvedValue(null);
 
-      await expectRejectionCode(service.findOneOrThrow('villa-1', 'missing'), ErrorCode.FLOOR_NOT_FOUND, 404);
+      await expectRejectionCode(
+        service.findOneOrThrow('villa-1', 'missing'),
+        ErrorCode.FLOOR_NOT_FOUND,
+        404,
+      );
     });
   });
 
   describe('update', () => {
     it('allows re-saving an existing entire-villa floor without conflict', async () => {
       repository.findById.mockResolvedValue(floor({ isEntireVilla: true }));
-      repository.update.mockResolvedValue(floor({ isEntireVilla: true, dailyPrice: 2000 as never }));
+      repository.update.mockResolvedValue(
+        floor({ isEntireVilla: true, dailyPrice: 2000 as never }),
+      );
 
-      await service.update('villa-1', 'floor-1', { isEntireVilla: true, dailyPrice: 2000 } as never);
+      await service.update('villa-1', 'floor-1', {
+        isEntireVilla: true,
+        dailyPrice: 2000,
+      } as never);
 
       expect(repository.findEntireVillaFloor).not.toHaveBeenCalled();
       expect(repository.update).toHaveBeenCalled();
@@ -128,7 +143,9 @@ describe('FloorsService', () => {
 
     it('rejects flipping a regular floor to entire-villa when one already exists', async () => {
       repository.findById.mockResolvedValue(floor({ isEntireVilla: false }));
-      repository.findEntireVillaFloor.mockResolvedValue(floor({ id: 'floor-other', isEntireVilla: true }));
+      repository.findEntireVillaFloor.mockResolvedValue(
+        floor({ id: 'floor-other', isEntireVilla: true }),
+      );
 
       await expectRejectionCode(
         service.update('villa-1', 'floor-1', { isEntireVilla: true } as never),

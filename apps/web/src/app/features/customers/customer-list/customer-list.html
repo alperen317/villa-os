@@ -46,40 +46,40 @@
     </thead>
     <tbody>
       @for (customer of customers(); track customer.id) {
-        <tr class="clickable-row" (click)="goToDetail(customer)">
-          <td data-label="Ad Soyad">
-            <a [routerLink]="['/customers', customer.id]" (click)="$event.stopPropagation()">
-              {{ customer.firstName }} {{ customer.lastName }}
-            </a>
-          </td>
-          <td data-label="Telefon">{{ customer.phone || '-' }}</td>
-          <td data-label="E-posta">{{ customer.email || '-' }}</td>
-          <td class="actions td-actions">
-            <button
-              nz-button
-              nzType="text"
-              aria-label="Müşteriyi düzenle"
-              (click)="$event.stopPropagation(); openEditModal(customer)"
-            >
-              <nz-icon nzType="edit" />
-            </button>
-            <button
-              nz-button
-              nzType="text"
-              nzDanger
-              aria-label="Müşteriyi sil"
-              nz-popconfirm
-              nzPopconfirmTitle="Bu müşteriyi silmek istediğine emin misin?"
-              (click)="$event.stopPropagation()"
-              (nzOnConfirm)="remove(customer)"
-            >
-              <nz-icon nzType="delete" />
-            </button>
-          </td>
-          <td class="td-chevron" data-label="Detay">
-            <nz-icon nzType="right" />
-          </td>
-        </tr>
+      <tr class="clickable-row" (click)="goToDetail(customer)">
+        <td data-label="Ad Soyad">
+          <a [routerLink]="['/customers', customer.id]" (click)="$event.stopPropagation()">
+            {{ customer.firstName }} {{ customer.lastName }}
+          </a>
+        </td>
+        <td data-label="Telefon">{{ customer.phone || '-' }}</td>
+        <td data-label="E-posta">{{ customer.email || '-' }}</td>
+        <td class="actions td-actions">
+          <button
+            nz-button
+            nzType="text"
+            aria-label="Müşteriyi düzenle"
+            (click)="$event.stopPropagation(); openEditModal(customer)"
+          >
+            <nz-icon nzType="edit" />
+          </button>
+          <button
+            nz-button
+            nzType="text"
+            nzDanger
+            aria-label="Müşteriyi sil"
+            nz-popconfirm
+            nzPopconfirmTitle="Bu müşteriyi silmek istediğine emin misin?"
+            (click)="$event.stopPropagation()"
+            (nzOnConfirm)="remove(customer)"
+          >
+            <nz-icon nzType="delete" />
+          </button>
+        </td>
+        <td class="td-chevron" data-label="Detay">
+          <nz-icon nzType="right" />
+        </td>
+      </tr>
       }
     </tbody>
   </nz-table>

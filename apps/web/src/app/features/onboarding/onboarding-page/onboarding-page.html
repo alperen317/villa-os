@@ -2,10 +2,8 @@
   <div class="onboarding-brand">
     <div class="onboarding-logo">
       @if (settingsStore.logoUrl(); as logoUrl) {
-        <img [src]="logoUrl" [alt]="settingsStore.companyName()" class="onboarding-logo-image" />
-      } @else {
-        VOS
-      }
+      <img [src]="logoUrl" [alt]="settingsStore.companyName()" class="onboarding-logo-image" />
+      } @else { VOS }
     </div>
     <h1 class="onboarding-title">{{ settingsStore.companyName() }}</h1>
     <p class="onboarding-tagline">{{ 'auth.onboarding.title' | translate }}</p>
@@ -14,7 +12,9 @@
   <nz-card class="onboarding-card">
     <form nz-form [formGroup]="form" (ngSubmit)="submit()">
       <nz-form-item>
-        <nz-form-label nzFor="username" nzNoColon class="sr-only">{{ 'auth.onboarding.username' | translate }}</nz-form-label>
+        <nz-form-label nzFor="username" nzNoColon class="sr-only"
+          >{{ 'auth.onboarding.username' | translate }}</nz-form-label
+        >
         <nz-form-control>
           <nz-input-group nzPrefixIcon="user">
             <input
@@ -30,7 +30,9 @@
       </nz-form-item>
 
       <nz-form-item>
-        <nz-form-label nzFor="password" nzNoColon class="sr-only">{{ 'auth.onboarding.password' | translate }}</nz-form-label>
+        <nz-form-label nzFor="password" nzNoColon class="sr-only"
+          >{{ 'auth.onboarding.password' | translate }}</nz-form-label
+        >
         <nz-form-control>
           <nz-input-group nzPrefixIcon="lock">
             <input
@@ -46,7 +48,9 @@
       </nz-form-item>
 
       <nz-form-item>
-        <nz-form-label nzFor="confirmPassword" nzNoColon class="sr-only">{{ 'auth.onboarding.passwordConfirm' | translate }}</nz-form-label>
+        <nz-form-label nzFor="confirmPassword" nzNoColon class="sr-only"
+          >{{ 'auth.onboarding.passwordConfirm' | translate }}</nz-form-label
+        >
         <nz-form-control>
           <nz-input-group nzPrefixIcon="lock">
             <input
@@ -62,7 +66,7 @@
       </nz-form-item>
 
       @if (errorMessage(); as message) {
-        <nz-alert nzType="error" [nzMessage]="message" nzShowIcon class="form-alert"></nz-alert>
+      <nz-alert nzType="error" [nzMessage]="message" nzShowIcon class="form-alert"></nz-alert>
       }
 
       <button

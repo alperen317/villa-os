@@ -19,7 +19,10 @@ export class HousekeepingService {
     private readonly villasService: VillasService,
   ) {}
 
-  createForReservation(reservationId: string, villaId: string): Promise<HousekeepingTaskWithRelations> {
+  createForReservation(
+    reservationId: string,
+    villaId: string,
+  ): Promise<HousekeepingTaskWithRelations> {
     return this.housekeepingRepository.create({ reservationId, villaId });
   }
 

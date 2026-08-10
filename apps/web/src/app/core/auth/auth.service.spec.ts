@@ -41,10 +41,9 @@ describe('AuthService', () => {
 
     it('does not claim a session when the credentials are rejected', async () => {
       const pending = service.login('admin', 'wrong');
-      http.expectOne(`${API_BASE_URL}/auth/login`).flush(
-        { code: 'AUTH_INVALID_CREDENTIALS' },
-        { status: 401, statusText: 'Unauthorized' },
-      );
+      http
+        .expectOne(`${API_BASE_URL}/auth/login`)
+        .flush({ code: 'AUTH_INVALID_CREDENTIALS' }, { status: 401, statusText: 'Unauthorized' });
 
       await expect(pending).rejects.toBeInstanceOf(HttpErrorResponse);
       expect(service.isAuthenticated()).toBe(false);
@@ -62,7 +61,9 @@ describe('AuthService', () => {
 
     it('treats a 401 as "nobody is signed in" rather than an error', async () => {
       const pending = service.ensureSessionLoaded();
-      http.expectOne(`${API_BASE_URL}/auth/me`).flush(null, { status: 401, statusText: 'Unauthorized' });
+      http
+        .expectOne(`${API_BASE_URL}/auth/me`)
+        .flush(null, { status: 401, statusText: 'Unauthorized' });
 
       // Must not reject: guards await this to decide where to navigate.
       await expect(pending).resolves.toBeUndefined();
@@ -109,7 +110,9 @@ describe('AuthService', () => {
       const first = service.refreshSession();
       const second = service.refreshSession();
 
-      http.expectOne(`${API_BASE_URL}/auth/refresh`).flush(null, { status: 204, statusText: 'No Content' });
+      http
+        .expectOne(`${API_BASE_URL}/auth/refresh`)
+        .flush(null, { status: 204, statusText: 'No Content' });
       await Promise.all([first, second]);
     });
 
@@ -119,7 +122,9 @@ describe('AuthService', () => {
       await pending;
 
       const refresh = service.refreshSession();
-      http.expectOne(`${API_BASE_URL}/auth/refresh`).flush(null, { status: 401, statusText: 'Unauthorized' });
+      http
+        .expectOne(`${API_BASE_URL}/auth/refresh`)
+        .flush(null, { status: 401, statusText: 'Unauthorized' });
 
       await expect(refresh).rejects.toBeInstanceOf(HttpErrorResponse);
       expect(service.isAuthenticated()).toBe(false);
@@ -127,11 +132,15 @@ describe('AuthService', () => {
 
     it('allows a new refresh after a failed one', async () => {
       const first = service.refreshSession();
-      http.expectOne(`${API_BASE_URL}/auth/refresh`).flush(null, { status: 401, statusText: 'Unauthorized' });
+      http
+        .expectOne(`${API_BASE_URL}/auth/refresh`)
+        .flush(null, { status: 401, statusText: 'Unauthorized' });
       await expect(first).rejects.toBeInstanceOf(HttpErrorResponse);
 
       const second = service.refreshSession();
-      http.expectOne(`${API_BASE_URL}/auth/refresh`).flush(null, { status: 204, statusText: 'No Content' });
+      http
+        .expectOne(`${API_BASE_URL}/auth/refresh`)
+        .flush(null, { status: 204, statusText: 'No Content' });
       await second;
     });
   });
@@ -145,7 +154,9 @@ describe('AuthService', () => {
       const pending = service.logout();
       expect(service.isAuthenticated()).toBe(false);
 
-      http.expectOne(`${API_BASE_URL}/auth/logout`).flush(null, { status: 204, statusText: 'No Content' });
+      http
+        .expectOne(`${API_BASE_URL}/auth/logout`)
+        .flush(null, { status: 204, statusText: 'No Content' });
       await pending;
     });
   });

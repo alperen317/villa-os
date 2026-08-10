@@ -620,7 +620,9 @@ export class ReservationList implements OnInit {
           `Bu tarihler ${conflicting.reservationNumber} numaralı rezervasyon (${conflicting.customer.firstName} ${conflicting.customer.lastName}) ile çakışıyor. Lütfen tarihleri güncelleyin.`,
         );
       } catch {
-        this.message.warning('Bu rezervasyon başka bir kayıtla çakışıyor. Lütfen tarihleri kontrol edin.');
+        this.message.warning(
+          'Bu rezervasyon başka bir kayıtla çakışıyor. Lütfen tarihleri kontrol edin.',
+        );
       }
     } else {
       this.message.warning('Rezervasyon oluşturulamadı. Bilgileri kontrol edip tekrar deneyin.');
@@ -803,7 +805,10 @@ export class ReservationList implements OnInit {
 
   async runAction(reservation: Reservation, action: string): Promise<void> {
     try {
-      const result = await this.reservationsService.transition(reservation, action as ReservationAction);
+      const result = await this.reservationsService.transition(
+        reservation,
+        action as ReservationAction,
+      );
       this.message.success(
         result.queued
           ? 'Çevrimdışısınız — işlem bağlantı kurulunca senkronize edilecek'
@@ -860,7 +865,9 @@ export class ReservationList implements OnInit {
         const customer = this.customerOptions().find((c) => c.id === customerId);
         return customer ? `${customer.firstName} ${customer.lastName}` : 'Müşteri';
       })();
-    return floorName ? `${villaName} / ${floorName} · ${customerName}` : `${villaName} · ${customerName}`;
+    return floorName
+      ? `${villaName} / ${floorName} · ${customerName}`
+      : `${villaName} · ${customerName}`;
   }
 
   private toIsoDate(date: Date): string {

@@ -1,0 +1,18 @@
+# Everything Git recognises as text is stored and checked out with LF.
+#
+# Without this, core.autocrlf on a Windows clone hands the working tree CRLF
+# while the repository holds LF — and Prettier, whose endOfLine default is lf,
+# then reports every single file as badly formatted. `nx format:check` becomes
+# noise no one can act on, which is how it came to be ignored.
+* text=auto eol=lf
+
+# Fonts and images are byte-for-byte; never let Git touch their line endings.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary

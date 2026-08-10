@@ -42,7 +42,9 @@ export class ReservationsController {
 
   @Get()
   @RequirePermission('reservations.read')
-  @ApiOperation({ summary: 'List reservations (paginated, filterable by villaId/customerId/status)' })
+  @ApiOperation({
+    summary: 'List reservations (paginated, filterable by villaId/customerId/status)',
+  })
   async findAll(
     @Query() query: ListReservationsQueryDto,
     @Res({ passthrough: true }) res: Response,
@@ -70,7 +72,9 @@ export class ReservationsController {
 
   @Patch(':id')
   @RequirePermission('reservations.write')
-  @ApiOperation({ summary: 'Edit guest count / notes (dates and unit are immutable — cancel and rebook instead)' })
+  @ApiOperation({
+    summary: 'Edit guest count / notes (dates and unit are immutable — cancel and rebook instead)',
+  })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateReservationDto,

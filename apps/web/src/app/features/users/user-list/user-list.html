@@ -32,43 +32,43 @@
     </thead>
     <tbody>
       @for (user of users(); track user.id) {
-        <tr>
-          <td data-label="Kullanıcı Adı">{{ user.username }}</td>
-          <td data-label="Rol">
-            <nz-tag>{{ roleLabels[user.role] }}</nz-tag>
-          </td>
-          <td data-label="Durum">
-            <nz-tag [nzColor]="user.isActive ? 'green' : 'default'">
-              {{ user.isActive ? 'Aktif' : 'Pasif' }}
-            </nz-tag>
-          </td>
-          <td class="actions td-actions">
-            <button nz-button nzType="text" aria-label="Rolü düzenle" (click)="openEditModal(user)">
-              <nz-icon nzType="edit" />
-            </button>
-            <button nz-button nzType="text" (click)="openResetPasswordModal(user)">
-              Şifre Sıfırla
-            </button>
-            @if (user.isActive && isSelf(user)) {
-              <!-- Was a disabled button explaining itself through a tooltip, which needs a
+      <tr>
+        <td data-label="Kullanıcı Adı">{{ user.username }}</td>
+        <td data-label="Rol">
+          <nz-tag>{{ roleLabels[user.role] }}</nz-tag>
+        </td>
+        <td data-label="Durum">
+          <nz-tag [nzColor]="user.isActive ? 'green' : 'default'">
+            {{ user.isActive ? 'Aktif' : 'Pasif' }}
+          </nz-tag>
+        </td>
+        <td class="actions td-actions">
+          <button nz-button nzType="text" aria-label="Rolü düzenle" (click)="openEditModal(user)">
+            <nz-icon nzType="edit" />
+          </button>
+          <button nz-button nzType="text" (click)="openResetPasswordModal(user)">
+            Şifre Sıfırla
+          </button>
+          @if (user.isActive && isSelf(user)) {
+          <!-- Was a disabled button explaining itself through a tooltip, which needs a
                    hover this row never gets on touch — and a disabled button swallows the
                    click a tooltip could otherwise open on. Plain visible text instead. -->
-              <span class="self-hint">Kendi hesabınızı deaktif edemezsiniz</span>
-            } @else if (user.isActive) {
-              <button
-                nz-button
-                nzType="text"
-                nz-popconfirm
-                nzPopconfirmTitle="Bu kullanıcıyı pasife almak istediğine emin misin?"
-                (nzOnConfirm)="toggleActive(user)"
-              >
-                Pasife Al
-              </button>
-            } @else {
-              <button nz-button nzType="text" (click)="toggleActive(user)">Aktif Et</button>
-            }
-          </td>
-        </tr>
+          <span class="self-hint">Kendi hesabınızı deaktif edemezsiniz</span>
+          } @else if (user.isActive) {
+          <button
+            nz-button
+            nzType="text"
+            nz-popconfirm
+            nzPopconfirmTitle="Bu kullanıcıyı pasife almak istediğine emin misin?"
+            (nzOnConfirm)="toggleActive(user)"
+          >
+            Pasife Al
+          </button>
+          } @else {
+          <button nz-button nzType="text" (click)="toggleActive(user)">Aktif Et</button>
+          }
+        </td>
+      </tr>
       }
     </tbody>
   </nz-table>
@@ -103,18 +103,18 @@
       </nz-form-item>
 
       @if (!editingUser) {
-        <nz-form-item>
-          <nz-form-label nzRequired>Şifre</nz-form-label>
-          <nz-form-control>
-            <input
-              nz-input
-              type="password"
-              formControlName="password"
-              placeholder="En az 8 karakter"
-              autocomplete="new-password"
-            />
-          </nz-form-control>
-        </nz-form-item>
+      <nz-form-item>
+        <nz-form-label nzRequired>Şifre</nz-form-label>
+        <nz-form-control>
+          <input
+            nz-input
+            type="password"
+            formControlName="password"
+            placeholder="En az 8 karakter"
+            autocomplete="new-password"
+          />
+        </nz-form-control>
+      </nz-form-item>
       }
 
       <nz-form-item>
@@ -122,7 +122,7 @@
         <nz-form-control>
           <nz-select formControlName="role">
             @for (option of roleOptions; track option.value) {
-              <nz-option [nzValue]="option.value" [nzLabel]="option.label"></nz-option>
+            <nz-option [nzValue]="option.value" [nzLabel]="option.label"></nz-option>
             }
           </nz-select>
         </nz-form-control>

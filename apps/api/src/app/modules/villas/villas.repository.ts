@@ -21,7 +21,11 @@ export class VillasRepository {
     arrivingToday?: boolean;
   }): Promise<Villa[]> {
     return this.prisma.villa.findMany({
-      where: { deletedAt: null, status: params.status, ...this.arrivingTodayFilter(params.arrivingToday) },
+      where: {
+        deletedAt: null,
+        status: params.status,
+        ...this.arrivingTodayFilter(params.arrivingToday),
+      },
       skip: params.skip,
       take: params.take,
       orderBy: { createdAt: 'desc' },
@@ -30,7 +34,11 @@ export class VillasRepository {
 
   count(params: { status?: VillaStatus; arrivingToday?: boolean }): Promise<number> {
     return this.prisma.villa.count({
-      where: { deletedAt: null, status: params.status, ...this.arrivingTodayFilter(params.arrivingToday) },
+      where: {
+        deletedAt: null,
+        status: params.status,
+        ...this.arrivingTodayFilter(params.arrivingToday),
+      },
     });
   }
 

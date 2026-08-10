@@ -5,7 +5,9 @@ import { HousekeepingRepository, HousekeepingTaskWithRelations } from './houseke
 import { HousekeepingService } from './housekeeping.service';
 import { HousekeepingStatus } from '../../../generated/prisma/client';
 
-function task(overrides: Partial<HousekeepingTaskWithRelations> = {}): HousekeepingTaskWithRelations {
+function task(
+  overrides: Partial<HousekeepingTaskWithRelations> = {},
+): HousekeepingTaskWithRelations {
   return {
     id: 'task-1',
     reservationId: 'reservation-1',
@@ -56,7 +58,9 @@ describe('HousekeepingService', () => {
 
   describe('findAll', () => {
     it('fetches active and completed tasks separately, capping completed to the most recent', async () => {
-      repository.findMany.mockResolvedValueOnce([task()]).mockResolvedValueOnce([task({ status: HousekeepingStatus.Completed })]);
+      repository.findMany
+        .mockResolvedValueOnce([task()])
+        .mockResolvedValueOnce([task({ status: HousekeepingStatus.Completed })]);
 
       await service.findAll({ villaId: 'villa-1' } as never);
 
@@ -90,7 +94,10 @@ describe('HousekeepingService', () => {
 
       await service.findAll({ status: HousekeepingStatus.Pending } as never);
 
-      expect(repository.findMany).toHaveBeenCalledWith({ villaId: undefined, status: HousekeepingStatus.Pending });
+      expect(repository.findMany).toHaveBeenCalledWith({
+        villaId: undefined,
+        status: HousekeepingStatus.Pending,
+      });
     });
   });
 
@@ -127,20 +134,27 @@ describe('HousekeepingService', () => {
   describe('start', () => {
     it('moves a Pending task to InProgress and self-assigns when unassigned', async () => {
       repository.findById.mockResolvedValue(task());
-      repository.updateFromStatus.mockResolvedValue(task({ status: HousekeepingStatus.InProgress }));
+      repository.updateFromStatus.mockResolvedValue(
+        task({ status: HousekeepingStatus.InProgress }),
+      );
 
       await service.start('task-1', 'user-1');
 
       expect(repository.updateFromStatus).toHaveBeenCalledWith(
         'task-1',
         HousekeepingStatus.Pending,
-        expect.objectContaining({ status: HousekeepingStatus.InProgress, assignedUserId: 'user-1' }),
+        expect.objectContaining({
+          status: HousekeepingStatus.InProgress,
+          assignedUserId: 'user-1',
+        }),
       );
     });
 
     it('keeps the existing assignee when the task is already assigned', async () => {
       repository.findById.mockResolvedValue(task({ assignedUserId: 'user-original' }));
-      repository.updateFromStatus.mockResolvedValue(task({ status: HousekeepingStatus.InProgress }));
+      repository.updateFromStatus.mockResolvedValue(
+        task({ status: HousekeepingStatus.InProgress }),
+      );
 
       await service.start('task-1', 'user-2');
 
@@ -188,14 +202,18 @@ describe('HousekeepingService', () => {
     it('rejects completing a task that is not InProgress', async () => {
       repository.findById.mockResolvedValue(task({ status: HousekeepingStatus.Pending }));
 
-      await expect(service.complete('task-1')).rejects.toThrow(InvalidHousekeepingTransitionException);
+      await expect(service.complete('task-1')).rejects.toThrow(
+        InvalidHousekeepingTransitionException,
+      );
     });
 
     it('rejects when the task was completed by someone else first, without overwriting completedAt', async () => {
       repository.findById.mockResolvedValue(task({ status: HousekeepingStatus.InProgress }));
       repository.updateFromStatus.mockResolvedValue(null);
 
-      await expect(service.complete('task-1')).rejects.toThrow(InvalidHousekeepingTransitionException);
+      await expect(service.complete('task-1')).rejects.toThrow(
+        InvalidHousekeepingTransitionException,
+      );
       expect(repository.update).not.toHaveBeenCalled();
     });
   });

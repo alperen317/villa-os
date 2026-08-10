@@ -46,19 +46,28 @@ export class PermissionsService implements OnModuleInit {
     for (const update of updates) {
       if (!CONFIGURABLE_ROLES.includes(update.role as ConfigurableRole)) {
         throw new AppException(
-        HttpStatus.BAD_REQUEST,
-        ErrorCode.ROLE_PERMISSIONS_IMMUTABLE,
-        `Permissions cannot be changed for role ${update.role}`,
-        { role: update.role },
-      );
+          HttpStatus.BAD_REQUEST,
+          ErrorCode.ROLE_PERMISSIONS_IMMUTABLE,
+          `Permissions cannot be changed for role ${update.role}`,
+          { role: update.role },
+        );
       }
     }
 
     await this.prisma.$transaction(
       updates.map((update) =>
         this.prisma.rolePermission.upsert({
-          where: { role_permissionKey: { role: update.role as ConfigurableRole, permissionKey: update.permissionKey } },
-          create: { role: update.role as ConfigurableRole, permissionKey: update.permissionKey, allowed: update.allowed },
+          where: {
+            role_permissionKey: {
+              role: update.role as ConfigurableRole,
+              permissionKey: update.permissionKey,
+            },
+          },
+          create: {
+            role: update.role as ConfigurableRole,
+            permissionKey: update.permissionKey,
+            allowed: update.allowed,
+          },
           update: { allowed: update.allowed },
         }),
       ),
@@ -72,7 +81,9 @@ export class PermissionsService implements OnModuleInit {
     const nextCache = new Map<ConfigurableRole, Set<string>>();
     for (const role of CONFIGURABLE_ROLES) {
       const defaults = new Set(
-        PERMISSION_CATALOG.filter((definition) => definition.defaults[role]).map((definition) => definition.key),
+        PERMISSION_CATALOG.filter((definition) => definition.defaults[role]).map(
+          (definition) => definition.key,
+        ),
       );
       nextCache.set(role, defaults);
     }

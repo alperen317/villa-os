@@ -67,7 +67,11 @@ describe('SyncQueueStore', () => {
     (syncOutboxDb.getAll as jest.Mock).mockResolvedValue([]);
 
     TestBed.configureTestingModule({
-      providers: [provideZonelessChangeDetection(), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideZonelessChangeDetection(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
     });
 
     store = TestBed.inject(SyncQueueStore);
@@ -117,7 +121,10 @@ describe('SyncQueueStore', () => {
     await flushMicrotasks();
     const req = httpMock.expectOne(`${API_BASE_URL}/reservations`);
     req.flush(
-      { message: 'These dates conflict with an existing reservation', conflictingReservationId: 'other-id' },
+      {
+        message: 'These dates conflict with an existing reservation',
+        conflictingReservationId: 'other-id',
+      },
       { status: 409, statusText: 'Conflict' },
     );
     await replayPromise;

@@ -61,7 +61,10 @@ export class MaintenanceService {
 
   create(villaId: string, input: CreateMaintenanceRecordInput): Promise<MaintenanceRecord> {
     return firstValueFrom(
-      this.http.post<MaintenanceRecord>(`${API_BASE_URL}/villas/${villaId}/maintenance-records`, input),
+      this.http.post<MaintenanceRecord>(
+        `${API_BASE_URL}/villas/${villaId}/maintenance-records`,
+        input,
+      ),
     );
   }
 

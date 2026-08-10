@@ -4,35 +4,35 @@
 </a>
 
 @if (loading() && !customer()) {
-  <div class="page-surface">
-    <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 3 }"></nz-skeleton>
-  </div>
+<div class="page-surface">
+  <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 3 }"></nz-skeleton>
+</div>
 } @else if (customer(); as c) {
-  <div class="page-header">
-    <div>
-      <h2 class="page-title">{{ c.firstName }} {{ c.lastName }}</h2>
-      <p class="page-subtitle">Müşteri bilgilerini ve rezervasyon geçmişini görüntüle.</p>
-    </div>
-    <button nz-button (click)="openEditModal()">
-      <nz-icon nzType="edit" />
-      Düzenle
-    </button>
+<div class="page-header">
+  <div>
+    <h2 class="page-title">{{ c.firstName }} {{ c.lastName }}</h2>
+    <p class="page-subtitle">Müşteri bilgilerini ve rezervasyon geçmişini görüntüle.</p>
   </div>
+  <button nz-button (click)="openEditModal()">
+    <nz-icon nzType="edit" />
+    Düzenle
+  </button>
+</div>
 
-  <div class="page-surface info-card">
-    <nz-descriptions
-      nzTitle="Müşteri Bilgileri"
-      [nzColumn]="{ xxl: 2, xl: 2, lg: 2, md: 2, sm: 1, xs: 1 }"
-      nzBordered
-      [nzSize]="'small'"
-    >
-      <nz-descriptions-item nzTitle="Telefon">{{ c.phone || '-' }}</nz-descriptions-item>
-      <nz-descriptions-item nzTitle="E-posta">{{ c.email || '-' }}</nz-descriptions-item>
-      <nz-descriptions-item nzTitle="Kimlik No">{{ c.identityNumber || '-' }}</nz-descriptions-item>
-      <nz-descriptions-item nzTitle="Pasaport No">{{ c.passportNumber || '-' }}</nz-descriptions-item>
-      <nz-descriptions-item nzTitle="Notlar" [nzSpan]="2">{{ c.notes || '-' }}</nz-descriptions-item>
-    </nz-descriptions>
-  </div>
+<div class="page-surface info-card">
+  <nz-descriptions
+    nzTitle="Müşteri Bilgileri"
+    [nzColumn]="{ xxl: 2, xl: 2, lg: 2, md: 2, sm: 1, xs: 1 }"
+    nzBordered
+    [nzSize]="'small'"
+  >
+    <nz-descriptions-item nzTitle="Telefon">{{ c.phone || '-' }}</nz-descriptions-item>
+    <nz-descriptions-item nzTitle="E-posta">{{ c.email || '-' }}</nz-descriptions-item>
+    <nz-descriptions-item nzTitle="Kimlik No">{{ c.identityNumber || '-' }}</nz-descriptions-item>
+    <nz-descriptions-item nzTitle="Pasaport No">{{ c.passportNumber || '-' }}</nz-descriptions-item>
+    <nz-descriptions-item nzTitle="Notlar" [nzSpan]="2">{{ c.notes || '-' }}</nz-descriptions-item>
+  </nz-descriptions>
+</div>
 }
 
 <div class="page-header">
@@ -59,19 +59,20 @@
     </thead>
     <tbody>
       @for (reservation of reservations(); track reservation.id) {
-        <tr>
-          <td data-label="Rez. No">{{ reservation.reservationNumber }}</td>
-          <td data-label="Villa">{{ reservation.villa.name }}</td>
-          <td data-label="Giriş - Çıkış">
-            {{ reservation.checkIn | date: 'dd.MM.yyyy' : 'UTC' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' : 'UTC' }}
-          </td>
-          <td data-label="Misafir">{{ reservation.guestCount }}</td>
-          <td data-label="Durum">
-            <nz-tag [nzColor]="reservationStatusColors[reservation.status]">
-              {{ reservationStatusLabels[reservation.status] }}
-            </nz-tag>
-          </td>
-        </tr>
+      <tr>
+        <td data-label="Rez. No">{{ reservation.reservationNumber }}</td>
+        <td data-label="Villa">{{ reservation.villa.name }}</td>
+        <td data-label="Giriş - Çıkış">
+          {{ reservation.checkIn | date: 'dd.MM.yyyy' : 'UTC' }} - {{ reservation.checkOut | date:
+          'dd.MM.yyyy' : 'UTC' }}
+        </td>
+        <td data-label="Misafir">{{ reservation.guestCount }}</td>
+        <td data-label="Durum">
+          <nz-tag [nzColor]="reservationStatusColors[reservation.status]">
+            {{ reservationStatusLabels[reservation.status] }}
+          </nz-tag>
+        </td>
+      </tr>
       }
     </tbody>
   </nz-table>

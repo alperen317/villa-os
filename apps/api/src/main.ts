@@ -51,10 +51,7 @@ async function bootstrap() {
   // registered after it never sees an /uploads response. That ordering is the whole point —
   // with the static mount first, uploads went out with no security headers at all.
   app.use('/uploads', (_req: Request, res: Response, next: NextFunction) => {
-    res.setHeader(
-      'Content-Security-Policy',
-      "default-src 'none'; style-src 'unsafe-inline'",
-    );
+    res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'");
     res.setHeader('X-Content-Type-Options', 'nosniff');
     next();
   });

@@ -12,7 +12,9 @@ import {
 export class HousekeepingService {
   private readonly http = inject(HttpClient);
 
-  list(params: { villaId?: string; status?: HousekeepingStatus } = {}): Promise<HousekeepingTask[]> {
+  list(
+    params: { villaId?: string; status?: HousekeepingStatus } = {},
+  ): Promise<HousekeepingTask[]> {
     let query = new HttpParams();
     if (params.villaId) query = query.set('villaId', params.villaId);
     if (params.status) query = query.set('status', params.status);

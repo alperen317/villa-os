@@ -65,7 +65,9 @@ export class MaintenanceList implements OnInit {
   protected readonly priorityColors = PRIORITY_COLORS;
   protected readonly statusColors = STATUS_COLORS;
   protected readonly statusKeys = Object.keys(MAINTENANCE_STATUS_LABELS) as MaintenanceStatus[];
-  protected readonly priorityKeys = Object.keys(MAINTENANCE_PRIORITY_LABELS) as MaintenancePriority[];
+  protected readonly priorityKeys = Object.keys(
+    MAINTENANCE_PRIORITY_LABELS,
+  ) as MaintenancePriority[];
 
   protected readonly villas = this.villasStore.villas;
   protected readonly filterVillaId = signal<string | null>(null);

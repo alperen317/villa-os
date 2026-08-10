@@ -23,9 +23,7 @@ export class PaymentsController {
   @Get()
   @RequirePermission('payments.read')
   @ApiOperation({ summary: 'List payments and outstanding balance for a reservation (FR-602)' })
-  findAll(
-    @Param('reservationId', ParseUUIDPipe) reservationId: string,
-  ): Promise<PaymentsSummary> {
+  findAll(@Param('reservationId', ParseUUIDPipe) reservationId: string): Promise<PaymentsSummary> {
     return this.paymentsService.findSummaryByReservation(reservationId);
   }
 }

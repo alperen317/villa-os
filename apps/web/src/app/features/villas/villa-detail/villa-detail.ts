@@ -89,7 +89,9 @@ export class VillaDetail implements OnInit {
   protected readonly statusLabels = MAINTENANCE_STATUS_LABELS;
   protected readonly priorityColors = PRIORITY_COLORS;
   protected readonly maintenanceStatusColors = MAINTENANCE_STATUS_COLORS;
-  protected readonly priorityKeys = Object.keys(MAINTENANCE_PRIORITY_LABELS) as MaintenancePriority[];
+  protected readonly priorityKeys = Object.keys(
+    MAINTENANCE_PRIORITY_LABELS,
+  ) as MaintenancePriority[];
 
   protected readonly maintenanceRecords = signal<MaintenanceRecord[]>([]);
   protected readonly maintenanceLoading = signal(false);

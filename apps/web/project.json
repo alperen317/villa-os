@@ -21,10 +21,7 @@
             "input": "apps/web/public"
           }
         ],
-        "styles": [
-          "node_modules/ng-zorro-antd/ng-zorro-antd.min.css",
-          "apps/web/src/styles.scss"
-        ]
+        "styles": ["node_modules/ng-zorro-antd/ng-zorro-antd.min.css", "apps/web/src/styles.scss"]
       },
       "configurations": {
         "production": {
@@ -76,10 +73,7 @@
       "options": {
         "cwd": "apps/web",
         "parallel": false,
-        "commands": [
-          "tsc -p tsconfig.app.json --noEmit",
-          "tsc -p tsconfig.spec.json --noEmit"
-        ]
+        "commands": ["tsc -p tsconfig.app.json --noEmit", "tsc -p tsconfig.spec.json --noEmit"]
       }
     },
     "test": {

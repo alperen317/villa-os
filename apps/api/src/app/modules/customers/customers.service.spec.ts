@@ -64,7 +64,12 @@ describe('CustomersService', () => {
       repository.findMany.mockResolvedValue([customer()]);
       repository.count.mockResolvedValue(1);
 
-      const result = await service.findAll({ page: 2, limit: 10, skip: 10, search: 'Ali' } as never);
+      const result = await service.findAll({
+        page: 2,
+        limit: 10,
+        skip: 10,
+        search: 'Ali',
+      } as never);
 
       expect(repository.findMany).toHaveBeenCalledWith({ skip: 10, take: 10, search: 'Ali' });
       expect(repository.count).toHaveBeenCalledWith({ search: 'Ali' });
@@ -82,7 +87,11 @@ describe('CustomersService', () => {
     it('throws NotFoundException when the customer does not exist', async () => {
       repository.findById.mockResolvedValue(null);
 
-      await expectRejectionCode(service.findOneOrThrow('missing'), ErrorCode.CUSTOMER_NOT_FOUND, 404);
+      await expectRejectionCode(
+        service.findOneOrThrow('missing'),
+        ErrorCode.CUSTOMER_NOT_FOUND,
+        404,
+      );
     });
   });
 
@@ -100,7 +109,11 @@ describe('CustomersService', () => {
     it('rejects updating an unknown customer', async () => {
       repository.findById.mockResolvedValue(null);
 
-      await expectRejectionCode(service.update('missing', { phone: '555' }), ErrorCode.CUSTOMER_NOT_FOUND, 404);
+      await expectRejectionCode(
+        service.update('missing', { phone: '555' }),
+        ErrorCode.CUSTOMER_NOT_FOUND,
+        404,
+      );
       expect(repository.update).not.toHaveBeenCalled();
     });
   });

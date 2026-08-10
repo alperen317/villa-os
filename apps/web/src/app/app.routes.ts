@@ -11,9 +11,7 @@ export const appRoutes: Route[] = [
   {
     path: 'onboarding',
     loadComponent: () =>
-      import('./features/onboarding/onboarding-page/onboarding-page').then(
-        (m) => m.OnboardingPage,
-      ),
+      import('./features/onboarding/onboarding-page/onboarding-page').then((m) => m.OnboardingPage),
     canActivate: [onboardingGuard],
   },
   {
@@ -76,8 +74,7 @@ export const appRoutes: Route[] = [
       },
       {
         path: 'users',
-        loadComponent: () =>
-          import('./features/users/user-list/user-list').then((m) => m.UserList),
+        loadComponent: () => import('./features/users/user-list/user-list').then((m) => m.UserList),
         canActivate: [adminGuard],
       },
     ],

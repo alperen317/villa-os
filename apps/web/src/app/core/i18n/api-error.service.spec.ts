@@ -40,9 +40,9 @@ describe('ApiErrorService', () => {
 
   it('falls back to the generic message for a code it has no wording for', () => {
     // Must not leak the API's English `message` into a Turkish screen.
-    expect(service.message(httpError({ code: 'SOMETHING_NEW', message: 'Raw server text' }, 409))).toBe(
-      MESSAGES['error.unknown'],
-    );
+    expect(
+      service.message(httpError({ code: 'SOMETHING_NEW', message: 'Raw server text' }, 409)),
+    ).toBe(MESSAGES['error.unknown']);
   });
 
   it('reports a rate-limited caller as such rather than as a generic failure', () => {
@@ -54,7 +54,9 @@ describe('ApiErrorService', () => {
   });
 
   it('falls back when the body carries no code at all', () => {
-    expect(service.message(httpError({ message: 'no code here' }, 500))).toBe(MESSAGES['error.unknown']);
+    expect(service.message(httpError({ message: 'no code here' }, 500))).toBe(
+      MESSAGES['error.unknown'],
+    );
   });
 
   it('handles a non-HTTP failure', () => {

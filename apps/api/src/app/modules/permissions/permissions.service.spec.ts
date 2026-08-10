@@ -35,10 +35,18 @@ describe('PermissionsService', () => {
       const matrix = await service.getMatrix();
 
       const villasRead = matrix.find((row) => row.key === 'villas.read');
-      expect(villasRead?.values).toEqual({ Operations: true, Accounting: true, Housekeeping: true });
+      expect(villasRead?.values).toEqual({
+        Operations: true,
+        Accounting: true,
+        Housekeeping: true,
+      });
 
       const usersManage = matrix.find((row) => row.key === 'users.manage');
-      expect(usersManage?.values).toEqual({ Operations: false, Accounting: false, Housekeeping: false });
+      expect(usersManage?.values).toEqual({
+        Operations: false,
+        Accounting: false,
+        Housekeeping: false,
+      });
     });
   });
 
@@ -58,7 +66,9 @@ describe('PermissionsService', () => {
   describe('updateMatrix', () => {
     it('rejects attempts to write an Administrator row', async () => {
       await expectRejectionCode(
-        service.updateMatrix([{ role: 'Administrator', permissionKey: 'villas.write', allowed: true }]),
+        service.updateMatrix([
+          { role: 'Administrator', permissionKey: 'villas.write', allowed: true },
+        ]),
         ErrorCode.ROLE_PERMISSIONS_IMMUTABLE,
         400,
       );
@@ -74,7 +84,9 @@ describe('PermissionsService', () => {
         { role: 'Operations', permissionKey: 'villas.write', allowed: true },
       ]);
 
-      await service.updateMatrix([{ role: 'Operations', permissionKey: 'villas.write', allowed: true }]);
+      await service.updateMatrix([
+        { role: 'Operations', permissionKey: 'villas.write', allowed: true },
+      ]);
 
       expect(prisma.rolePermission.upsert).toHaveBeenCalledWith({
         where: { role_permissionKey: { role: 'Operations', permissionKey: 'villas.write' } },

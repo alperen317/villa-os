@@ -4,36 +4,38 @@
 </a>
 
 @if (loading() && !villa()) {
-  <div class="page-surface">
-    <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 3 }"></nz-skeleton>
-  </div>
+<div class="page-surface">
+  <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 3 }"></nz-skeleton>
+</div>
 } @else if (villa(); as v) {
-  <div class="page-header">
-    <div>
-      <div class="title-row">
-        <h2 class="page-title">{{ v.name }}</h2>
-        <nz-tag [nzColor]="v.status === 'Active' ? 'green' : 'default'">
-          {{ v.status === 'Active' ? 'Aktif' : 'Pasif' }}
-        </nz-tag>
-      </div>
-      <p class="page-subtitle">Villa bilgilerini ve katlarını yönet.</p>
+<div class="page-header">
+  <div>
+    <div class="title-row">
+      <h2 class="page-title">{{ v.name }}</h2>
+      <nz-tag [nzColor]="v.status === 'Active' ? 'green' : 'default'">
+        {{ v.status === 'Active' ? 'Aktif' : 'Pasif' }}
+      </nz-tag>
     </div>
-    <button nz-button (click)="toggleVillaStatus()">
-      {{ v.status === 'Active' ? 'Pasife Al' : 'Aktif Et' }}
-    </button>
+    <p class="page-subtitle">Villa bilgilerini ve katlarını yönet.</p>
   </div>
+  <button nz-button (click)="toggleVillaStatus()">
+    {{ v.status === 'Active' ? 'Pasife Al' : 'Aktif Et' }}
+  </button>
+</div>
 
-  <div class="page-surface info-card">
-    <nz-descriptions
-      nzTitle="Villa Bilgileri"
-      [nzColumn]="{ xxl: 2, xl: 2, lg: 2, md: 2, sm: 1, xs: 1 }"
-      nzBordered
-      [nzSize]="'small'"
+<div class="page-surface info-card">
+  <nz-descriptions
+    nzTitle="Villa Bilgileri"
+    [nzColumn]="{ xxl: 2, xl: 2, lg: 2, md: 2, sm: 1, xs: 1 }"
+    nzBordered
+    [nzSize]="'small'"
+  >
+    <nz-descriptions-item nzTitle="Adres" [nzSpan]="2">{{ v.address || '-' }}</nz-descriptions-item>
+    <nz-descriptions-item nzTitle="Açıklama" [nzSpan]="2"
+      >{{ v.description || '-' }}</nz-descriptions-item
     >
-      <nz-descriptions-item nzTitle="Adres" [nzSpan]="2">{{ v.address || '-' }}</nz-descriptions-item>
-      <nz-descriptions-item nzTitle="Açıklama" [nzSpan]="2">{{ v.description || '-' }}</nz-descriptions-item>
-    </nz-descriptions>
-  </div>
+  </nz-descriptions>
+</div>
 }
 
 <div class="page-header">
@@ -64,38 +66,37 @@
     </thead>
     <tbody>
       @for (floor of floors(); track floor.id) {
-        <tr>
-          <td data-label="Ad">
-            {{ floor.name }}
-            @if (floor.isEntireVilla) {
-              <nz-tag nzColor="blue">Tüm Villa</nz-tag>
-            }
-          </td>
-          <td data-label="Kapasite">{{ floor.capacity }} kişi</td>
-          <td data-label="Yatak/Banyo">{{ floor.bedrooms }} yatak / {{ floor.bathrooms }} banyo</td>
-          <td data-label="Günlük Fiyat">{{ floor.dailyPrice }} ₺</td>
-          <td data-label="Durum">
-            <nz-tag [nzColor]="floor.rentable ? 'green' : 'default'">
-              {{ floor.rentable ? 'Kiralanabilir' : 'Pasif' }}
-            </nz-tag>
-          </td>
-          <td class="actions td-actions">
-            <button nz-button nzType="text" aria-label="Katı düzenle" (click)="openEditModal(floor)">
-              <nz-icon nzType="edit" />
-            </button>
-            <button
-              nz-button
-              nzType="text"
-              nzDanger
-              aria-label="Katı sil"
-              nz-popconfirm
-              nzPopconfirmTitle="Bu katı silmek istediğine emin misin?"
-              (nzOnConfirm)="removeFloor(floor)"
-            >
-              <nz-icon nzType="delete" />
-            </button>
-          </td>
-        </tr>
+      <tr>
+        <td data-label="Ad">
+          {{ floor.name }} @if (floor.isEntireVilla) {
+          <nz-tag nzColor="blue">Tüm Villa</nz-tag>
+          }
+        </td>
+        <td data-label="Kapasite">{{ floor.capacity }} kişi</td>
+        <td data-label="Yatak/Banyo">{{ floor.bedrooms }} yatak / {{ floor.bathrooms }} banyo</td>
+        <td data-label="Günlük Fiyat">{{ floor.dailyPrice }} ₺</td>
+        <td data-label="Durum">
+          <nz-tag [nzColor]="floor.rentable ? 'green' : 'default'">
+            {{ floor.rentable ? 'Kiralanabilir' : 'Pasif' }}
+          </nz-tag>
+        </td>
+        <td class="actions td-actions">
+          <button nz-button nzType="text" aria-label="Katı düzenle" (click)="openEditModal(floor)">
+            <nz-icon nzType="edit" />
+          </button>
+          <button
+            nz-button
+            nzType="text"
+            nzDanger
+            aria-label="Katı sil"
+            nz-popconfirm
+            nzPopconfirmTitle="Bu katı silmek istediğine emin misin?"
+            (nzOnConfirm)="removeFloor(floor)"
+          >
+            <nz-icon nzType="delete" />
+          </button>
+        </td>
+      </tr>
       }
     </tbody>
   </nz-table>
@@ -136,19 +137,22 @@
     </thead>
     <tbody>
       @for (reservation of reservations(); track reservation.id) {
-        <tr>
-          <td data-label="Rez. No">{{ reservation.reservationNumber }}</td>
-          <td data-label="Müşteri">{{ reservation.customer.firstName }} {{ reservation.customer.lastName }}</td>
-          <td data-label="Giriş - Çıkış">
-            {{ reservation.checkIn | date: 'dd.MM.yyyy' : 'UTC' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' : 'UTC' }}
-          </td>
-          <td data-label="Misafir">{{ reservation.guestCount }}</td>
-          <td data-label="Durum">
-            <nz-tag [nzColor]="reservationStatusColors[reservation.status]">
-              {{ reservationStatusLabels[reservation.status] }}
-            </nz-tag>
-          </td>
-        </tr>
+      <tr>
+        <td data-label="Rez. No">{{ reservation.reservationNumber }}</td>
+        <td data-label="Müşteri">
+          {{ reservation.customer.firstName }} {{ reservation.customer.lastName }}
+        </td>
+        <td data-label="Giriş - Çıkış">
+          {{ reservation.checkIn | date: 'dd.MM.yyyy' : 'UTC' }} - {{ reservation.checkOut | date:
+          'dd.MM.yyyy' : 'UTC' }}
+        </td>
+        <td data-label="Misafir">{{ reservation.guestCount }}</td>
+        <td data-label="Durum">
+          <nz-tag [nzColor]="reservationStatusColors[reservation.status]">
+            {{ reservationStatusLabels[reservation.status] }}
+          </nz-tag>
+        </td>
+      </tr>
       }
     </tbody>
   </nz-table>
@@ -188,44 +192,46 @@
     </thead>
     <tbody>
       @for (record of maintenanceRecords(); track record.id) {
-        <tr>
-          <td data-label="Başlık" class="td-block">
-            {{ record.title }}
-            @if (record.description) {
-              <div class="record-description">{{ record.description }}</div>
-            }
-          </td>
-          <td data-label="Öncelik">
-            <nz-tag [nzColor]="priorityColors[record.priority]">{{ priorityLabels[record.priority] }}</nz-tag>
-          </td>
-          <td data-label="Açıldı">{{ record.openedAt | date: 'dd.MM.yyyy' }}</td>
-          <td data-label="Durum">
-            <nz-tag [nzColor]="maintenanceStatusColors[record.status]">{{ statusLabels[record.status] }}</nz-tag>
-          </td>
-          <td class="td-actions">
-            @if (record.status === 'Open') {
-              <button
-                nz-button
-                nzSize="small"
-                [nzLoading]="maintenanceActingId() === record.id"
-                (click)="startMaintenance(record)"
-              >
-                Başlat
-              </button>
-            }
-            @if (record.status === 'InProgress') {
-              <button
-                nz-button
-                nzSize="small"
-                nzType="primary"
-                [nzLoading]="maintenanceActingId() === record.id"
-                (click)="completeMaintenance(record)"
-              >
-                Tamamlandı Olarak İşaretle
-              </button>
-            }
-          </td>
-        </tr>
+      <tr>
+        <td data-label="Başlık" class="td-block">
+          {{ record.title }} @if (record.description) {
+          <div class="record-description">{{ record.description }}</div>
+          }
+        </td>
+        <td data-label="Öncelik">
+          <nz-tag [nzColor]="priorityColors[record.priority]"
+            >{{ priorityLabels[record.priority] }}</nz-tag
+          >
+        </td>
+        <td data-label="Açıldı">{{ record.openedAt | date: 'dd.MM.yyyy' }}</td>
+        <td data-label="Durum">
+          <nz-tag [nzColor]="maintenanceStatusColors[record.status]"
+            >{{ statusLabels[record.status] }}</nz-tag
+          >
+        </td>
+        <td class="td-actions">
+          @if (record.status === 'Open') {
+          <button
+            nz-button
+            nzSize="small"
+            [nzLoading]="maintenanceActingId() === record.id"
+            (click)="startMaintenance(record)"
+          >
+            Başlat
+          </button>
+          } @if (record.status === 'InProgress') {
+          <button
+            nz-button
+            nzSize="small"
+            nzType="primary"
+            [nzLoading]="maintenanceActingId() === record.id"
+            (click)="completeMaintenance(record)"
+          >
+            Tamamlandı Olarak İşaretle
+          </button>
+          }
+        </td>
+      </tr>
       }
     </tbody>
   </nz-table>
@@ -264,7 +270,7 @@
         <nz-form-control>
           <nz-select formControlName="priority">
             @for (priority of priorityKeys; track priority) {
-              <nz-option [nzValue]="priority" [nzLabel]="priorityLabels[priority]" />
+            <nz-option [nzValue]="priority" [nzLabel]="priorityLabels[priority]" />
             }
           </nz-select>
         </nz-form-control>
@@ -333,7 +339,9 @@
 
       <nz-form-item>
         <nz-form-control>
-          <label nz-checkbox formControlName="isEntireVilla">Tüm Villa (bu kat villanın tamamını temsil eder)</label>
+          <label nz-checkbox formControlName="isEntireVilla"
+            >Tüm Villa (bu kat villanın tamamını temsil eder)</label
+          >
         </nz-form-control>
       </nz-form-item>
     </form>

@@ -90,7 +90,9 @@ export class HousekeepingQueue implements OnInit {
   async loadTasks(): Promise<void> {
     this.loading.set(true);
     try {
-      this.tasks.set(await this.housekeepingService.list({ villaId: this.filterVillaId() ?? undefined }));
+      this.tasks.set(
+        await this.housekeepingService.list({ villaId: this.filterVillaId() ?? undefined }),
+      );
     } catch {
       this.message.error('Temizlik görevleri alınamadı');
     } finally {
@@ -116,7 +118,10 @@ export class HousekeepingQueue implements OnInit {
     const value = this.form.getRawValue();
 
     try {
-      await this.housekeepingService.create({ villaId: value.villaId, notes: value.notes || undefined });
+      await this.housekeepingService.create({
+        villaId: value.villaId,
+        notes: value.notes || undefined,
+      });
       this.message.success('Temizlik görevi oluşturuldu');
       this.modalVisible.set(false);
       await this.loadTasks();

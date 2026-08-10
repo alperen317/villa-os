@@ -12,7 +12,8 @@ export interface UpdateReservationPayload {
   notes?: string;
 }
 
-export type SyncOutboxPayload = CreateReservationInput | UpdateReservationPayload | Record<string, never>;
+export type SyncOutboxPayload =
+  CreateReservationInput | UpdateReservationPayload | Record<string, never>;
 
 export interface SyncOutboxItem {
   id: string;

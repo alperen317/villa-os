@@ -65,9 +65,7 @@ export class VillasService {
   }
 
   createFloor(villaId: string, input: CreateFloorInput): Promise<Floor> {
-    return firstValueFrom(
-      this.http.post<Floor>(`${API_BASE_URL}/villas/${villaId}/floors`, input),
-    );
+    return firstValueFrom(this.http.post<Floor>(`${API_BASE_URL}/villas/${villaId}/floors`, input));
   }
 
   updateFloor(villaId: string, id: string, input: UpdateFloorInput): Promise<Floor> {
@@ -77,8 +75,6 @@ export class VillasService {
   }
 
   removeFloor(villaId: string, id: string): Promise<void> {
-    return firstValueFrom(
-      this.http.delete<void>(`${API_BASE_URL}/villas/${villaId}/floors/${id}`),
-    );
+    return firstValueFrom(this.http.delete<void>(`${API_BASE_URL}/villas/${villaId}/floors/${id}`));
   }
 }

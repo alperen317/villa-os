@@ -42,7 +42,11 @@ export class ReportingRepository {
     });
   }
 
-  async findReservationsOverlapping(from: Date, to: Date, villaId?: string): Promise<ReportReservation[]> {
+  async findReservationsOverlapping(
+    from: Date,
+    to: Date,
+    villaId?: string,
+  ): Promise<ReportReservation[]> {
     const reservations = await this.prisma.reservation.findMany({
       where: {
         deletedAt: null,

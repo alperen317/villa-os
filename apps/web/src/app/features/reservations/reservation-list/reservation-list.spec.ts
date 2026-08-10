@@ -182,10 +182,7 @@ describe('ReservationList', () => {
     });
 
     it('lets only the newest run publish when months are paged quickly', async () => {
-      let releaseFirst: (value: {
-        data: Reservation[];
-        total: number;
-      }) => void = () => undefined;
+      let releaseFirst: (value: { data: Reservation[]; total: number }) => void = () => undefined;
       reservationsService.list
         .mockReturnValueOnce(new Promise((resolve) => (releaseFirst = resolve)))
         .mockResolvedValue({ data: [reservation({ id: 'newer' })], total: 1 });
@@ -195,9 +192,7 @@ describe('ReservationList', () => {
       releaseFirst({ data: [reservation({ id: 'older' })], total: 1 });
       await stale;
 
-      expect(
-        component['calendarReservations']().map((item) => item.id),
-      ).toEqual(['newer']);
+      expect(component['calendarReservations']().map((item) => item.id)).toEqual(['newer']);
     });
   });
 

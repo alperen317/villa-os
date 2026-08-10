@@ -47,7 +47,9 @@ export const SyncQueueStore = signalStore(
   withMethods((store, http = inject(HttpClient)) => {
     async function persist(item: SyncOutboxItem): Promise<void> {
       await syncOutboxDb.put(item);
-      patchState(store, { items: sortByCreatedAt([...store.items().filter((i) => i.id !== item.id), item]) });
+      patchState(store, {
+        items: sortByCreatedAt([...store.items().filter((i) => i.id !== item.id), item]),
+      });
     }
 
     async function remove(id: string): Promise<void> {
@@ -56,10 +58,13 @@ export const SyncQueueStore = signalStore(
     }
 
     /** Dependent update/cancel ops enqueued before their create synced were pointed at `local:<createId>` — swap in the real id now that it exists. */
-    async function resolveDependents(createLocalId: string, realReservationId: string): Promise<void> {
-      const dependents = store.items().filter(
-        (item) => item.targetReservationId === `${LOCAL_ID_PREFIX}${createLocalId}`,
-      );
+    async function resolveDependents(
+      createLocalId: string,
+      realReservationId: string,
+    ): Promise<void> {
+      const dependents = store
+        .items()
+        .filter((item) => item.targetReservationId === `${LOCAL_ID_PREFIX}${createLocalId}`);
       for (const dependent of dependents) {
         await persist({ ...dependent, targetReservationId: realReservationId });
       }
@@ -139,7 +144,8 @@ export const SyncQueueStore = signalStore(
           typeof error.error?.conflictingReservationId === 'string'
             ? error.error.conflictingReservationId
             : undefined;
-        const errorMessage = typeof error.error?.message === 'string' ? error.error.message : 'Çakışma tespit edildi';
+        const errorMessage =
+          typeof error.error?.message === 'string' ? error.error.message : 'Çakışma tespit edildi';
         await persist({ ...item, status: 'conflict', conflictingReservationId, errorMessage });
         return;
       }
@@ -189,7 +195,10 @@ export const SyncQueueStore = signalStore(
         patchState(store, { items: sortByCreatedAt(recovered), loaded: true });
       },
 
-      async enqueueCreate(payload: CreateReservationInput, summary: string): Promise<SyncOutboxItem> {
+      async enqueueCreate(
+        payload: CreateReservationInput,
+        summary: string,
+      ): Promise<SyncOutboxItem> {
         if (store.items().length >= SYNC_QUEUE_MAX_ITEMS) {
           throw new Error('Bekleyen işlem kuyruğu dolu. Lütfen önce senkronize edin.');
         }

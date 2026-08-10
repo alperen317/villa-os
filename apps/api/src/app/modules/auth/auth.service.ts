@@ -157,12 +157,7 @@ export class AuthService {
       expiresIn: this.refreshTtlSeconds,
     });
 
-    await this.redis.set(
-      REFRESH_TOKEN_REDIS_PREFIX + jti,
-      userId,
-      'EX',
-      this.refreshTtlSeconds,
-    );
+    await this.redis.set(REFRESH_TOKEN_REDIS_PREFIX + jti, userId, 'EX', this.refreshTtlSeconds);
 
     return token;
   }

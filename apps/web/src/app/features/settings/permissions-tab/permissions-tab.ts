@@ -4,7 +4,11 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzTableModule } from 'ng-zorro-antd/table';
-import { ConfigurableRole, PermissionRow, PermissionUpdate } from '../../../core/models/permission.model';
+import {
+  ConfigurableRole,
+  PermissionRow,
+  PermissionUpdate,
+} from '../../../core/models/permission.model';
 import { PermissionsStore } from '../permissions.store';
 
 const ROLE_COLUMNS: { role: ConfigurableRole; label: string }[] = [

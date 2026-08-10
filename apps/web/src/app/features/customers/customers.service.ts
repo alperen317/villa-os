@@ -3,22 +3,29 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from '../../core/api-base-url';
 import { PagedResult } from '../../core/models/paged-result.model';
-import { CreateCustomerInput, Customer, UpdateCustomerInput } from '../../core/models/customer.model';
+import {
+  CreateCustomerInput,
+  Customer,
+  UpdateCustomerInput,
+} from '../../core/models/customer.model';
 
 @Injectable({ providedIn: 'root' })
 export class CustomersService {
   private readonly http = inject(HttpClient);
 
-  async list(params: { page?: number; limit?: number; search?: string } = {}): Promise<
-    PagedResult<Customer>
-  > {
+  async list(
+    params: { page?: number; limit?: number; search?: string } = {},
+  ): Promise<PagedResult<Customer>> {
     let query = new HttpParams();
     if (params.page) query = query.set('page', params.page);
     if (params.limit) query = query.set('limit', params.limit);
     if (params.search) query = query.set('search', params.search);
 
     const response = await firstValueFrom(
-      this.http.get<Customer[]>(`${API_BASE_URL}/customers`, { params: query, observe: 'response' }),
+      this.http.get<Customer[]>(`${API_BASE_URL}/customers`, {
+        params: query,
+        observe: 'response',
+      }),
     );
 
     return {

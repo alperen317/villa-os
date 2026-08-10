@@ -19,7 +19,15 @@ const OPERATION_LABELS: Record<SyncOperationType, string> = {
 @Component({
   selector: 'app-sync-queue-panel',
   standalone: true,
-  imports: [DatePipe, NzBadgeModule, NzButtonModule, NzDrawerModule, NzEmptyModule, NzIconModule, NzTagModule],
+  imports: [
+    DatePipe,
+    NzBadgeModule,
+    NzButtonModule,
+    NzDrawerModule,
+    NzEmptyModule,
+    NzIconModule,
+    NzTagModule,
+  ],
   templateUrl: './sync-queue-panel.html',
   styleUrl: './sync-queue-panel.scss',
 })

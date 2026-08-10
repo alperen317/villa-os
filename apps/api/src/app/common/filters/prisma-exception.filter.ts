@@ -33,7 +33,11 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     // was called from; that goes to the log, never to the client.
     this.logger.error(`Prisma ${exception.code} -> HTTP ${status}: ${exception.message}`);
 
-    host.switchToHttp().getResponse<Response>().status(status).json({ statusCode: status, message, error });
+    host
+      .switchToHttp()
+      .getResponse<Response>()
+      .status(status)
+      .json({ statusCode: status, message, error });
   }
 
   private translate(exception: Prisma.PrismaClientKnownRequestError): Translation {
@@ -82,15 +86,18 @@ export class PrismaExceptionFilter implements ExceptionFilter {
 
   /** The Postgres SQLSTATE, which the pg driver adapter nests inside `meta`. */
   private sqlState(exception: Prisma.PrismaClientKnownRequestError): string | undefined {
-    const cause = (exception.meta as { driverAdapterError?: { cause?: { originalCode?: unknown } } } | undefined)
-      ?.driverAdapterError?.cause;
+    const cause = (
+      exception.meta as { driverAdapterError?: { cause?: { originalCode?: unknown } } } | undefined
+    )?.driverAdapterError?.cause;
 
     return typeof cause?.originalCode === 'string' ? cause.originalCode : undefined;
   }
 
   private uniqueMessage(exception: Prisma.PrismaClientKnownRequestError): string {
     const target = (exception.meta as { target?: unknown } | undefined)?.target;
-    const fields = Array.isArray(target) ? target.filter((field): field is string => typeof field === 'string') : [];
+    const fields = Array.isArray(target)
+      ? target.filter((field): field is string => typeof field === 'string')
+      : [];
 
     return fields.length > 0
       ? `A record with this ${fields.join(', ')} already exists`

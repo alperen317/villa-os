@@ -16,8 +16,7 @@ export type ReservationAction = 'confirm' | 'check-in' | 'check-out' | 'complete
 
 /** A write either went straight to the API (queued: false) or was appended to the offline sync outbox (queued: true). */
 export type ReservationWriteResult =
-  | { queued: false; reservation: Reservation }
-  | { queued: true; item: SyncOutboxItem };
+  { queued: false; reservation: Reservation } | { queued: true; item: SyncOutboxItem };
 
 @Injectable({ providedIn: 'root' })
 export class ReservationsService {
@@ -111,9 +110,15 @@ export class ReservationsService {
     return { queued: false, reservation: updated };
   }
 
-  async transition(reservation: Reservation, action: ReservationAction): Promise<ReservationWriteResult> {
+  async transition(
+    reservation: Reservation,
+    action: ReservationAction,
+  ): Promise<ReservationWriteResult> {
     if (action === 'cancel' && this.shouldQueue()) {
-      const item = await this.syncQueueStore.enqueueCancel(reservation.id, this.summarize(reservation));
+      const item = await this.syncQueueStore.enqueueCancel(
+        reservation.id,
+        this.summarize(reservation),
+      );
       this.triggerReplay();
       return { queued: true, item };
     }

@@ -31,7 +31,10 @@ export function acceptLogoUpload(
   callback: (error: Error | null, accept: boolean) => void,
 ): void {
   if (!ALLOWED_LOGO_TYPES.has(file.mimetype)) {
-    callback(new BadRequestException('Sadece PNG, JPEG, SVG veya WEBP dosyaları yüklenebilir'), false);
+    callback(
+      new BadRequestException('Sadece PNG, JPEG, SVG veya WEBP dosyaları yüklenebilir'),
+      false,
+    );
     return;
   }
   callback(null, true);

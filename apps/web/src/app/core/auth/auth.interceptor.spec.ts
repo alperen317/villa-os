@@ -59,8 +59,12 @@ describe('authInterceptor', () => {
   it('refreshes and retries once when a request comes back 401', async () => {
     const pending = firstValueFrom(client.get(`${API_BASE_URL}/villas`));
 
-    http.expectOne(`${API_BASE_URL}/villas`).flush(null, { status: 401, statusText: 'Unauthorized' });
-    http.expectOne(`${API_BASE_URL}/auth/refresh`).flush(null, { status: 204, statusText: 'No Content' });
+    http
+      .expectOne(`${API_BASE_URL}/villas`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+    http
+      .expectOne(`${API_BASE_URL}/auth/refresh`)
+      .flush(null, { status: 204, statusText: 'No Content' });
 
     await settle();
     http.expectOne(`${API_BASE_URL}/villas`).flush([{ id: 'villa-1' }]);
@@ -72,8 +76,12 @@ describe('authInterceptor', () => {
   it('sends the user to /login when the refresh also fails', async () => {
     const pending = firstValueFrom(client.get(`${API_BASE_URL}/villas`));
 
-    http.expectOne(`${API_BASE_URL}/villas`).flush(null, { status: 401, statusText: 'Unauthorized' });
-    http.expectOne(`${API_BASE_URL}/auth/refresh`).flush(null, { status: 401, statusText: 'Unauthorized' });
+    http
+      .expectOne(`${API_BASE_URL}/villas`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+    http
+      .expectOne(`${API_BASE_URL}/auth/refresh`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
 
     await expect(pending).rejects.toBeInstanceOf(HttpErrorResponse);
     expect(router.navigateByUrl).toHaveBeenCalledWith('/login');
@@ -83,7 +91,9 @@ describe('authInterceptor', () => {
   it('does not try to refresh a failed login — that would loop', async () => {
     const pending = firstValueFrom(client.post(`${API_BASE_URL}/auth/login`, {}));
 
-    http.expectOne(`${API_BASE_URL}/auth/login`).flush(null, { status: 401, statusText: 'Unauthorized' });
+    http
+      .expectOne(`${API_BASE_URL}/auth/login`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
 
     await expect(pending).rejects.toBeInstanceOf(HttpErrorResponse);
     // expectNone would also be satisfied by verify(), but state it outright.
@@ -93,8 +103,12 @@ describe('authInterceptor', () => {
   it('does not redirect when a session probe fails — the guards decide that', async () => {
     const pending = firstValueFrom(client.get(`${API_BASE_URL}/auth/me`));
 
-    http.expectOne(`${API_BASE_URL}/auth/me`).flush(null, { status: 401, statusText: 'Unauthorized' });
-    http.expectOne(`${API_BASE_URL}/auth/refresh`).flush(null, { status: 401, statusText: 'Unauthorized' });
+    http
+      .expectOne(`${API_BASE_URL}/auth/me`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+    http
+      .expectOne(`${API_BASE_URL}/auth/refresh`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
 
     await expect(pending).rejects.toBeInstanceOf(HttpErrorResponse);
     expect(router.navigateByUrl).not.toHaveBeenCalled();
@@ -103,7 +117,9 @@ describe('authInterceptor', () => {
   it('leaves non-401 failures alone', async () => {
     const pending = firstValueFrom(client.get(`${API_BASE_URL}/villas`));
 
-    http.expectOne(`${API_BASE_URL}/villas`).flush(null, { status: 500, statusText: 'Server Error' });
+    http
+      .expectOne(`${API_BASE_URL}/villas`)
+      .flush(null, { status: 500, statusText: 'Server Error' });
 
     await expect(pending).rejects.toBeInstanceOf(HttpErrorResponse);
     http.expectNone(`${API_BASE_URL}/auth/refresh`);

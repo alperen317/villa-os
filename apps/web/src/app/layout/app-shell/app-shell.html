@@ -1,11 +1,11 @@
 <nz-layout class="shell">
   @if (mobileNavOpen()) {
-    <button
-      type="button"
-      class="sider-backdrop"
-      aria-label="Menüyü kapat"
-      (click)="mobileNavOpen.set(false)"
-    ></button>
+  <button
+    type="button"
+    class="sider-backdrop"
+    aria-label="Menüyü kapat"
+    (click)="mobileNavOpen.set(false)"
+  ></button>
   }
 
   <nz-sider
@@ -17,9 +17,9 @@
   >
     <div class="logo">
       @if (settingsStore.logoUrl(); as logoUrl) {
-        <img [src]="logoUrl" [alt]="settingsStore.companyName()" class="logo-image" />
+      <img [src]="logoUrl" [alt]="settingsStore.companyName()" class="logo-image" />
       } @else {
-        <span>{{ collapsed() ? 'VOS' : settingsStore.companyName() }}</span>
+      <span>{{ collapsed() ? 'VOS' : settingsStore.companyName() }}</span>
       }
     </div>
     <ul nz-menu nzTheme="dark" nzMode="inline">
@@ -40,24 +40,24 @@
         <span>{{ 'shell.customers' | translate }}</span>
       </li>
       @if (showHousekeepingNav()) {
-        <li nz-menu-item routerLink="/housekeeping" routerLinkActive="ant-menu-item-selected">
-          <nz-icon nzType="clear" />
-          <span>{{ 'shell.housekeeping' | translate }}</span>
-        </li>
+      <li nz-menu-item routerLink="/housekeeping" routerLinkActive="ant-menu-item-selected">
+        <nz-icon nzType="clear" />
+        <span>{{ 'shell.housekeeping' | translate }}</span>
+      </li>
       }
       <li nz-menu-item routerLink="/maintenance" routerLinkActive="ant-menu-item-selected">
         <nz-icon nzType="tool" />
         <span>{{ 'shell.maintenance' | translate }}</span>
       </li>
       @if (showAdminNav()) {
-        <li nz-menu-item routerLink="/users" routerLinkActive="ant-menu-item-selected">
-          <nz-icon nzType="user" />
-          <span>{{ 'shell.users' | translate }}</span>
-        </li>
-        <li nz-menu-item routerLink="/settings" routerLinkActive="ant-menu-item-selected">
-          <nz-icon nzType="setting" />
-          <span>{{ 'shell.settings' | translate }}</span>
-        </li>
+      <li nz-menu-item routerLink="/users" routerLinkActive="ant-menu-item-selected">
+        <nz-icon nzType="user" />
+        <span>{{ 'shell.users' | translate }}</span>
+      </li>
+      <li nz-menu-item routerLink="/settings" routerLinkActive="ant-menu-item-selected">
+        <nz-icon nzType="setting" />
+        <span>{{ 'shell.settings' | translate }}</span>
+      </li>
       }
     </ul>
   </nz-sider>
@@ -76,8 +76,8 @@
 
       <span class="user-info">
         @if (authService.currentUser(); as user) {
-          <nz-icon nzType="user" />
-          <span class="user-info-text">{{ user.username }} · {{ user.role }}</span>
+        <nz-icon nzType="user" />
+        <span class="user-info-text">{{ user.username }} · {{ user.role }}</span>
         }
       </span>
       <app-sync-queue-panel />

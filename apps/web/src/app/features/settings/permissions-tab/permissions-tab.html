@@ -17,30 +17,28 @@
         <th>Modül</th>
         <th>İşlem</th>
         @for (col of roleColumns; track col.role) {
-          <th class="permissions-role-col">{{ col.label }}</th>
+        <th class="permissions-role-col">{{ col.label }}</th>
         }
       </tr>
     </thead>
     <tbody>
       @for (row of rows(); track row.key; let i = $index) {
-        <tr>
-          <td data-label="Modül" class="permissions-module-cell">
-            @if (isFirstOfModule(row, i)) {
-              {{ row.module }}
-            }
-          </td>
-          <td data-label="İşlem">{{ row.label }}</td>
-          @for (col of roleColumns; track col.role) {
-            <td [attr.data-label]="col.label" class="permissions-role-col">
-              <label
-                nz-checkbox
-                [nzChecked]="row.values[col.role]"
-                (nzCheckedChange)="toggle(row, col.role)"
-                [attr.aria-label]="col.label + ' - ' + row.label"
-              ></label>
-            </td>
-          }
-        </tr>
+      <tr>
+        <td data-label="Modül" class="permissions-module-cell">
+          @if (isFirstOfModule(row, i)) { {{ row.module }} }
+        </td>
+        <td data-label="İşlem">{{ row.label }}</td>
+        @for (col of roleColumns; track col.role) {
+        <td [attr.data-label]="col.label" class="permissions-role-col">
+          <label
+            nz-checkbox
+            [nzChecked]="row.values[col.role]"
+            (nzCheckedChange)="toggle(row, col.role)"
+            [attr.aria-label]="col.label + ' - ' + row.label"
+          ></label>
+        </td>
+        }
+      </tr>
       }
     </tbody>
   </nz-table>

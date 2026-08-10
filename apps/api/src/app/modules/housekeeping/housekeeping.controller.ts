@@ -15,7 +15,9 @@ export class HousekeepingController {
 
   @Post()
   @RequirePermission('housekeeping.write')
-  @ApiOperation({ summary: 'Manually open an ad-hoc cleaning task for a villa (not tied to a reservation)' })
+  @ApiOperation({
+    summary: 'Manually open an ad-hoc cleaning task for a villa (not tied to a reservation)',
+  })
   create(@Body() dto: CreateHousekeepingTaskDto): Promise<HousekeepingTaskWithRelations> {
     return this.housekeepingService.createManual(dto);
   }

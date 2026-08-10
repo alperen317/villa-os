@@ -10,13 +10,11 @@ export interface HousekeepingTask {
   completedAt: string | null;
   notes: string | null;
   villa: { id: string; name: string };
-  reservation:
-    | {
-        id: string;
-        reservationNumber: string;
-        floor: { id: string; name: string; isEntireVilla: boolean };
-      }
-    | null;
+  reservation: {
+    id: string;
+    reservationNumber: string;
+    floor: { id: string; name: string; isEntireVilla: boolean };
+  } | null;
   assignedUser: { id: string; username: string } | null;
 }
 

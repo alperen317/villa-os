@@ -22,7 +22,12 @@ export class VillasService {
   async findAll(
     query: ListVillasQueryDto,
   ): Promise<{ data: VillaWithMaintenanceFlag[]; total: number }> {
-    const params = { skip: query.skip, take: query.limit, status: query.status, arrivingToday: query.arrivingToday };
+    const params = {
+      skip: query.skip,
+      take: query.limit,
+      status: query.status,
+      arrivingToday: query.arrivingToday,
+    };
     const [data, total] = await Promise.all([
       this.villasRepository.findMany(params),
       this.villasRepository.count(params),
@@ -44,7 +49,11 @@ export class VillasService {
   async findOneOrThrow(id: string): Promise<Villa> {
     const villa = await this.villasRepository.findById(id);
     if (!villa) {
-      throw new AppException(HttpStatus.NOT_FOUND, ErrorCode.VILLA_NOT_FOUND, `Villa ${id} not found`);
+      throw new AppException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.VILLA_NOT_FOUND,
+        `Villa ${id} not found`,
+      );
     }
 
     return villa;

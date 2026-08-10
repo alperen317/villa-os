@@ -41,7 +41,11 @@ export class PaymentsService {
   }
 
   /** FR-602: outstanding balance = total price minus all recorded payments (can go negative — overpayment, see docs/FEATURES/payments.md). */
-  buildSummary(reservationId: string, totalPrice: MoneyInput, payments: Payment[]): PaymentsSummary {
+  buildSummary(
+    reservationId: string,
+    totalPrice: MoneyInput,
+    payments: Payment[],
+  ): PaymentsSummary {
     const totalPaid = sumMoney(payments.map((payment) => payment.amount));
 
     return {

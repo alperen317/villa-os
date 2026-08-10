@@ -170,7 +170,9 @@ export class ReportingService {
 
     const daily: OccupancyReportDailyPoint[] = enumerateDates(from, to).map((date) => {
       const isoDate = toIsoDate(date);
-      const occupiedVillas = villas.filter((villa) => occupiedDatesByVilla.get(villa.id)?.has(isoDate)).length;
+      const occupiedVillas = villas.filter((villa) =>
+        occupiedDatesByVilla.get(villa.id)?.has(isoDate),
+      ).length;
       return {
         date: isoDate,
         occupiedVillas,
@@ -205,7 +207,10 @@ export class ReportingService {
     for (const payment of payments) {
       const isoDate = toIsoDate(toDateOnly(payment.paymentDate.toISOString()));
       dailyMap.set(isoDate, addMoney(dailyMap.get(isoDate) ?? 0, payment.amount));
-      methodMap.set(payment.paymentMethod, addMoney(methodMap.get(payment.paymentMethod) ?? 0, payment.amount));
+      methodMap.set(
+        payment.paymentMethod,
+        addMoney(methodMap.get(payment.paymentMethod) ?? 0, payment.amount),
+      );
     }
 
     const daily: RevenueReportDailyPoint[] = enumerateDates(from, to).map((date) => {
@@ -213,10 +218,12 @@ export class ReportingService {
       return { date: isoDate, amount: dailyMap.get(isoDate) ?? 0 };
     });
 
-    const byMethod: RevenueReportByMethod[] = Array.from(methodMap.entries()).map(([method, amount]) => ({
-      method,
-      amount,
-    }));
+    const byMethod: RevenueReportByMethod[] = Array.from(methodMap.entries()).map(
+      ([method, amount]) => ({
+        method,
+        amount,
+      }),
+    );
 
     const totalRevenue = sumMoney(payments.map((payment) => payment.amount));
 
@@ -242,7 +249,11 @@ export class ReportingService {
     const from = toDateOnly(query.from);
     const to = toDateOnly(query.to);
 
-    const reservations = await this.reportingRepository.findReservationsOverlapping(from, to, query.villaId);
+    const reservations = await this.reportingRepository.findReservationsOverlapping(
+      from,
+      to,
+      query.villaId,
+    );
 
     const statusMap = new Map<ReservationStatus, number>();
     let totalGuestNights = 0;
@@ -251,7 +262,10 @@ export class ReportingService {
     const rows: ReservationsReportRow[] = reservations.map((reservation) => {
       const clampedIn = clamp(reservation.checkIn, from, to);
       const clampedOut = clamp(reservation.checkOut, from, to);
-      const nights = Math.max(0, Math.round((clampedOut.getTime() - clampedIn.getTime()) / MS_PER_DAY));
+      const nights = Math.max(
+        0,
+        Math.round((clampedOut.getTime() - clampedIn.getTime()) / MS_PER_DAY),
+      );
 
       statusMap.set(reservation.status, (statusMap.get(reservation.status) ?? 0) + 1);
       totalGuestNights += nights * reservation.guestCount;
@@ -276,7 +290,8 @@ export class ReportingService {
       to: query.to,
       totalReservations: reservations.length,
       totalGuestNights,
-      averageLengthOfStay: reservations.length === 0 ? 0 : Math.round((totalNights / reservations.length) * 10) / 10,
+      averageLengthOfStay:
+        reservations.length === 0 ? 0 : Math.round((totalNights / reservations.length) * 10) / 10,
       byStatus: Array.from(statusMap.entries()).map(([status, count]) => ({ status, count })),
       reservations: rows,
     };
@@ -286,7 +301,11 @@ export class ReportingService {
     const from = toDateOnly(query.from);
     const to = toDateOnly(query.to);
 
-    const reservations = await this.reportingRepository.findReservationsOverlapping(from, to, query.villaId);
+    const reservations = await this.reportingRepository.findReservationsOverlapping(
+      from,
+      to,
+      query.villaId,
+    );
 
     const byCustomer = new Map<string, CustomersReportRow>();
     for (const reservation of reservations) {

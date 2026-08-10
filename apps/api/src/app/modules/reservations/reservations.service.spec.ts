@@ -93,7 +93,10 @@ describe('ReservationsService', () => {
           },
         },
         { provide: VillasService, useValue: { findOneOrThrow: jest.fn() } },
-        { provide: FloorsService, useValue: { findOneOrThrow: jest.fn(), findRentableFloors: jest.fn() } },
+        {
+          provide: FloorsService,
+          useValue: { findOneOrThrow: jest.fn(), findRentableFloors: jest.fn() },
+        },
         { provide: CustomersService, useValue: { findOneOrThrow: jest.fn() } },
         { provide: HousekeepingService, useValue: { createForReservation: jest.fn() } },
       ],
@@ -131,7 +134,7 @@ describe('ReservationsService', () => {
       } as never);
     }
 
-    it('checks for conflicts using the target floor\'s entire-villa flag (BR-004/005/006)', async () => {
+    it("checks for conflicts using the target floor's entire-villa flag (BR-004/005/006)", async () => {
       stubHappyPath({ isEntireVilla: true });
       reservationsRepository.findConflicting.mockResolvedValue(null);
       reservationsRepository.create.mockResolvedValue(reservation());
@@ -139,14 +142,20 @@ describe('ReservationsService', () => {
       await service.create(dto as never);
 
       expect(reservationsRepository.findConflicting).toHaveBeenCalledWith(
-        expect.objectContaining({ villaId: 'villa-1', floorId: 'floor-1', isEntireVillaFloor: true }),
+        expect.objectContaining({
+          villaId: 'villa-1',
+          floorId: 'floor-1',
+          isEntireVillaFloor: true,
+        }),
         expect.anything(),
       );
     });
 
     it('rejects the booking when a conflicting reservation exists (FR-404)', async () => {
       stubHappyPath();
-      reservationsRepository.findConflicting.mockResolvedValue(reservation({ id: 'conflicting-1' }));
+      reservationsRepository.findConflicting.mockResolvedValue(
+        reservation({ id: 'conflicting-1' }),
+      );
 
       await expect(service.create(dto as never)).rejects.toThrow(ReservationConflictException);
       expect(reservationsRepository.create).not.toHaveBeenCalled();
@@ -180,7 +189,10 @@ describe('ReservationsService', () => {
       // Without the shared lock, a whole-villa booking and a single-floor
       // booking can both pass the check and both commit — the EXCLUDE
       // constraint only catches overlaps on the same unit.
-      expect(reservationsRepository.withVillaLock).toHaveBeenCalledWith('villa-1', expect.any(Function));
+      expect(reservationsRepository.withVillaLock).toHaveBeenCalledWith(
+        'villa-1',
+        expect.any(Function),
+      );
       expect(reservationsRepository.findConflicting).toHaveBeenCalledWith(
         expect.anything(),
         TRANSACTION_CLIENT,
@@ -266,7 +278,9 @@ describe('ReservationsService', () => {
   describe('update', () => {
     it('rejects with a stale-write conflict when expectedUpdatedAt does not match', async () => {
       const currentUpdatedAt = new Date('2026-08-01T10:00:00.000Z');
-      reservationsRepository.findById.mockResolvedValue(reservation({ updatedAt: currentUpdatedAt }));
+      reservationsRepository.findById.mockResolvedValue(
+        reservation({ updatedAt: currentUpdatedAt }),
+      );
 
       await expect(
         service.update('reservation-1', {
@@ -444,18 +458,25 @@ describe('ReservationsService', () => {
 
   describe('transition', () => {
     it('auto-creates a housekeeping task when a reservation checks out (BR-008)', async () => {
-      reservationsRepository.findById.mockResolvedValue(reservation({ status: ReservationStatus.CheckedIn }));
+      reservationsRepository.findById.mockResolvedValue(
+        reservation({ status: ReservationStatus.CheckedIn }),
+      );
       reservationsRepository.updateStatusFrom.mockResolvedValue(
         reservation({ status: ReservationStatus.CheckedOut }),
       );
 
       await service.transition('reservation-1', ReservationStatus.CheckedOut);
 
-      expect(housekeepingService.createForReservation).toHaveBeenCalledWith('reservation-1', 'villa-1');
+      expect(housekeepingService.createForReservation).toHaveBeenCalledWith(
+        'reservation-1',
+        'villa-1',
+      );
     });
 
     it('does not create a housekeeping task for other transitions', async () => {
-      reservationsRepository.findById.mockResolvedValue(reservation({ status: ReservationStatus.Pending }));
+      reservationsRepository.findById.mockResolvedValue(
+        reservation({ status: ReservationStatus.Pending }),
+      );
       reservationsRepository.updateStatusFrom.mockResolvedValue(
         reservation({ status: ReservationStatus.Confirmed }),
       );
@@ -466,16 +487,20 @@ describe('ReservationsService', () => {
     });
 
     it('rejects an invalid transition and does not touch housekeeping', async () => {
-      reservationsRepository.findById.mockResolvedValue(reservation({ status: ReservationStatus.Pending }));
-
-      await expect(service.transition('reservation-1', ReservationStatus.CheckedOut)).rejects.toThrow(
-        InvalidReservationTransitionException,
+      reservationsRepository.findById.mockResolvedValue(
+        reservation({ status: ReservationStatus.Pending }),
       );
+
+      await expect(
+        service.transition('reservation-1', ReservationStatus.CheckedOut),
+      ).rejects.toThrow(InvalidReservationTransitionException);
       expect(housekeepingService.createForReservation).not.toHaveBeenCalled();
     });
 
     it('moves the status only from the one it read, so a concurrent write cannot double-apply', async () => {
-      reservationsRepository.findById.mockResolvedValue(reservation({ status: ReservationStatus.CheckedIn }));
+      reservationsRepository.findById.mockResolvedValue(
+        reservation({ status: ReservationStatus.CheckedIn }),
+      );
       reservationsRepository.updateStatusFrom.mockResolvedValue(
         reservation({ status: ReservationStatus.CheckedOut }),
       );
@@ -490,13 +515,15 @@ describe('ReservationsService', () => {
     });
 
     it('rejects when another request already moved the row, and queues no housekeeping', async () => {
-      reservationsRepository.findById.mockResolvedValue(reservation({ status: ReservationStatus.CheckedIn }));
+      reservationsRepository.findById.mockResolvedValue(
+        reservation({ status: ReservationStatus.CheckedIn }),
+      );
       // No row matched the expected status — someone else checked this stay out first.
       reservationsRepository.updateStatusFrom.mockResolvedValue(null);
 
-      await expect(service.transition('reservation-1', ReservationStatus.CheckedOut)).rejects.toThrow(
-        InvalidReservationTransitionException,
-      );
+      await expect(
+        service.transition('reservation-1', ReservationStatus.CheckedOut),
+      ).rejects.toThrow(InvalidReservationTransitionException);
       expect(housekeepingService.createForReservation).not.toHaveBeenCalled();
     });
   });

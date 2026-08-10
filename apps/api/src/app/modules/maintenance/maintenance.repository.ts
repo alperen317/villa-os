@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infra/prisma/prisma.service';
-import { MaintenanceRecord, MaintenancePriority, MaintenanceStatus, Prisma } from '../../../generated/prisma/client';
+import {
+  MaintenanceRecord,
+  MaintenancePriority,
+  MaintenanceStatus,
+  Prisma,
+} from '../../../generated/prisma/client';
 
 const MAINTENANCE_RECORD_WITH_VILLA_INCLUDE = {
   villa: { select: { id: true, name: true } },
@@ -49,7 +54,11 @@ export class MaintenanceRepository {
     });
   }
 
-  count(params: { villaId?: string; status?: MaintenanceStatus; priority?: MaintenancePriority }): Promise<number> {
+  count(params: {
+    villaId?: string;
+    status?: MaintenanceStatus;
+    priority?: MaintenancePriority;
+  }): Promise<number> {
     return this.prisma.maintenanceRecord.count({
       where: { villaId: params.villaId, status: params.status, priority: params.priority },
     });

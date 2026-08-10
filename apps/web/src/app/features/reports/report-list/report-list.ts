@@ -158,29 +158,33 @@ export class ReportList implements OnInit {
     };
   });
 
-  protected readonly revenueMethodChartData = computed<ChartConfiguration<'doughnut'>['data']>(() => {
-    const report = this.revenue();
-    const rows = report?.byMethod ?? [];
-    return {
-      labels: rows.map((row) => this.paymentMethodLabels[row.method]),
-      datasets: [{ data: rows.map((row) => row.amount), backgroundColor: this.chartColors() }],
-    };
-  });
+  protected readonly revenueMethodChartData = computed<ChartConfiguration<'doughnut'>['data']>(
+    () => {
+      const report = this.revenue();
+      const rows = report?.byMethod ?? [];
+      return {
+        labels: rows.map((row) => this.paymentMethodLabels[row.method]),
+        datasets: [{ data: rows.map((row) => row.amount), backgroundColor: this.chartColors() }],
+      };
+    },
+  );
 
-  protected readonly reservationsStatusChartData = computed<ChartConfiguration<'bar'>['data']>(() => {
-    const report = this.reservationsReport();
-    const rows = report?.byStatus ?? [];
-    return {
-      labels: rows.map((row) => this.statusLabels[row.status]),
-      datasets: [
-        {
-          label: 'Rezervasyon Sayısı',
-          data: rows.map((row) => row.count),
-          backgroundColor: this.chartColors()[0],
-        },
-      ],
-    };
-  });
+  protected readonly reservationsStatusChartData = computed<ChartConfiguration<'bar'>['data']>(
+    () => {
+      const report = this.reservationsReport();
+      const rows = report?.byStatus ?? [];
+      return {
+        labels: rows.map((row) => this.statusLabels[row.status]),
+        datasets: [
+          {
+            label: 'Rezervasyon Sayısı',
+            data: rows.map((row) => row.count),
+            backgroundColor: this.chartColors()[0],
+          },
+        ],
+      };
+    },
+  );
 
   protected readonly customersChartData = computed<ChartConfiguration<'bar'>['data']>(() => {
     const top = (this.customers()?.customers ?? []).slice(0, 10);
@@ -200,7 +204,9 @@ export class ReportList implements OnInit {
     // Manual edits to the range picker (not routed through setDatePreset) should
     // drop the active preset highlight — setDatePreset re-sets it right after
     // its own setValue call, so this only fires for genuinely manual changes.
-    this.filterForm.controls.dateRange.valueChanges.subscribe(() => this.filterDatePreset.set(null));
+    this.filterForm.controls.dateRange.valueChanges.subscribe(() =>
+      this.filterDatePreset.set(null),
+    );
 
     await this.villasStore.ensureLoaded();
     await this.loadActiveReport();

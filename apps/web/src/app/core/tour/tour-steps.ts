@@ -30,25 +30,29 @@ export const TOUR_STEPS: TourStep[] = [
     path: '/villas',
     elementId: 'tour-villas',
     title: 'Villalar',
-    description: 'Villalarını ve katlarını (kiralanabilir birimlerini) buradan yönetir, durumlarını aktif/pasif olarak değiştirebilirsin.',
+    description:
+      'Villalarını ve katlarını (kiralanabilir birimlerini) buradan yönetir, durumlarını aktif/pasif olarak değiştirebilirsin.',
   },
   {
     path: '/villas',
     elementId: 'tour-villas-create',
     title: 'Yeni Villa Ekle',
-    description: 'Buradan yeni bir villa oluşturur; adını, adresini ve katlarını tanımlayabilirsin.',
+    description:
+      'Buradan yeni bir villa oluşturur; adını, adresini ve katlarını tanımlayabilirsin.',
   },
   {
     path: '/reservations',
     elementId: 'tour-reservations',
     title: 'Rezervasyonlar',
-    description: 'Rezervasyonları oluşturur, check-in/check-out yapar, iptal edebilir ve tüm rezervasyon geçmişini buradan görüntülersin.',
+    description:
+      'Rezervasyonları oluşturur, check-in/check-out yapar, iptal edebilir ve tüm rezervasyon geçmişini buradan görüntülersin.',
   },
   {
     path: '/reservations',
     elementId: 'tour-reservations-view',
     title: 'Görünüm Seçenekleri',
-    description: 'Liste, takvim veya müsaitlik görünümleri arasında geçiş yaparak rezervasyonları farklı açılardan inceleyebilirsin.',
+    description:
+      'Liste, takvim veya müsaitlik görünümleri arasında geçiş yaparak rezervasyonları farklı açılardan inceleyebilirsin.',
   },
   {
     path: '/customers',
@@ -66,27 +70,31 @@ export const TOUR_STEPS: TourStep[] = [
     path: '/housekeeping',
     elementId: 'tour-housekeeping',
     title: 'Temizlik',
-    description: 'Temizlik görevlerini bekleyen, devam eden ve tamamlanan olarak kuyruk halinde görür, üstlenip tamamlayabilirsin.',
+    description:
+      'Temizlik görevlerini bekleyen, devam eden ve tamamlanan olarak kuyruk halinde görür, üstlenip tamamlayabilirsin.',
     roles: HOUSEKEEPING_ROLES,
   },
   {
     path: '/housekeeping',
     elementId: 'tour-housekeeping-actions',
     title: 'Filtrele ve Görev Aç',
-    description: 'Villaya göre filtreleyebilir, rezervasyona bağlı olmayan ek bir temizlik görevini manuel olarak açabilirsin.',
+    description:
+      'Villaya göre filtreleyebilir, rezervasyona bağlı olmayan ek bir temizlik görevini manuel olarak açabilirsin.',
     roles: HOUSEKEEPING_ROLES,
   },
   {
     path: '/maintenance',
     elementId: 'tour-maintenance',
     title: 'Bakım',
-    description: 'Villalardaki bakım kayıtlarını (açık, devam eden, tamamlanan) buradan takip edersin.',
+    description:
+      'Villalardaki bakım kayıtlarını (açık, devam eden, tamamlanan) buradan takip edersin.',
   },
   {
     path: '/maintenance',
     elementId: 'tour-maintenance-filters',
     title: 'Bakım Filtreleri',
-    description: 'Villa, durum ve önceliğe göre filtreleyerek açık bakım kayıtlarını hızlıca bulabilirsin.',
+    description:
+      'Villa, durum ve önceliğe göre filtreleyerek açık bakım kayıtlarını hızlıca bulabilirsin.',
   },
   {
     path: '/users',
@@ -99,21 +107,24 @@ export const TOUR_STEPS: TourStep[] = [
     path: '/users',
     elementId: 'tour-users-create',
     title: 'Yeni Kullanıcı Ekle',
-    description: 'Yeni bir kullanıcı oluşturup rolünü (Operasyon, Muhasebe, Temizlik, Yönetici) atayabilir, gerektiğinde şifresini sıfırlayabilirsin.',
+    description:
+      'Yeni bir kullanıcı oluşturup rolünü (Operasyon, Muhasebe, Temizlik, Yönetici) atayabilir, gerektiğinde şifresini sıfırlayabilirsin.',
     roles: ADMIN_ONLY,
   },
   {
     path: '/settings',
     elementId: 'tour-settings',
     title: 'Ayarlar — Marka',
-    description: 'Şirket adını, logonu ve marka rengini buradan özelleştirirsin; marka rengi rapor grafiklerine de otomatik yansır.',
+    description:
+      'Şirket adını, logonu ve marka rengini buradan özelleştirirsin; marka rengi rapor grafiklerine de otomatik yansır.',
     roles: ADMIN_ONLY,
   },
   {
     path: '/settings',
     elementId: 'tour-settings-tabs',
     title: 'Ayarlar — İzinler',
-    description: '"İzinler" sekmesinden her rolün (Operasyon, Muhasebe, Temizlik) hangi modülü görüntüleyip hangi işlemi yapabileceğini ayrıntılı şekilde yapılandırabilirsin.',
+    description:
+      '"İzinler" sekmesinden her rolün (Operasyon, Muhasebe, Temizlik) hangi modülü görüntüleyip hangi işlemi yapabileceğini ayrıntılı şekilde yapılandırabilirsin.',
     roles: ADMIN_ONLY,
   },
 ];

@@ -64,22 +64,92 @@ function overlaps(a: DateInterval, b: DateInterval): boolean {
 // ---------------------------------------------------------------------------
 
 const MALE_FIRST_NAMES = [
-  'Mehmet', 'Ahmet', 'Mustafa', 'Ali', 'Hüseyin', 'Hasan', 'İbrahim', 'Osman',
-  'Yusuf', 'Murat', 'Emre', 'Burak', 'Kemal', 'Serkan', 'Tolga', 'Onur', 'Cem',
-  'Barış', 'Kaan', 'Erhan', 'Fatih', 'Cengiz', 'Uğur', 'Volkan', 'Selim',
+  'Mehmet',
+  'Ahmet',
+  'Mustafa',
+  'Ali',
+  'Hüseyin',
+  'Hasan',
+  'İbrahim',
+  'Osman',
+  'Yusuf',
+  'Murat',
+  'Emre',
+  'Burak',
+  'Kemal',
+  'Serkan',
+  'Tolga',
+  'Onur',
+  'Cem',
+  'Barış',
+  'Kaan',
+  'Erhan',
+  'Fatih',
+  'Cengiz',
+  'Uğur',
+  'Volkan',
+  'Selim',
 ];
 
 const FEMALE_FIRST_NAMES = [
-  'Ayşe', 'Fatma', 'Emine', 'Hatice', 'Zeynep', 'Elif', 'Merve', 'Esra',
-  'Selin', 'Deniz', 'Gamze', 'Pınar', 'Aylin', 'Ebru', 'Seda', 'Burcu',
-  'Melis', 'Derya', 'Nazlı', 'Yasemin', 'Gül', 'Sibel', 'Canan', 'İpek', 'Buse',
+  'Ayşe',
+  'Fatma',
+  'Emine',
+  'Hatice',
+  'Zeynep',
+  'Elif',
+  'Merve',
+  'Esra',
+  'Selin',
+  'Deniz',
+  'Gamze',
+  'Pınar',
+  'Aylin',
+  'Ebru',
+  'Seda',
+  'Burcu',
+  'Melis',
+  'Derya',
+  'Nazlı',
+  'Yasemin',
+  'Gül',
+  'Sibel',
+  'Canan',
+  'İpek',
+  'Buse',
 ];
 
 const LAST_NAMES = [
-  'Yılmaz', 'Kaya', 'Demir', 'Çelik', 'Şahin', 'Yıldız', 'Yıldırım', 'Öztürk',
-  'Aydın', 'Özdemir', 'Arslan', 'Doğan', 'Kılıç', 'Aslan', 'Çetin', 'Kara',
-  'Koç', 'Kurt', 'Özkan', 'Şimşek', 'Aksoy', 'Bulut', 'Erdoğan', 'Güneş',
-  'Polat', 'Aktaş', 'Korkmaz', 'Tunç', 'Uçar', 'Ergün',
+  'Yılmaz',
+  'Kaya',
+  'Demir',
+  'Çelik',
+  'Şahin',
+  'Yıldız',
+  'Yıldırım',
+  'Öztürk',
+  'Aydın',
+  'Özdemir',
+  'Arslan',
+  'Doğan',
+  'Kılıç',
+  'Aslan',
+  'Çetin',
+  'Kara',
+  'Koç',
+  'Kurt',
+  'Özkan',
+  'Şimşek',
+  'Aksoy',
+  'Bulut',
+  'Erdoğan',
+  'Güneş',
+  'Polat',
+  'Aktaş',
+  'Korkmaz',
+  'Tunç',
+  'Uçar',
+  'Ergün',
 ];
 
 const EMAIL_DOMAINS = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com'];
@@ -100,18 +170,45 @@ const RESERVATION_NOTES = [
 ];
 
 const MAINTENANCE_ITEMS: { title: string; description: string }[] = [
-  { title: 'Klima Bakımı', description: 'Salon ve yatak odası klimalarının periyodik bakımı ve gaz kontrolü.' },
-  { title: 'Havuz Filtre Değişimi', description: 'Havuz filtrasyon sisteminde filtre değişimi ve su kalitesi ölçümü.' },
-  { title: 'Su Tesisatı Kontrolü', description: 'Banyo ve mutfaktaki sızıntı şüphesi üzerine tesisat kontrolü.' },
-  { title: 'Elektrik Panosu Kontrolü', description: 'Sigorta atması şikayeti üzerine pano ve hat kontrolü.' },
-  { title: 'Kapı Kilit Tamiri', description: 'Bahçe kapısındaki akıllı kilidin pil ve mekanizma kontrolü.' },
+  {
+    title: 'Klima Bakımı',
+    description: 'Salon ve yatak odası klimalarının periyodik bakımı ve gaz kontrolü.',
+  },
+  {
+    title: 'Havuz Filtre Değişimi',
+    description: 'Havuz filtrasyon sisteminde filtre değişimi ve su kalitesi ölçümü.',
+  },
+  {
+    title: 'Su Tesisatı Kontrolü',
+    description: 'Banyo ve mutfaktaki sızıntı şüphesi üzerine tesisat kontrolü.',
+  },
+  {
+    title: 'Elektrik Panosu Kontrolü',
+    description: 'Sigorta atması şikayeti üzerine pano ve hat kontrolü.',
+  },
+  {
+    title: 'Kapı Kilit Tamiri',
+    description: 'Bahçe kapısındaki akıllı kilidin pil ve mekanizma kontrolü.',
+  },
   { title: 'Jakuzi Bakımı', description: 'Teras jakuzisinin temizliği ve pompa bakımı.' },
-  { title: 'Bahçe ve Çim Düzenlemesi', description: 'Sezon öncesi çim biçme, budama ve sulama sistemi kontrolü.' },
+  {
+    title: 'Bahçe ve Çim Düzenlemesi',
+    description: 'Sezon öncesi çim biçme, budama ve sulama sistemi kontrolü.',
+  },
   { title: 'Isıtma Sistemi Bakımı', description: 'Yerden ısıtma sisteminin sezon öncesi bakımı.' },
-  { title: 'Pencere Contası Değişimi', description: 'Üst kat pencerelerinde hava sızıntısı için conta değişimi.' },
-  { title: 'Boya Rötuşu', description: 'Konuk çıkışı sonrası duvarlarda oluşan izlerin giderilmesi.' },
+  {
+    title: 'Pencere Contası Değişimi',
+    description: 'Üst kat pencerelerinde hava sızıntısı için conta değişimi.',
+  },
+  {
+    title: 'Boya Rötuşu',
+    description: 'Konuk çıkışı sonrası duvarlarda oluşan izlerin giderilmesi.',
+  },
   { title: 'Wi-Fi Modem Değişimi', description: 'Sinyal şikayeti üzerine modem yenilendi.' },
-  { title: 'Güvenlik Kamerası Kontrolü', description: 'Giriş kapısı kamerasının görüntü ve kayıt kontrolü.' },
+  {
+    title: 'Güvenlik Kamerası Kontrolü',
+    description: 'Giriş kapısı kamerasının görüntü ve kayıt kontrolü.',
+  },
 ];
 
 const ADHOC_HOUSEKEEPING_NOTES = [
@@ -167,15 +264,24 @@ async function seedCustomers(count: number) {
       data: {
         firstName,
         lastName,
-        phone: hasPhone ? `05${randInt(30, 59)}${randInt(100, 999)}${randInt(10, 99)}${randInt(10, 99)}` : null,
+        phone: hasPhone
+          ? `05${randInt(30, 59)}${randInt(100, 999)}${randInt(10, 99)}${randInt(10, 99)}`
+          : null,
         email: hasEmail
           ? `${firstName.toLocaleLowerCase('tr-TR')}.${lastName.toLocaleLowerCase('tr-TR')}${randInt(1, 99)}@${pick(EMAIL_DOMAINS)}`
               .normalize('NFD')
               .replace(/[̀-ͯ]/g, '')
           : null,
-        identityNumber: !isForeign && chance(0.6) ? String(randInt(10000000000, 99999999999)) : null,
+        identityNumber:
+          !isForeign && chance(0.6) ? String(randInt(10000000000, 99999999999)) : null,
         passportNumber: isForeign ? `P${randInt(1000000, 9999999)}` : null,
-        notes: chance(0.15) ? pick(['VIP müşteri', 'Sadık müşteri, indirim uygulanıyor', 'İletişim tercihi: WhatsApp']) : null,
+        notes: chance(0.15)
+          ? pick([
+              'VIP müşteri',
+              'Sadık müşteri, indirim uygulanıyor',
+              'İletişim tercihi: WhatsApp',
+            ])
+          : null,
       },
       select: { id: true },
     });
@@ -258,7 +364,13 @@ async function seedVillaWithFloors(index: number) {
   });
 
   const floors: FloorPlan[] = [
-    { id: ground.id, name: 'Zemin Kat', capacity: 4, dailyPrice: groundPrice, isEntireVilla: false },
+    {
+      id: ground.id,
+      name: 'Zemin Kat',
+      capacity: 4,
+      dailyPrice: groundPrice,
+      isEntireVilla: false,
+    },
     { id: upper.id, name: 'Üst Kat', capacity: 4, dailyPrice: upperPrice, isEntireVilla: false },
     { id: entire.id, name: 'Tüm Villa', capacity: 8, dailyPrice: entirePrice, isEntireVilla: true },
   ];
@@ -366,19 +478,30 @@ interface GeneratedPayment {
   paymentDate: Date;
 }
 
-function generatePayments(status: ReservationStatus, totalPrice: number, checkIn: Date): GeneratedPayment[] {
+function generatePayments(
+  status: ReservationStatus,
+  totalPrice: number,
+  checkIn: Date,
+): GeneratedPayment[] {
   const methods = [PaymentMethod.Cash, PaymentMethod.BankTransfer, PaymentMethod.CreditCard];
   const firstPaymentDate = addDays(checkIn, -randInt(1, 30));
   const clampedFirstDate = firstPaymentDate > NOW ? NOW : firstPaymentDate;
 
   if (status === ReservationStatus.Pending || status === ReservationStatus.Cancelled) {
     if (chance(0.2)) {
-      return [{ amount: round2(totalPrice * randFloat(0.15, 0.3)), paymentMethod: pick(methods), paymentDate: clampedFirstDate }];
+      return [
+        {
+          amount: round2(totalPrice * randFloat(0.15, 0.3)),
+          paymentMethod: pick(methods),
+          paymentDate: clampedFirstDate,
+        },
+      ];
     }
     return [];
   }
 
-  const settledBias = status === ReservationStatus.Completed || status === ReservationStatus.CheckedOut;
+  const settledBias =
+    status === ReservationStatus.Completed || status === ReservationStatus.CheckedOut;
   const r = Math.random();
 
   if (settledBias ? r < 0.75 : r < 0.35) {
@@ -390,15 +513,31 @@ function generatePayments(status: ReservationStatus, totalPrice: number, checkIn
     const secondDate = addDays(clampedFirstDate, randInt(1, 5));
     return [
       { amount: first, paymentMethod: pick(methods), paymentDate: clampedFirstDate },
-      { amount: round2(totalPrice - first), paymentMethod: pick(methods), paymentDate: secondDate > NOW ? NOW : secondDate },
+      {
+        amount: round2(totalPrice - first),
+        paymentMethod: pick(methods),
+        paymentDate: secondDate > NOW ? NOW : secondDate,
+      },
     ];
   }
 
   if (r < 0.97) {
-    return [{ amount: round2(totalPrice * randFloat(0.3, 0.7)), paymentMethod: pick(methods), paymentDate: clampedFirstDate }];
+    return [
+      {
+        amount: round2(totalPrice * randFloat(0.3, 0.7)),
+        paymentMethod: pick(methods),
+        paymentDate: clampedFirstDate,
+      },
+    ];
   }
 
-  return [{ amount: round2(totalPrice * randFloat(1.02, 1.08)), paymentMethod: pick(methods), paymentDate: clampedFirstDate }];
+  return [
+    {
+      amount: round2(totalPrice * randFloat(1.02, 1.08)),
+      paymentMethod: pick(methods),
+      paymentDate: clampedFirstDate,
+    },
+  ];
 }
 
 async function seedReservationsForVilla(
@@ -506,7 +645,11 @@ async function seedAdhocHousekeeping(villaId: string) {
   const count = randInt(1, 3);
   for (let i = 0; i < count; i++) {
     const openedAt = addDays(WINDOW_START, randInt(0, daysBetween(WINDOW_START, NOW)));
-    const status = pick([HousekeepingStatus.Pending, HousekeepingStatus.InProgress, HousekeepingStatus.Completed]);
+    const status = pick([
+      HousekeepingStatus.Pending,
+      HousekeepingStatus.InProgress,
+      HousekeepingStatus.Completed,
+    ]);
 
     await prisma.housekeepingTask.create({
       data: {
@@ -536,7 +679,12 @@ async function seedMaintenanceRecords(villaId: string) {
     const openedAt = addDays(WINDOW_START, randInt(0, daysBetween(WINDOW_START, NOW)));
     const isOld = daysBetween(openedAt, NOW) > 14;
     const status = isOld
-      ? pick([MaintenanceStatus.Completed, MaintenanceStatus.Completed, MaintenanceStatus.Completed, MaintenanceStatus.Open])
+      ? pick([
+          MaintenanceStatus.Completed,
+          MaintenanceStatus.Completed,
+          MaintenanceStatus.Completed,
+          MaintenanceStatus.Open,
+        ])
       : pick([MaintenanceStatus.Open, MaintenanceStatus.InProgress, MaintenanceStatus.Completed]);
 
     const priority = pick([
@@ -555,7 +703,8 @@ async function seedMaintenanceRecords(villaId: string) {
         priority,
         status,
         openedAt,
-        completedAt: status === MaintenanceStatus.Completed ? addDays(openedAt, randInt(0, 5)) : null,
+        completedAt:
+          status === MaintenanceStatus.Completed ? addDays(openedAt, randInt(0, 5)) : null,
       },
     });
   }
@@ -564,7 +713,9 @@ async function seedMaintenanceRecords(villaId: string) {
 async function seedMockData() {
   const existing = await prisma.villa.findFirst({ where: { name: 'Villa 1' } });
   if (existing) {
-    console.log('Mock villa data already present (villa "Villa 1" exists) — skipping mock data generation.');
+    console.log(
+      'Mock villa data already present (villa "Villa 1" exists) — skipping mock data generation.',
+    );
     return;
   }
 
@@ -580,7 +731,9 @@ async function seedMockData() {
     await seedMaintenanceRecords(villaId);
   }
 
-  console.log(`Seeded ${VILLA_COUNT} villas with floors, a year of reservations, payments, housekeeping and maintenance records.`);
+  console.log(
+    `Seeded ${VILLA_COUNT} villas with floors, a year of reservations, payments, housekeeping and maintenance records.`,
+  );
 }
 
 async function main() {

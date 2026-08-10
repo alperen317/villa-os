@@ -44,7 +44,11 @@ export class UsersService {
   async findOneOrThrow(id: string): Promise<SafeUser> {
     const user = await this.usersRepository.findById(id);
     if (!user) {
-      throw new AppException(HttpStatus.NOT_FOUND, ErrorCode.USER_NOT_FOUND, `User ${id} not found`);
+      throw new AppException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.USER_NOT_FOUND,
+        `User ${id} not found`,
+      );
     }
 
     return user;

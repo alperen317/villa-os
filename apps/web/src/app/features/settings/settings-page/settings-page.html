@@ -1,123 +1,141 @@
 <div class="page-header" id="tour-settings">
   <div>
     <h2 class="page-title">Ayarlar</h2>
-    <p class="page-subtitle">Şirket adı, logo, genel tema ve kullanıcı yetkilerini buradan yönetin.</p>
+    <p class="page-subtitle">
+      Şirket adı, logo, genel tema ve kullanıcı yetkilerini buradan yönetin.
+    </p>
   </div>
 </div>
 
 <nz-tabs id="tour-settings-tabs">
-<nz-tab nzTitle="Marka">
-<div class="page-surface settings-section">
-  <h3 class="section-title">Marka Kimliği</h3>
+  <nz-tab nzTitle="Marka">
+    <div class="page-surface settings-section">
+      <h3 class="section-title">Marka Kimliği</h3>
 
-  <div class="logo-row">
-    <div class="logo-preview">
-      @if (store.logoUrl(); as logoUrl) {
-        <img [src]="logoUrl" alt="Şirket logosu" />
-      } @else {
-        <nz-icon nzType="picture" class="logo-placeholder-icon" />
-      }
-    </div>
-
-    <div class="logo-actions">
-      <input
-        #logoInput
-        type="file"
-        accept="image/png,image/jpeg,image/svg+xml,image/webp"
-        class="sr-only"
-        (change)="onLogoSelected($event)"
-      />
-      <button nz-button [nzLoading]="logoUploading()" (click)="triggerLogoSelect()">
-        <nz-icon nzType="upload" />
-        Logo Yükle
-      </button>
-      @if (store.logoUrl()) {
-        <button
-          nz-button
-          nzDanger
-          nzType="text"
-          [nzLoading]="logoUploading()"
-          (click)="removeLogo()"
-        >
-          Kaldır
-        </button>
-      }
-      <p class="logo-hint">PNG, JPEG, SVG veya WEBP · en fazla 2 MB</p>
-    </div>
-  </div>
-
-  <form nz-form [formGroup]="form" (ngSubmit)="save()">
-    <nz-form-item>
-      <nz-form-label nzRequired>Şirket Adı</nz-form-label>
-      <nz-form-control>
-        <input nz-input formControlName="companyName" placeholder="ör. Villa OS" />
-      </nz-form-control>
-    </nz-form-item>
-
-    <nz-form-item>
-      <nz-form-label nzRequired>Marka Rengi</nz-form-label>
-      <nz-form-control>
-        <div class="theme-preset-grid" role="radiogroup" aria-label="Hazır tema seç">
-          @for (preset of themePresets; track preset.id) {
-            <button
-              type="button"
-              class="theme-preset"
-              [class.theme-preset--active]="isPresetSelected(preset)"
-              [style.--preset-color]="preset.accentColor"
-              role="radio"
-              [attr.aria-checked]="isPresetSelected(preset)"
-              [attr.aria-label]="preset.name"
-              (click)="selectPreset(preset)"
-            >
-              <span class="theme-preset-swatch">
-                @if (isPresetSelected(preset)) {
-                  <nz-icon nzType="check" />
-                }
-              </span>
-              <span class="theme-preset-name">{{ preset.name }}</span>
-            </button>
+      <div class="logo-row">
+        <div class="logo-preview">
+          @if (store.logoUrl(); as logoUrl) {
+          <img [src]="logoUrl" alt="Şirket logosu" />
+          } @else {
+          <nz-icon nzType="picture" class="logo-placeholder-icon" />
           }
         </div>
 
-        <p class="custom-color-label">veya özel bir renk gir</p>
-        <div class="accent-color-row">
-          <input type="color" formControlName="accentColor" class="accent-color-swatch" aria-label="Özel marka rengi seç" />
-          <input nz-input formControlName="accentColor" placeholder="#2563eb" class="accent-color-text" />
+        <div class="logo-actions">
+          <input
+            #logoInput
+            type="file"
+            accept="image/png,image/jpeg,image/svg+xml,image/webp"
+            class="sr-only"
+            (change)="onLogoSelected($event)"
+          />
+          <button nz-button [nzLoading]="logoUploading()" (click)="triggerLogoSelect()">
+            <nz-icon nzType="upload" />
+            Logo Yükle
+          </button>
+          @if (store.logoUrl()) {
+          <button
+            nz-button
+            nzDanger
+            nzType="text"
+            [nzLoading]="logoUploading()"
+            (click)="removeLogo()"
+          >
+            Kaldır
+          </button>
+          }
+          <p class="logo-hint">PNG, JPEG, SVG veya WEBP · en fazla 2 MB</p>
         </div>
-      </nz-form-control>
-    </nz-form-item>
+      </div>
 
-    <h3 class="section-title section-title--spaced">İletişim Bilgileri</h3>
+      <form nz-form [formGroup]="form" (ngSubmit)="save()">
+        <nz-form-item>
+          <nz-form-label nzRequired>Şirket Adı</nz-form-label>
+          <nz-form-control>
+            <input nz-input formControlName="companyName" placeholder="ör. Villa OS" />
+          </nz-form-control>
+        </nz-form-item>
 
-    <nz-form-item>
-      <nz-form-label>E-posta</nz-form-label>
-      <nz-form-control>
-        <input nz-input formControlName="contactEmail" placeholder="info@villaos.com" />
-      </nz-form-control>
-    </nz-form-item>
+        <nz-form-item>
+          <nz-form-label nzRequired>Marka Rengi</nz-form-label>
+          <nz-form-control>
+            <div class="theme-preset-grid" role="radiogroup" aria-label="Hazır tema seç">
+              @for (preset of themePresets; track preset.id) {
+              <button
+                type="button"
+                class="theme-preset"
+                [class.theme-preset--active]="isPresetSelected(preset)"
+                [style.--preset-color]="preset.accentColor"
+                role="radio"
+                [attr.aria-checked]="isPresetSelected(preset)"
+                [attr.aria-label]="preset.name"
+                (click)="selectPreset(preset)"
+              >
+                <span class="theme-preset-swatch">
+                  @if (isPresetSelected(preset)) {
+                  <nz-icon nzType="check" />
+                  }
+                </span>
+                <span class="theme-preset-name">{{ preset.name }}</span>
+              </button>
+              }
+            </div>
 
-    <nz-form-item>
-      <nz-form-label>Telefon</nz-form-label>
-      <nz-form-control>
-        <input nz-input formControlName="contactPhone" placeholder="+90 5xx xxx xx xx" />
-      </nz-form-control>
-    </nz-form-item>
+            <p class="custom-color-label">veya özel bir renk gir</p>
+            <div class="accent-color-row">
+              <input
+                type="color"
+                formControlName="accentColor"
+                class="accent-color-swatch"
+                aria-label="Özel marka rengi seç"
+              />
+              <input
+                nz-input
+                formControlName="accentColor"
+                placeholder="#2563eb"
+                class="accent-color-text"
+              />
+            </div>
+          </nz-form-control>
+        </nz-form-item>
 
-    <nz-form-item>
-      <nz-form-label>Adres</nz-form-label>
-      <nz-form-control>
-        <textarea nz-input formControlName="contactAddress" rows="2"></textarea>
-      </nz-form-control>
-    </nz-form-item>
+        <h3 class="section-title section-title--spaced">İletişim Bilgileri</h3>
 
-    <button nz-button nzType="primary" type="submit" [nzLoading]="saving()" [disabled]="form.invalid">
-      Kaydet
-    </button>
-  </form>
-</div>
-</nz-tab>
+        <nz-form-item>
+          <nz-form-label>E-posta</nz-form-label>
+          <nz-form-control>
+            <input nz-input formControlName="contactEmail" placeholder="info@villaos.com" />
+          </nz-form-control>
+        </nz-form-item>
 
-<nz-tab nzTitle="İzinler">
-  <app-permissions-tab />
-</nz-tab>
+        <nz-form-item>
+          <nz-form-label>Telefon</nz-form-label>
+          <nz-form-control>
+            <input nz-input formControlName="contactPhone" placeholder="+90 5xx xxx xx xx" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Adres</nz-form-label>
+          <nz-form-control>
+            <textarea nz-input formControlName="contactAddress" rows="2"></textarea>
+          </nz-form-control>
+        </nz-form-item>
+
+        <button
+          nz-button
+          nzType="primary"
+          type="submit"
+          [nzLoading]="saving()"
+          [disabled]="form.invalid"
+        >
+          Kaydet
+        </button>
+      </form>
+    </div>
+  </nz-tab>
+
+  <nz-tab nzTitle="İzinler">
+    <app-permissions-tab />
+  </nz-tab>
 </nz-tabs>

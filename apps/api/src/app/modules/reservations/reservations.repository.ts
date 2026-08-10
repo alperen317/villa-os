@@ -45,7 +45,10 @@ export class ReservationsRepository {
    * the check and both commit, double-booking the villa. The advisory lock is
    * held until the surrounding transaction ends.
    */
-  withVillaLock<T>(villaId: string, work: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+  withVillaLock<T>(
+    villaId: string,
+    work: (tx: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
     return this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${villaId})::bigint)`;
       return work(tx);
@@ -151,7 +154,10 @@ export class ReservationsRepository {
     return where;
   }
 
-  update(id: string, data: Prisma.ReservationUncheckedUpdateInput): Promise<ReservationWithRelations> {
+  update(
+    id: string,
+    data: Prisma.ReservationUncheckedUpdateInput,
+  ): Promise<ReservationWithRelations> {
     return this.prisma.reservation.update({ where: { id }, data, include: RESERVATION_INCLUDE });
   }
 
@@ -215,11 +221,7 @@ export class ReservationsRepository {
    * index carries the scan; a reservation's floor always belongs to its villa, which `create`
    * enforces through `FloorsService.findOneOrThrow`.
    */
-  findOverlappingUnits(
-    villaIds: string[],
-    checkIn: Date,
-    checkOut: Date,
-  ): Promise<BookedUnit[]> {
+  findOverlappingUnits(villaIds: string[], checkIn: Date, checkOut: Date): Promise<BookedUnit[]> {
     return this.prisma.reservation.findMany({
       where: {
         villaId: { in: villaIds },

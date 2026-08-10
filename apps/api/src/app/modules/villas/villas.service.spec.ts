@@ -105,7 +105,11 @@ describe('VillasService', () => {
     it('rejects setting status on an unknown villa', async () => {
       repository.findById.mockResolvedValue(null);
 
-      await expectRejectionCode(service.setStatus('missing', 'Inactive'), ErrorCode.VILLA_NOT_FOUND, 404);
+      await expectRejectionCode(
+        service.setStatus('missing', 'Inactive'),
+        ErrorCode.VILLA_NOT_FOUND,
+        404,
+      );
       expect(repository.update).not.toHaveBeenCalled();
     });
   });
