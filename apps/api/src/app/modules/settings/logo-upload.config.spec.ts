@@ -1,11 +1,22 @@
 import { BadRequestException } from '@nestjs/common';
-import { acceptLogoUpload, logoFilename, logoUploadOptions } from './logo-upload.config';
+import {
+  acceptLogoUpload,
+  logoFilename,
+  logoUploadOptions,
+} from './logo-upload.config';
 
 function upload(overrides: Partial<Express.Multer.File>): Express.Multer.File {
-  return { mimetype: 'image/png', originalname: 'logo.png', ...overrides } as Express.Multer.File;
+  return {
+    mimetype: 'image/png',
+    originalname: 'logo.png',
+    ...overrides,
+  } as Express.Multer.File;
 }
 
-function filter(file: Express.Multer.File): { error: Error | null; accepted: boolean } {
+function filter(file: Express.Multer.File): {
+  error: Error | null;
+  accepted: boolean;
+} {
   let result = { error: null as Error | null, accepted: false };
   acceptLogoUpload(null, file, (error, accepted) => {
     result = { error, accepted };
@@ -36,7 +47,12 @@ describe('logo upload config', () => {
 
   describe('acceptLogoUpload', () => {
     it('accepts every type the extension map knows', () => {
-      for (const mimetype of ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp']) {
+      for (const mimetype of [
+        'image/png',
+        'image/jpeg',
+        'image/svg+xml',
+        'image/webp',
+      ]) {
         expect(filter(upload({ mimetype })).accepted).toBe(true);
       }
     });
@@ -49,9 +65,10 @@ describe('logo upload config', () => {
     });
 
     it('rejects a disguised document even when it is named like an image', () => {
-      expect(filter(upload({ mimetype: 'text/html', originalname: 'logo.png' })).accepted).toBe(
-        false,
-      );
+      expect(
+        filter(upload({ mimetype: 'text/html', originalname: 'logo.png' }))
+          .accepted,
+      ).toBe(false);
     });
   });
 

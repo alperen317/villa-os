@@ -10,12 +10,16 @@ function villa(id: string): Villa {
 
 /** A `list` that serves `total` villas out of pages of at most `limit`, like the API does. */
 function pagedVillas(total: number): jest.Mock {
-  const all = Array.from({ length: total }, (_, index) => villa(`villa-${index + 1}`));
+  const all = Array.from({ length: total }, (_, index) =>
+    villa(`villa-${index + 1}`),
+  );
 
-  return jest.fn(async ({ page = 1, limit = 100 }): Promise<PagedResult<Villa>> => {
-    const start = (page - 1) * limit;
-    return { data: all.slice(start, start + limit), total };
-  });
+  return jest.fn(
+    async ({ page = 1, limit = 100 }): Promise<PagedResult<Villa>> => {
+      const start = (page - 1) * limit;
+      return { data: all.slice(start, start + limit), total };
+    },
+  );
 }
 
 describe('VillasStore', () => {
@@ -92,7 +96,9 @@ describe('VillasStore', () => {
   });
 
   it('clears the loading flag when a page fails', async () => {
-    const store = createStore(jest.fn().mockRejectedValue(new Error('offline')));
+    const store = createStore(
+      jest.fn().mockRejectedValue(new Error('offline')),
+    );
 
     await expect(store.ensureLoaded()).rejects.toThrow('offline');
 

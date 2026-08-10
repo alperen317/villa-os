@@ -50,7 +50,10 @@ export const VillasStore = signalStore(
 
       patchState(store, { loading: true });
       try {
-        patchState(store, { villas: await fetchAllVillas(villasService), loaded: true });
+        patchState(store, {
+          villas: await fetchAllVillas(villasService),
+          loaded: true,
+        });
       } finally {
         patchState(store, { loading: false });
       }
@@ -59,7 +62,10 @@ export const VillasStore = signalStore(
     async refresh(): Promise<void> {
       patchState(store, { loading: true });
       try {
-        patchState(store, { villas: await fetchAllVillas(villasService), loaded: true });
+        patchState(store, {
+          villas: await fetchAllVillas(villasService),
+          loaded: true,
+        });
       } finally {
         patchState(store, { loading: false });
       }

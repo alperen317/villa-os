@@ -37,7 +37,11 @@ function reservation(overrides: Partial<Reservation> = {}): Reservation {
 
 describe('ReservationList', () => {
   let component: ReservationList;
-  let reservationsService: { list: jest.Mock; get: jest.Mock; remove: jest.Mock };
+  let reservationsService: {
+    list: jest.Mock;
+    get: jest.Mock;
+    remove: jest.Mock;
+  };
 
   beforeEach(() => {
     reservationsService = {
@@ -49,10 +53,22 @@ describe('ReservationList', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: ReservationsService, useValue: reservationsService },
-        { provide: VillasService, useValue: { list: jest.fn(), listFloors: jest.fn() } },
-        { provide: VillasStore, useValue: { villas: signal([]), ensureLoaded: jest.fn() } },
-        { provide: CustomersService, useValue: { list: jest.fn(), create: jest.fn() } },
-        { provide: PaymentsService, useValue: { getSummary: jest.fn(), create: jest.fn() } },
+        {
+          provide: VillasService,
+          useValue: { list: jest.fn(), listFloors: jest.fn() },
+        },
+        {
+          provide: VillasStore,
+          useValue: { villas: signal([]), ensureLoaded: jest.fn() },
+        },
+        {
+          provide: CustomersService,
+          useValue: { list: jest.fn(), create: jest.fn() },
+        },
+        {
+          provide: PaymentsService,
+          useValue: { getSummary: jest.fn(), create: jest.fn() },
+        },
         { provide: AuthService, useValue: { currentUser: signal(null) } },
         { provide: ViewportService, useValue: { isMobile: signal(true) } },
         {
@@ -64,7 +80,10 @@ describe('ReservationList', () => {
             clearResolveTarget: jest.fn(),
           },
         },
-        { provide: NzMessageService, useValue: { success: jest.fn(), error: jest.fn() } },
+        {
+          provide: NzMessageService,
+          useValue: { success: jest.fn(), error: jest.fn() },
+        },
         { provide: Router, useValue: { navigate: jest.fn() } },
         {
           provide: ActivatedRoute,
@@ -138,7 +157,11 @@ describe('ReservationList', () => {
       await component.loadCalendarData();
 
       expect(reservationsService.list).toHaveBeenCalledWith(
-        expect.objectContaining({ dateFrom: '2026-02-22', dateTo: '2026-04-07', page: 1 }),
+        expect.objectContaining({
+          dateFrom: '2026-02-22',
+          dateTo: '2026-04-07',
+          page: 1,
+        }),
       );
     });
 
@@ -147,7 +170,10 @@ describe('ReservationList', () => {
       // make that a false negative rather than a visibly short list.
       reservationsService.list
         .mockResolvedValueOnce({ data: [reservation({ id: 'a' })], total: 150 })
-        .mockResolvedValueOnce({ data: [reservation({ id: 'b' })], total: 150 });
+        .mockResolvedValueOnce({
+          data: [reservation({ id: 'b' })],
+          total: 150,
+        });
 
       await component.loadCalendarData();
 
@@ -156,7 +182,10 @@ describe('ReservationList', () => {
     });
 
     it('lets only the newest run publish when months are paged quickly', async () => {
-      let releaseFirst: (value: { data: Reservation[]; total: number }) => void = () => undefined;
+      let releaseFirst: (value: {
+        data: Reservation[];
+        total: number;
+      }) => void = () => undefined;
       reservationsService.list
         .mockReturnValueOnce(new Promise((resolve) => (releaseFirst = resolve)))
         .mockResolvedValue({ data: [reservation({ id: 'newer' })], total: 1 });
@@ -166,7 +195,9 @@ describe('ReservationList', () => {
       releaseFirst({ data: [reservation({ id: 'older' })], total: 1 });
       await stale;
 
-      expect(component['calendarReservations']().map((item) => item.id)).toEqual(['newer']);
+      expect(
+        component['calendarReservations']().map((item) => item.id),
+      ).toEqual(['newer']);
     });
   });
 
@@ -175,7 +206,10 @@ describe('ReservationList', () => {
       // checkIn is a @db.Date that travels as midnight UTC; reading it with local getters
       // lands on the previous day anywhere west of UTC.
       component['calendarReservations'].set([
-        reservation({ checkIn: '2026-03-10T00:00:00.000Z', checkOut: '2026-03-14T00:00:00.000Z' }),
+        reservation({
+          checkIn: '2026-03-10T00:00:00.000Z',
+          checkOut: '2026-03-14T00:00:00.000Z',
+        }),
       ]);
 
       expect(component.checkInsForDate(new Date(2026, 2, 10))).toHaveLength(1);
