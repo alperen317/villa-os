@@ -1,3 +1,4 @@
+import { ExpenseCategory } from './expense.model';
 import { ReservationStatus } from './reservation.model';
 
 export type PaymentMethod = 'Cash' | 'BankTransfer' | 'CreditCard';
@@ -57,9 +58,52 @@ export interface RevenueReport {
   to: string;
   totalRevenue: number;
   paymentCount: number;
+  totalExpenses: number;
+  /** Revenue minus expenses over the same window; negative is a real answer. */
+  netProfit: number;
   daily: RevenueReportDailyPoint[];
   byMethod: RevenueReportByMethod[];
   payments: RevenueReportPaymentRow[];
+}
+
+export interface ExpensesReportByCategory {
+  category: ExpenseCategory;
+  amount: number;
+  count: number;
+}
+
+export interface ExpensesReportDailyPoint {
+  date: string;
+  amount: number;
+}
+
+export interface ExpensesReportByVilla {
+  villaId: string | null;
+  villaName: string | null;
+  amount: number;
+}
+
+export interface ExpensesReportRow {
+  id: string;
+  expenseDate: string;
+  category: ExpenseCategory;
+  description: string;
+  supplier: string | null;
+  villaName: string | null;
+  amount: number;
+}
+
+export interface ExpensesReport {
+  from: string;
+  to: string;
+  totalExpenses: number;
+  expenseCount: number;
+  /** The part carried by no single villa; filtering by villa excludes it entirely. */
+  unallocatedExpenses: number;
+  byCategory: ExpensesReportByCategory[];
+  byVilla: ExpensesReportByVilla[];
+  daily: ExpensesReportDailyPoint[];
+  expenses: ExpensesReportRow[];
 }
 
 export interface ReservationsReportByStatus {

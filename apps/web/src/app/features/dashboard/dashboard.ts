@@ -103,6 +103,20 @@ export class Dashboard implements OnInit {
           link: '/reservations',
         },
         {
+          label: 'Bu Ay Gider',
+          value: `${summary.expensesThisMonth.toLocaleString('tr-TR')} ₺`,
+          icon: 'wallet',
+          link: '/expenses',
+        },
+        {
+          label: 'Bu Ay Net',
+          // Not the same icon as "Bu Ay Gelir": two cards sitting side by side with an
+          // identical glyph read as duplicates of one another.
+          value: `${summary.netThisMonth.toLocaleString('tr-TR')} ₺`,
+          icon: 'check-circle',
+          link: '/expenses',
+        },
+        {
           label: 'Bekleyen Temizlik',
           value: String(summary.openCleaningTasks),
           icon: 'clear',

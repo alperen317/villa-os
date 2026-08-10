@@ -13,8 +13,10 @@ import { NzStatisticModule } from 'ng-zorro-antd/statistic';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { NzTagModule } from 'ng-zorro-antd/tag';
+import { EXPENSE_CATEGORY_LABELS } from '../../../core/models/expense.model';
 import {
   CustomersReport,
+  ExpensesReport,
   OccupancyReport,
   PAYMENT_METHOD_LABELS,
   ReportQuery,
@@ -101,6 +103,7 @@ export class ReportList implements OnInit {
   protected readonly statusLabels = RESERVATION_STATUS_LABELS;
   protected readonly statusColors = RESERVATION_STATUS_COLORS;
   protected readonly paymentMethodLabels = PAYMENT_METHOD_LABELS;
+  protected readonly expenseCategoryLabels = EXPENSE_CATEGORY_LABELS;
 
   protected readonly villas = this.villasStore.villas;
   protected readonly tabIndex = signal(0);
@@ -108,6 +111,7 @@ export class ReportList implements OnInit {
 
   protected readonly occupancy = signal<OccupancyReport | null>(null);
   protected readonly revenue = signal<RevenueReport | null>(null);
+  protected readonly expenses = signal<ExpensesReport | null>(null);
   protected readonly reservationsReport = signal<ReservationsReport | null>(null);
   protected readonly customers = signal<CustomersReport | null>(null);
 
@@ -119,6 +123,10 @@ export class ReportList implements OnInit {
   });
 
   protected readonly filterDatePreset = signal<DatePreset | null>('thisMonth');
+
+  /** A loss should read as one at a glance, not just by its minus sign. */
+  protected readonly positiveValueStyle = { color: '#52c41a' };
+  protected readonly negativeValueStyle = { color: '#cf1322' };
 
   protected readonly chartOptions: ChartConfiguration['options'] = {
     responsive: true,
@@ -164,6 +172,30 @@ export class ReportList implements OnInit {
       const rows = report?.byMethod ?? [];
       return {
         labels: rows.map((row) => this.paymentMethodLabels[row.method]),
+        datasets: [{ data: rows.map((row) => row.amount), backgroundColor: this.chartColors() }],
+      };
+    },
+  );
+
+  protected readonly expensesDailyChartData = computed<ChartConfiguration<'bar'>['data']>(() => {
+    const report = this.expenses();
+    return {
+      labels: report?.daily.map((point) => point.date) ?? [],
+      datasets: [
+        {
+          label: 'Gider',
+          data: report?.daily.map((point) => point.amount) ?? [],
+          backgroundColor: this.chartColors()[0],
+        },
+      ],
+    };
+  });
+
+  protected readonly expensesCategoryChartData = computed<ChartConfiguration<'doughnut'>['data']>(
+    () => {
+      const rows = this.expenses()?.byCategory ?? [];
+      return {
+        labels: rows.map((row) => this.expenseCategoryLabels[row.category]),
         datasets: [{ data: rows.map((row) => row.amount), backgroundColor: this.chartColors() }],
       };
     },
@@ -276,14 +308,24 @@ export class ReportList implements OnInit {
 
     this.loading.set(true);
     try {
-      if (index === 0) {
-        this.occupancy.set(await this.reportsService.getOccupancy(query));
-      } else if (index === 1) {
-        this.revenue.set(await this.reportsService.getRevenue(query));
-      } else if (index === 2) {
-        this.reservationsReport.set(await this.reportsService.getReservations(query));
-      } else {
-        this.customers.set(await this.reportsService.getCustomers(query));
+      // A switch rather than an if/else chain ending in a catch-all: the next tab added
+      // would otherwise inherit the fallback and quietly fetch the wrong report.
+      switch (index) {
+        case 0:
+          this.occupancy.set(await this.reportsService.getOccupancy(query));
+          break;
+        case 1:
+          this.revenue.set(await this.reportsService.getRevenue(query));
+          break;
+        case 2:
+          this.expenses.set(await this.reportsService.getExpenses(query));
+          break;
+        case 3:
+          this.reservationsReport.set(await this.reportsService.getReservations(query));
+          break;
+        case 4:
+          this.customers.set(await this.reportsService.getCustomers(query));
+          break;
       }
       this.loadedTabs.add(index);
     } catch {

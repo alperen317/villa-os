@@ -39,6 +39,10 @@
         <nz-icon nzType="team" />
         <span>{{ 'shell.customers' | translate }}</span>
       </li>
+      <li nz-menu-item routerLink="/expenses" routerLinkActive="ant-menu-item-selected">
+        <nz-icon nzType="wallet" />
+        <span>{{ 'shell.expenses' | translate }}</span>
+      </li>
       @if (showHousekeepingNav()) {
       <li nz-menu-item routerLink="/housekeeping" routerLinkActive="ant-menu-item-selected">
         <nz-icon nzType="clear" />

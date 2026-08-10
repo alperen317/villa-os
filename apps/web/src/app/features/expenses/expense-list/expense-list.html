@@ -1,0 +1,233 @@
+<div class="page-header" id="tour-expenses">
+  <div>
+    <h2 class="page-title">Giderler</h2>
+    <p class="page-subtitle">Villa masraflarını ve genel işletme giderlerini kaydet ve izle.</p>
+  </div>
+  <div class="filters" id="tour-expenses-filters">
+    <nz-select
+      [ngModel]="filterVillaId()"
+      (ngModelChange)="filterVillaId.set($event); onFilterChange()"
+      nzAllowClear
+      nzPlaceHolder="Villa"
+      class="filter-select"
+    >
+      @for (villa of villas(); track villa.id) {
+      <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+      }
+    </nz-select>
+    <nz-select
+      [ngModel]="filterCategory()"
+      (ngModelChange)="filterCategory.set($event); onFilterChange()"
+      nzAllowClear
+      nzPlaceHolder="Kategori"
+      class="filter-select"
+    >
+      @for (category of categoryKeys; track category) {
+      <nz-option [nzValue]="category" [nzLabel]="categoryLabels[category]" />
+      }
+    </nz-select>
+    <nz-range-picker
+      [ngModel]="filterRange()"
+      (ngModelChange)="filterRange.set($event); onFilterChange()"
+      nzFormat="dd.MM.yyyy"
+      class="filter-range"
+    />
+    @if (canManage()) {
+    <button nz-button nzType="primary" (click)="openCreateModal()">
+      <nz-icon nzType="plus" />
+      Yeni Gider
+    </button>
+    }
+  </div>
+</div>
+
+<div class="page-surface">
+  <div class="search-bar">
+    <input
+      nz-input
+      class="search-input"
+      placeholder="Açıklama veya tedarikçi ara"
+      [ngModel]="searchTerm()"
+      (ngModelChange)="searchTerm.set($event)"
+      (keyup.enter)="onFilterChange()"
+    />
+    <button nz-button (click)="onFilterChange()">
+      <nz-icon nzType="search" />
+      Ara
+    </button>
+
+    <div class="totals">
+      <nz-statistic nzTitle="Kayıt" [nzValue]="total()" />
+      <!-- The filtered total, not the page's — a five-row page of a 200-row filter would
+           otherwise look like the whole answer.
+
+           The raw number goes to nzValue and the formatting happens in the template:
+           nz-statistic splits a string value on "." and keeps only the first two parts,
+           so a pre-formatted "1.693.844,64 ₺" would render as "1.693". -->
+      <nz-statistic nzTitle="Toplam Gider" [nzValue]="totalAmount()" [nzValueTemplate]="money" />
+    </div>
+    <ng-template #money let-value>{{ currency(value) }}</ng-template>
+  </div>
+
+  <nz-table
+    class="responsive-table"
+    [nzData]="expenses()"
+    [nzFrontPagination]="false"
+    [nzTotal]="total()"
+    [nzPageIndex]="pageIndex()"
+    [nzPageSize]="pageSize()"
+    [nzHideOnSinglePage]="true"
+    [nzLoading]="loading()"
+    [nzNoResult]="emptyState"
+    (nzPageIndexChange)="onPageIndexChange($event)"
+  >
+    <thead>
+      <tr>
+        <th>Tarih</th>
+        <th>Açıklama</th>
+        <th>Kategori</th>
+        <th>Villa</th>
+        <th>Tutar</th>
+        @if (canManage() || canDelete()) {
+        <th>Aksiyonlar</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (expense of expenses(); track expense.id) {
+      <tr>
+        <td data-label="Tarih">{{ displayDate(expense.expenseDate) | date: 'dd.MM.yyyy' }}</td>
+        <td data-label="Açıklama" class="td-block">
+          {{ expense.description }} @if (expense.supplier) {
+          <div class="expense-supplier">{{ expense.supplier }}</div>
+          } @if (expense.maintenanceRecord) {
+          <div class="expense-link">
+            <nz-icon nzType="tool" />
+            {{ expense.maintenanceRecord.title }}
+          </div>
+          }
+        </td>
+        <td data-label="Kategori">
+          <nz-tag [nzColor]="categoryColors[expense.category]"
+            >{{ categoryLabels[expense.category] }}</nz-tag
+          >
+        </td>
+        <td data-label="Villa">
+          @if (expense.villa) {
+          <a [routerLink]="['/villas', expense.villa.id]" class="ref-link">
+            {{ expense.villa.name }}
+            <nz-icon nzType="right" class="ref-link-icon" />
+          </a>
+          } @else {
+          <span class="expense-general">Genel</span>
+          }
+        </td>
+        <td data-label="Tutar" class="td-amount">{{ currency(expense.amount) }}</td>
+        @if (canManage() || canDelete()) {
+        <td class="td-actions">
+          @if (canManage()) {
+          <button nz-button nzSize="small" (click)="openEditModal(expense)">Düzenle</button>
+          } @if (canDelete()) {
+          <button
+            nz-button
+            nzSize="small"
+            nzDanger
+            nz-popconfirm
+            nzPopconfirmTitle="Bu gider kaydı silinsin mi?"
+            nzOkText="Sil"
+            nzCancelText="Vazgeç"
+            (nzOnConfirm)="remove(expense)"
+          >
+            Sil
+          </button>
+          }
+        </td>
+        }
+      </tr>
+      }
+    </tbody>
+  </nz-table>
+</div>
+
+<ng-template #emptyState>
+  <div class="empty-state">
+    <nz-icon nzType="wallet" class="empty-icon" />
+    <p>Bu filtreye uyan gider kaydı bulunamadı.</p>
+  </div>
+</ng-template>
+
+<nz-modal
+  [nzVisible]="modalVisible()"
+  [nzTitle]="editingExpense ? 'Gideri Düzenle' : 'Yeni Gider'"
+  [nzOkLoading]="modalSaving()"
+  [nzOkDisabled]="form.invalid"
+  (nzOnCancel)="modalVisible.set(false)"
+  (nzOnOk)="save()"
+>
+  <ng-container *nzModalContent>
+    <form nz-form [formGroup]="form">
+      <nz-form-item>
+        <nz-form-label nzRequired>Kategori</nz-form-label>
+        <nz-form-control>
+          <nz-select formControlName="category">
+            @for (category of categoryKeys; track category) {
+            <nz-option [nzValue]="category" [nzLabel]="categoryLabels[category]" />
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Açıklama</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="description" placeholder="ör. Elektrik faturası" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Tutar</nz-form-label>
+        <nz-form-control>
+          <nz-input-number
+            formControlName="amount"
+            [nzMin]="0.01"
+            [nzStep]="100"
+            nzPlaceHolder="0,00"
+            class="full-width"
+          />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Tarih</nz-form-label>
+        <nz-form-control>
+          <nz-date-picker formControlName="expenseDate" nzFormat="dd.MM.yyyy" class="full-width" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Villa</nz-form-label>
+        <nz-form-control nzExtra="Boş bırakılırsa genel işletme gideri olarak kaydedilir.">
+          <nz-select formControlName="villaId" nzAllowClear nzPlaceHolder="Genel gider">
+            @for (villa of villas(); track villa.id) {
+            <nz-option [nzValue]="villa.id" [nzLabel]="villa.name" />
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Tedarikçi</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="supplier" placeholder="ör. Aydem Elektrik" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Not</nz-form-label>
+        <nz-form-control>
+          <textarea nz-input formControlName="notes" rows="2"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>

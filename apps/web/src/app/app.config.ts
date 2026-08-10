@@ -49,6 +49,7 @@ import {
   ToolOutline,
   UploadOutline,
   UserOutline,
+  WalletOutline,
 } from '@ant-design/icons-angular/icons';
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
@@ -123,6 +124,7 @@ export const appConfig: ApplicationConfig = {
       MobileOutline,
       CloseOutline,
       CompassOutline,
+      WalletOutline,
     ]),
   ],
 };

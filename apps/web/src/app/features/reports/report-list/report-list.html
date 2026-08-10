@@ -1,3 +1,11 @@
+<!--
+  Money statistics pass the raw number to nzValue and format here, rather than handing
+  nz-statistic an already-formatted string: it splits a string value on "." and keeps only
+  the first two parts, so "4.590.409,95 ₺" renders as "4.590" — a thousandfold error that
+  also loses the currency symbol.
+-->
+<ng-template #money let-value>{{ currency(value) }}</ng-template>
+
 <div class="reports-section page-surface">
   <div class="section-header">
     <h3>Raporlar</h3>
@@ -139,7 +147,22 @@
       <nz-skeleton [nzActive]="true" />
       } @else if (revenue(); as report) {
       <div class="stat-row">
-        <nz-statistic nzTitle="Toplam Gelir" [nzValue]="currency(report.totalRevenue)" />
+        <nz-statistic
+          nzTitle="Toplam Gelir"
+          [nzValue]="report.totalRevenue"
+          [nzValueTemplate]="money"
+        />
+        <nz-statistic
+          nzTitle="Toplam Gider"
+          [nzValue]="report.totalExpenses"
+          [nzValueTemplate]="money"
+        />
+        <nz-statistic
+          nzTitle="Net Kâr"
+          [nzValue]="report.netProfit"
+          [nzValueTemplate]="money"
+          [nzValueStyle]="report.netProfit < 0 ? negativeValueStyle : positiveValueStyle"
+        />
         <nz-statistic nzTitle="Ödeme Sayısı" [nzValue]="report.paymentCount" />
       </div>
 
@@ -185,6 +208,105 @@
             <td data-label="Rezervasyon">{{ payment.reservationNumber }}</td>
             <td data-label="Yöntem">{{ paymentMethodLabels[payment.paymentMethod] }}</td>
             <td data-label="Tutar">{{ currency(payment.amount) }}</td>
+          </tr>
+          }
+        </tbody>
+      </nz-table>
+      }
+    </nz-tab>
+
+    <nz-tab nzTitle="Giderler">
+      @if (loading() && !expenses()) {
+      <nz-skeleton [nzActive]="true" />
+      } @else if (expenses(); as report) {
+      <div class="stat-row">
+        <nz-statistic
+          nzTitle="Toplam Gider"
+          [nzValue]="report.totalExpenses"
+          [nzValueTemplate]="money"
+        />
+        <nz-statistic nzTitle="Kayıt Sayısı" [nzValue]="report.expenseCount" />
+        @if (report.unallocatedExpenses > 0) {
+        <!-- Named because filtering by villa drops these, which otherwise makes the two
+             views look like an arithmetic error. -->
+        <nz-statistic
+          nzTitle="Villaya Bağlı Olmayan"
+          [nzValue]="report.unallocatedExpenses"
+          [nzValueTemplate]="money"
+        />
+        }
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-box">
+          <canvas
+            baseChart
+            type="bar"
+            [data]="expensesDailyChartData()"
+            [options]="chartOptions"
+          ></canvas>
+        </div>
+        <div class="chart-box chart-box--small">
+          <canvas
+            baseChart
+            type="doughnut"
+            [data]="expensesCategoryChartData()"
+            [options]="chartOptions"
+          ></canvas>
+        </div>
+      </div>
+
+      <nz-table
+        class="responsive-table"
+        [nzData]="report.byCategory"
+        [nzHideOnSinglePage]="true"
+        [nzPageSize]="10"
+      >
+        <thead>
+          <tr>
+            <th>Kategori</th>
+            <th>Kayıt</th>
+            <th>Tutar</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of report.byCategory; track row.category) {
+          <tr>
+            <td data-label="Kategori">{{ expenseCategoryLabels[row.category] }}</td>
+            <td data-label="Kayıt">{{ row.count }}</td>
+            <td data-label="Tutar">{{ currency(row.amount) }}</td>
+          </tr>
+          }
+        </tbody>
+      </nz-table>
+
+      <nz-table
+        class="responsive-table"
+        [nzData]="report.expenses"
+        [nzPageSize]="10"
+        [nzHideOnSinglePage]="true"
+      >
+        <thead>
+          <tr>
+            <th>Tarih</th>
+            <th>Açıklama</th>
+            <th>Kategori</th>
+            <th>Villa</th>
+            <th>Tutar</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (expense of report.expenses; track expense.id) {
+          <tr>
+            <td data-label="Tarih">{{ expense.expenseDate }}</td>
+            <td data-label="Açıklama">
+              {{ expense.description }} @if (expense.supplier) {
+              <span class="row-hint">· {{ expense.supplier }}</span>
+              }
+            </td>
+            <td data-label="Kategori">{{ expenseCategoryLabels[expense.category] }}</td>
+            <td data-label="Villa">{{ expense.villaName ?? 'Genel' }}</td>
+            <td data-label="Tutar">{{ currency(expense.amount) }}</td>
           </tr>
           }
         </tbody>

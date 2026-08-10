@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from '../../core/api-base-url';
 import {
   CustomersReport,
+  ExpensesReport,
   OccupancyReport,
   ReportQuery,
   ReservationsReport,
@@ -25,6 +26,14 @@ export class ReportsService {
   getRevenue(query: ReportQuery): Promise<RevenueReport> {
     return firstValueFrom(
       this.http.get<RevenueReport>(`${API_BASE_URL}/reports/revenue`, {
+        params: this.toParams(query),
+      }),
+    );
+  }
+
+  getExpenses(query: ReportQuery): Promise<ExpensesReport> {
+    return firstValueFrom(
+      this.http.get<ExpensesReport>(`${API_BASE_URL}/reports/expenses`, {
         params: this.toParams(query),
       }),
     );

@@ -11,6 +11,7 @@ describe('ReportList', () => {
   let reportsService: {
     getOccupancy: jest.Mock;
     getRevenue: jest.Mock;
+    getExpenses: jest.Mock;
     getReservations: jest.Mock;
     getCustomers: jest.Mock;
   };
@@ -21,6 +22,7 @@ describe('ReportList', () => {
     reportsService = {
       getOccupancy: jest.fn().mockResolvedValue({ daily: [] }),
       getRevenue: jest.fn().mockResolvedValue({ daily: [], byMethod: [] }),
+      getExpenses: jest.fn().mockResolvedValue({ daily: [], byCategory: [], byVilla: [] }),
       getReservations: jest.fn().mockResolvedValue({ byStatus: [], reservations: [] }),
       getCustomers: jest.fn().mockResolvedValue({ topCustomers: [] }),
     };
@@ -59,6 +61,24 @@ describe('ReportList', () => {
 
       expect(reportsService.getOccupancy).toHaveBeenCalledTimes(1);
       expect(reportsService.getRevenue).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      [0, 'getOccupancy'],
+      [1, 'getRevenue'],
+      [2, 'getExpenses'],
+      [3, 'getReservations'],
+      [4, 'getCustomers'],
+    ])('tab %i fetches %s and nothing else', async (index, method) => {
+      // The dispatch used to end in a catch-all `else`, so a tab added anywhere but the
+      // end would silently serve the last tab's report.
+      component.onTabIndexChange(index as number);
+      await Promise.resolve();
+
+      const called = Object.entries(reportsService)
+        .filter(([, mock]) => mock.mock.calls.length > 0)
+        .map(([name]) => name);
+      expect(called).toEqual([method]);
     });
 
     it('re-reads the open tab when the filter changes, and forgets the others', async () => {
@@ -117,7 +137,24 @@ describe('ReportList', () => {
     it('renders empty rather than throwing before a report has arrived', () => {
       expect(component['occupancyChartData']().labels).toEqual([]);
       expect(component['revenueDailyChartData']().labels).toEqual([]);
+      expect(component['expensesDailyChartData']().labels).toEqual([]);
+      expect(component['expensesCategoryChartData']().labels).toEqual([]);
       expect(component['customersChartData']().labels).toEqual([]);
+    });
+
+    it('splits expenses by category into the doughnut, labelled in Turkish', () => {
+      component['expenses'].set({
+        byCategory: [
+          { category: 'Staff', amount: 5000, count: 1 },
+          { category: 'Utilities', amount: 2000, count: 2 },
+        ],
+        daily: [],
+      } as never);
+
+      const chart = component['expensesCategoryChartData']();
+
+      expect(chart.labels).toEqual(['Personel', 'Faturalar']);
+      expect(chart.datasets[0].data).toEqual([5000, 2000]);
     });
 
     it('draws the occupancy line in the accent colour the branding sets', () => {

@@ -53,6 +53,11 @@ export const appRoutes: Route[] = [
           ),
       },
       {
+        path: 'expenses',
+        loadComponent: () =>
+          import('./features/expenses/expense-list/expense-list').then((m) => m.ExpenseList),
+      },
+      {
         path: 'housekeeping',
         loadComponent: () =>
           import('./features/housekeeping/housekeeping-queue/housekeeping-queue').then(
