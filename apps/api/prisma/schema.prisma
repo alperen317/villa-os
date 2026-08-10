@@ -49,6 +49,16 @@ enum MaintenanceStatus {
   Completed
 }
 
+enum ExpenseCategory {
+  Utilities
+  Cleaning
+  Maintenance
+  Staff
+  Supplies
+  Tax
+  Other
+}
+
 enum UserRole {
   Administrator
   Operations
@@ -72,6 +82,7 @@ model Villa {
   reservations       Reservation[]
   maintenanceRecords MaintenanceRecord[]
   housekeepingTasks  HousekeepingTask[]
+  expenses           Expense[]
 
   @@index([status])
   @@map("villas")
@@ -192,10 +203,42 @@ model MaintenanceRecord {
   openedAt    DateTime            @default(now()) @map("opened_at")
   completedAt DateTime?           @map("completed_at")
 
-  villa Villa @relation(fields: [villaId], references: [id])
+  villa    Villa     @relation(fields: [villaId], references: [id])
+  expenses Expense[]
 
   @@index([villaId])
   @@map("maintenance_records")
+}
+
+/// Money leaving the business. Deliberately not a negative `Payment`: FR-604 forbids
+/// deleting payment history, whereas an expense is mistyped and corrected all the time —
+/// hence its own table with the usual `deleted_at`.
+model Expense {
+  id                  String          @id @default(uuid()) @db.Uuid
+  /// Null for costs that belong to the business rather than one property (accountancy,
+  /// insurance, software), which is what keeps them out of per-villa profitability.
+  villaId             String?         @map("villa_id") @db.Uuid
+  maintenanceRecordId String?         @map("maintenance_record_id") @db.Uuid
+  category            ExpenseCategory
+  description         String
+  amount              Decimal         @db.Decimal(10, 2)
+  /// A calendar date like `reservations.check_in`, not an instant: an invoice is dated,
+  /// not timestamped, and a date-only column cannot straddle a reporting boundary.
+  expenseDate         DateTime        @map("expense_date") @db.Date
+  supplier            String?
+  notes               String?
+  createdAt           DateTime        @default(now()) @map("created_at")
+  updatedAt           DateTime        @updatedAt @map("updated_at")
+  deletedAt           DateTime?       @map("deleted_at")
+
+  villa             Villa?             @relation(fields: [villaId], references: [id])
+  maintenanceRecord MaintenanceRecord? @relation(fields: [maintenanceRecordId], references: [id])
+
+  @@index([expenseDate])
+  @@index([villaId, expenseDate])
+  @@index([category])
+  @@index([maintenanceRecordId])
+  @@map("expenses")
 }
 
 model User {

@@ -68,7 +68,8 @@ async function bootstrap() {
   if (corsOrigin) {
     app.enableCors({
       origin: corsOrigin.split(',').map((origin) => origin.trim()),
-      exposedHeaders: ['X-Total-Count'],
+      // Both are pagination metadata the browser cannot read unless the server says so.
+      exposedHeaders: ['X-Total-Count', 'X-Total-Amount'],
       // The session lives in cookies, which a cross-origin caller only gets to
       // send when the server opts in.
       credentials: true,

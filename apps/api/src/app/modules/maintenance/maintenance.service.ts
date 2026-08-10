@@ -58,6 +58,23 @@ export class MaintenanceService {
     return { data, total };
   }
 
+  /**
+   * Looks a record up without knowing its villa — which is the position anything holding
+   * only a `maintenanceRecordId` is in, such as an expense linking back to the job.
+   */
+  async findByIdOrThrow(id: string): Promise<MaintenanceRecord> {
+    const record = await this.maintenanceRepository.findById(id);
+    if (!record) {
+      throw new AppException(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.MAINTENANCE_RECORD_NOT_FOUND,
+        `Maintenance record ${id} not found`,
+      );
+    }
+
+    return record;
+  }
+
   async findOneOrThrow(villaId: string, id: string): Promise<MaintenanceRecord> {
     const record = await this.maintenanceRepository.findById(id);
     if (!record || record.villaId !== villaId) {

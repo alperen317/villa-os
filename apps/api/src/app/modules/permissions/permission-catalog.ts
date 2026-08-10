@@ -96,6 +96,24 @@ export const PERMISSION_CATALOG: PermissionDefinition[] = [
     defaults: { Accounting: true },
   },
   {
+    key: 'expenses.read',
+    module: 'Giderler',
+    label: 'Giderleri görüntüle',
+    defaults: { Operations: true, Accounting: true },
+  },
+  {
+    key: 'expenses.write',
+    module: 'Giderler',
+    label: 'Gider kaydı oluştur, düzenle',
+    defaults: { Accounting: true },
+  },
+  {
+    key: 'expenses.delete',
+    module: 'Giderler',
+    label: 'Gider kaydı sil',
+    defaults: {},
+  },
+  {
     key: 'dashboard.read',
     module: 'Dashboard',
     label: "Dashboard'u görüntüle",

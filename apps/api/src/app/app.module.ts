@@ -12,6 +12,7 @@ import { VillasModule } from './modules/villas/villas.module';
 import { CustomersModule } from './modules/customers/customers.module';
 import { ReservationsModule } from './modules/reservations/reservations.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { ExpensesModule } from './modules/expenses/expenses.module';
 import { HousekeepingModule } from './modules/housekeeping/housekeeping.module';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
@@ -35,6 +36,7 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
     CustomersModule,
     ReservationsModule,
     PaymentsModule,
+    ExpensesModule,
     HousekeepingModule,
     MaintenanceModule,
     DashboardModule,

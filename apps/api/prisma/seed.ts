@@ -2,6 +2,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../src/generated/prisma/client';
 import {
+  ExpenseCategory,
   HousekeepingStatus,
   MaintenancePriority,
   MaintenanceStatus,
@@ -208,6 +209,139 @@ const MAINTENANCE_ITEMS: { title: string; description: string }[] = [
   {
     title: 'Güvenlik Kamerası Kontrolü',
     description: 'Giriş kapısı kamerasının görüntü ve kayıt kontrolü.',
+  },
+];
+
+const MAINTENANCE_SUPPLIERS = [
+  'Bodrum Teknik Servis',
+  'Ege Tesisat',
+  'Mavi Havuz Bakım',
+  'Yılmaz Elektrik',
+];
+
+interface ExpenseBlueprint {
+  category: ExpenseCategory;
+  description: string;
+  supplier: string;
+  minAmount: number;
+  maxAmount: number;
+  minCount: number;
+  maxCount: number;
+}
+
+/** Costs that belong to a specific property. */
+const VILLA_EXPENSE_ITEMS: ExpenseBlueprint[] = [
+  {
+    category: ExpenseCategory.Utilities,
+    description: 'Elektrik faturası',
+    supplier: 'Aydem Elektrik',
+    minAmount: 1800,
+    maxAmount: 9500,
+    minCount: 8,
+    maxCount: 11,
+  },
+  {
+    category: ExpenseCategory.Utilities,
+    description: 'Su faturası',
+    supplier: 'MUSKİ',
+    minAmount: 400,
+    maxAmount: 2200,
+    minCount: 8,
+    maxCount: 11,
+  },
+  {
+    category: ExpenseCategory.Utilities,
+    description: 'İnternet aboneliği',
+    supplier: 'Türk Telekom',
+    minAmount: 450,
+    maxAmount: 900,
+    minCount: 8,
+    maxCount: 11,
+  },
+  {
+    category: ExpenseCategory.Cleaning,
+    description: 'Temizlik malzemesi alımı',
+    supplier: 'Bodrum Hijyen',
+    minAmount: 900,
+    maxAmount: 4500,
+    minCount: 4,
+    maxCount: 8,
+  },
+  {
+    category: ExpenseCategory.Cleaning,
+    description: 'Havuz kimyasalı',
+    supplier: 'Mavi Havuz Bakım',
+    minAmount: 1200,
+    maxAmount: 5500,
+    minCount: 3,
+    maxCount: 6,
+  },
+  {
+    category: ExpenseCategory.Supplies,
+    description: 'Nevresim ve havlu yenileme',
+    supplier: 'Ege Tekstil',
+    minAmount: 2500,
+    maxAmount: 14000,
+    minCount: 1,
+    maxCount: 3,
+  },
+  {
+    category: ExpenseCategory.Supplies,
+    description: 'Misafir karşılama ikramlıkları',
+    supplier: 'Migros',
+    minAmount: 300,
+    maxAmount: 1500,
+    minCount: 4,
+    maxCount: 9,
+  },
+];
+
+/** Overheads with no single property behind them (`villaId` stays null). */
+const GENERAL_EXPENSE_ITEMS: ExpenseBlueprint[] = [
+  {
+    category: ExpenseCategory.Staff,
+    description: 'Personel maaş ödemesi',
+    supplier: 'Bordro',
+    minAmount: 45000,
+    maxAmount: 78000,
+    minCount: 9,
+    maxCount: 11,
+  },
+  {
+    category: ExpenseCategory.Tax,
+    description: 'Emlak ve çevre temizlik vergisi',
+    supplier: 'Bodrum Belediyesi',
+    minAmount: 6000,
+    maxAmount: 22000,
+    minCount: 2,
+    maxCount: 3,
+  },
+  {
+    category: ExpenseCategory.Other,
+    description: 'Mali müşavirlik ücreti',
+    supplier: 'Kaya Mali Müşavirlik',
+    minAmount: 4500,
+    maxAmount: 7500,
+    minCount: 9,
+    maxCount: 11,
+  },
+  {
+    category: ExpenseCategory.Other,
+    description: 'Sigorta primi',
+    supplier: 'Anadolu Sigorta',
+    minAmount: 9000,
+    maxAmount: 26000,
+    minCount: 1,
+    maxCount: 2,
+  },
+  {
+    category: ExpenseCategory.Other,
+    description: 'Rezervasyon platformu komisyonu',
+    supplier: 'Booking.com',
+    minAmount: 8000,
+    maxAmount: 35000,
+    minCount: 6,
+    maxCount: 10,
   },
 ];
 
@@ -663,9 +797,10 @@ async function seedAdhocHousekeeping(villaId: string) {
   }
 }
 
-async function seedMaintenanceRecords(villaId: string) {
+async function seedMaintenanceRecords(villaId: string): Promise<string[]> {
   const count = randInt(3, 5);
   const usedTitles = new Set<string>();
+  const recordIds: string[] = [];
 
   for (let i = 0; i < count; i++) {
     let item = pick(MAINTENANCE_ITEMS);
@@ -695,7 +830,7 @@ async function seedMaintenanceRecords(villaId: string) {
       MaintenancePriority.Urgent,
     ]);
 
-    await prisma.maintenanceRecord.create({
+    const record = await prisma.maintenanceRecord.create({
       data: {
         villaId,
         title: item.title,
@@ -707,6 +842,69 @@ async function seedMaintenanceRecords(villaId: string) {
           status === MaintenanceStatus.Completed ? addDays(openedAt, randInt(0, 5)) : null,
       },
     });
+
+    recordIds.push(record.id);
+  }
+
+  return recordIds;
+}
+
+/**
+ * Villa-level running costs. Roughly two thirds of the maintenance jobs get a cost
+ * attached, which is what makes the maintenance-to-expense link visible in the reports
+ * without pretending every job was invoiced.
+ */
+async function seedExpensesForVilla(villaId: string, maintenanceRecordIds: string[]) {
+  for (const item of VILLA_EXPENSE_ITEMS) {
+    const occurrences = randInt(item.minCount, item.maxCount);
+    for (let i = 0; i < occurrences; i++) {
+      await prisma.expense.create({
+        data: {
+          villaId,
+          category: item.category,
+          description: item.description,
+          supplier: item.supplier,
+          amount: round2(randFloat(item.minAmount, item.maxAmount)),
+          expenseDate: addDays(WINDOW_START, randInt(0, daysBetween(WINDOW_START, NOW))),
+        },
+      });
+    }
+  }
+
+  for (const recordId of maintenanceRecordIds) {
+    if (!chance(0.65)) continue;
+
+    const record = await prisma.maintenanceRecord.findUniqueOrThrow({ where: { id: recordId } });
+    await prisma.expense.create({
+      data: {
+        villaId,
+        maintenanceRecordId: recordId,
+        category: ExpenseCategory.Maintenance,
+        description: record.title,
+        supplier: pick(MAINTENANCE_SUPPLIERS),
+        amount: round2(randFloat(800, 12000)),
+        expenseDate: record.completedAt ?? record.openedAt,
+      },
+    });
+  }
+}
+
+/** Overheads carried by the business, which is what `villaId: null` means. */
+async function seedGeneralExpenses() {
+  for (const item of GENERAL_EXPENSE_ITEMS) {
+    const occurrences = randInt(item.minCount, item.maxCount);
+    for (let i = 0; i < occurrences; i++) {
+      await prisma.expense.create({
+        data: {
+          villaId: null,
+          category: item.category,
+          description: item.description,
+          supplier: item.supplier,
+          amount: round2(randFloat(item.minAmount, item.maxAmount)),
+          expenseDate: addDays(WINDOW_START, randInt(0, daysBetween(WINDOW_START, NOW))),
+        },
+      });
+    }
   }
 }
 
@@ -728,11 +926,14 @@ async function seedMockData() {
     const { villaId, villaName, floors } = await seedVillaWithFloors(i);
     await seedReservationsForVilla(villaId, villaName, floors, customers, usedReservationNumbers);
     await seedAdhocHousekeeping(villaId);
-    await seedMaintenanceRecords(villaId);
+    const maintenanceRecordIds = await seedMaintenanceRecords(villaId);
+    await seedExpensesForVilla(villaId, maintenanceRecordIds);
   }
 
+  await seedGeneralExpenses();
+
   console.log(
-    `Seeded ${VILLA_COUNT} villas with floors, a year of reservations, payments, housekeeping and maintenance records.`,
+    `Seeded ${VILLA_COUNT} villas with floors, a year of reservations, payments, housekeeping, maintenance records and expenses.`,
   );
 }
 
