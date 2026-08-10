@@ -121,7 +121,13 @@ export class VillaDetail implements OnInit {
   });
 
   private get villaId(): string {
-    return this.route.snapshot.paramMap.get('id')!;
+    const id = this.route.snapshot.paramMap.get('id');
+    if (!id) {
+      // Only reachable if the route loses its :id segment — worth failing loudly rather
+      // than letting `undefined` travel into a request URL and come back a confusing 404.
+      throw new Error('VillaDetail was routed to without an :id parameter');
+    }
+    return id;
   }
 
   ngOnInit(): void {

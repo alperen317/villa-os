@@ -402,12 +402,14 @@ export class ReservationList implements OnInit {
   }
 
   async searchAvailability(): Promise<void> {
-    if (this.availabilityForm.invalid) {
+    const value = this.availabilityForm.getRawValue();
+    // `invalid` tells the compiler nothing about `dateRange`, so reading the field is what
+    // actually establishes it is there — and it covers the same ground as the validity check.
+    if (this.availabilityForm.invalid || !value.dateRange) {
       return;
     }
 
-    const value = this.availabilityForm.getRawValue();
-    const [checkIn, checkOut] = value.dateRange!;
+    const [checkIn, checkOut] = value.dateRange;
 
     this.availabilitySearching.set(true);
     try {
@@ -700,12 +702,12 @@ export class ReservationList implements OnInit {
   }
 
   async save(): Promise<void> {
-    if (this.form.invalid) {
+    const value = this.form.getRawValue();
+    if (this.form.invalid || !value.dateRange) {
       return;
     }
 
-    const value = this.form.getRawValue();
-    const [checkIn, checkOut] = value.dateRange!;
+    const [checkIn, checkOut] = value.dateRange;
 
     this.modalSaving.set(true);
     try {
