@@ -53,6 +53,7 @@ describe('ReservationsService', () => {
           useValue: {
             findById: jest.fn(),
             update: jest.fn(),
+            updateStatusFrom: jest.fn(),
             create: jest.fn(),
             findConflicting: jest.fn(),
             findByIdempotencyKey: jest.fn(),
@@ -203,6 +204,36 @@ describe('ReservationsService', () => {
         expect.anything(),
       );
     });
+
+    it('returns the winner when a concurrent replay only becomes visible inside the lock', async () => {
+      const existing = reservation({ id: 'reservation-existing' });
+      stubHappyPath();
+      // Two replays raced: this one missed the pre-check, then queued on the villa lock while
+      // the other committed. The re-check inside the lock is the one that sees the row.
+      reservationsRepository.findByIdempotencyKey
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(existing);
+
+      const result = await service.create(dto as never, 'key-1');
+
+      expect(result).toBe(existing);
+      expect(reservationsRepository.findConflicting).not.toHaveBeenCalled();
+      expect(reservationsRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('re-checks the key against the transaction client, not a separate connection', async () => {
+      stubHappyPath();
+      reservationsRepository.findByIdempotencyKey.mockResolvedValue(null);
+      reservationsRepository.findConflicting.mockResolvedValue(null);
+      reservationsRepository.create.mockResolvedValue(reservation());
+
+      await service.create(dto as never, 'key-1');
+
+      expect(reservationsRepository.findByIdempotencyKey).toHaveBeenLastCalledWith(
+        'key-1',
+        TRANSACTION_CLIENT,
+      );
+    });
   });
 
   describe('update', () => {
@@ -263,7 +294,7 @@ describe('ReservationsService', () => {
   describe('transition', () => {
     it('auto-creates a housekeeping task when a reservation checks out (BR-008)', async () => {
       reservationsRepository.findById.mockResolvedValue(reservation({ status: ReservationStatus.CheckedIn }));
-      reservationsRepository.update.mockResolvedValue(
+      reservationsRepository.updateStatusFrom.mockResolvedValue(
         reservation({ status: ReservationStatus.CheckedOut }),
       );
 
@@ -274,7 +305,7 @@ describe('ReservationsService', () => {
 
     it('does not create a housekeeping task for other transitions', async () => {
       reservationsRepository.findById.mockResolvedValue(reservation({ status: ReservationStatus.Pending }));
-      reservationsRepository.update.mockResolvedValue(
+      reservationsRepository.updateStatusFrom.mockResolvedValue(
         reservation({ status: ReservationStatus.Confirmed }),
       );
 
@@ -285,6 +316,32 @@ describe('ReservationsService', () => {
 
     it('rejects an invalid transition and does not touch housekeeping', async () => {
       reservationsRepository.findById.mockResolvedValue(reservation({ status: ReservationStatus.Pending }));
+
+      await expect(service.transition('reservation-1', ReservationStatus.CheckedOut)).rejects.toThrow(
+        InvalidReservationTransitionException,
+      );
+      expect(housekeepingService.createForReservation).not.toHaveBeenCalled();
+    });
+
+    it('moves the status only from the one it read, so a concurrent write cannot double-apply', async () => {
+      reservationsRepository.findById.mockResolvedValue(reservation({ status: ReservationStatus.CheckedIn }));
+      reservationsRepository.updateStatusFrom.mockResolvedValue(
+        reservation({ status: ReservationStatus.CheckedOut }),
+      );
+
+      await service.transition('reservation-1', ReservationStatus.CheckedOut);
+
+      expect(reservationsRepository.updateStatusFrom).toHaveBeenCalledWith(
+        'reservation-1',
+        ReservationStatus.CheckedIn,
+        ReservationStatus.CheckedOut,
+      );
+    });
+
+    it('rejects when another request already moved the row, and queues no housekeeping', async () => {
+      reservationsRepository.findById.mockResolvedValue(reservation({ status: ReservationStatus.CheckedIn }));
+      // No row matched the expected status — someone else checked this stay out first.
+      reservationsRepository.updateStatusFrom.mockResolvedValue(null);
 
       await expect(service.transition('reservation-1', ReservationStatus.CheckedOut)).rejects.toThrow(
         InvalidReservationTransitionException,

@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import { NextFunction, Request, Response } from 'express';
 import { mkdirSync } from 'fs';
 import helmet from 'helmet';
 import { AppModule } from './app/app.module';
@@ -12,7 +13,6 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   mkdirSync(UPLOADS_ROOT, { recursive: true });
-  app.useStaticAssets(UPLOADS_ROOT, { prefix: '/uploads/' });
 
   // Both topologies put exactly one proxy in front of the API: nginx in the
   // container, the Angular dev-server under `nx serve`. Without this Express
@@ -25,8 +25,8 @@ async function bootstrap() {
     app.set('trust proxy', trustedProxyHops);
   }
 
-  // Swagger UI needs inline styles and its own scripts; the rest of the API
-  // serves JSON and uploaded images, for which the defaults are right.
+  // Swagger UI needs inline styles and its own scripts; the rest of the API serves JSON, for
+  // which the defaults are right. Uploads are the exception and override this below.
   app.use(
     helmet({
       contentSecurityPolicy: {
@@ -38,6 +38,24 @@ async function bootstrap() {
       },
     }),
   );
+
+  // Uploads are bytes a user supplied, served back from the app's own origin — so they get
+  // a policy of their own rather than the one written for JSON responses. `default-src
+  // 'none'` means nothing inside an uploaded file executes or fetches anything, which is
+  // what keeps an SVG logo from being a script delivery vehicle (the API's own CSP allows
+  // `script-src 'self' 'unsafe-inline'` for Swagger, and an upload *is* 'self'). `nosniff`
+  // stops the browser from second-guessing the declared type.
+  //
+  // Both of these run before useStaticAssets on purpose: Express dispatches middleware in
+  // registration order and the static handler answers the request itself, so anything
+  // registered after it never sees an /uploads response. That ordering is the whole point —
+  // with the static mount first, uploads went out with no security headers at all.
+  app.use('/uploads', (_req: Request, res: Response, next: NextFunction) => {
+    res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'");
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    next();
+  });
+  app.useStaticAssets(UPLOADS_ROOT, { prefix: '/uploads/' });
 
   // The containerised deployment is same-origin — nginx proxies /api and
   // /uploads — so CORS is only needed for `nx serve`, where the dev-server sits

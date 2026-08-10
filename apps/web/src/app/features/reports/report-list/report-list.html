@@ -190,8 +190,8 @@
               <td data-label="Rezervasyon No">{{ reservation.reservationNumber }}</td>
               <td data-label="Villa">{{ reservation.villaName }}</td>
               <td data-label="Müşteri">{{ reservation.customerName }}</td>
-              <td data-label="Giriş">{{ reservation.checkIn | date: 'dd.MM.yyyy' }}</td>
-              <td data-label="Çıkış">{{ reservation.checkOut | date: 'dd.MM.yyyy' }}</td>
+              <td data-label="Giriş">{{ reservation.checkIn | date: 'dd.MM.yyyy' : 'UTC' }}</td>
+              <td data-label="Çıkış">{{ reservation.checkOut | date: 'dd.MM.yyyy' : 'UTC' }}</td>
               <td data-label="Gece">{{ reservation.nights }}</td>
               <td data-label="Misafir">{{ reservation.guestCount }}</td>
               <td data-label="Tutar">{{ currency(reservation.totalPrice) }}</td>

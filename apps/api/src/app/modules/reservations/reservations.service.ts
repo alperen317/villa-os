@@ -35,6 +35,10 @@ export class ReservationsService {
   ) {}
 
   async create(dto: CreateReservationDto, idempotencyKey?: string): Promise<ReservationWithRelations> {
+    // A cheap pre-check outside the lock: the overwhelmingly common retry is a sequential
+    // one, and answering it here costs a single indexed read instead of a lock acquisition.
+    // The authoritative check is repeated inside the lock below, which is what makes
+    // *concurrent* retries safe.
     if (idempotencyKey) {
       const existing = await this.reservationsRepository.findByIdempotencyKey(idempotencyKey);
       if (existing) {
@@ -70,6 +74,18 @@ export class ReservationsService {
     // ReservationsRepository.withVillaLock for why the EXCLUDE constraint alone
     // does not cover the entire-villa-vs-floor case.
     return this.reservationsRepository.withVillaLock(dto.villaId, async (tx) => {
+      // Re-checked here, not just above: two replays of the same queued write can both miss
+      // the pre-check and then queue up on the lock. Without this the second one reaches the
+      // conflict check, matches the reservation the first one just made, and comes back as a
+      // double-booking — turning a retry into an error the client cannot act on. Inside the
+      // lock the loser sees the winner's row and returns it, which is what the key promises.
+      if (idempotencyKey) {
+        const existing = await this.reservationsRepository.findByIdempotencyKey(idempotencyKey, tx);
+        if (existing) {
+          return existing;
+        }
+      }
+
       const conflict = await this.reservationsRepository.findConflicting(
         {
           villaId: dto.villaId,
@@ -165,7 +181,21 @@ export class ReservationsService {
       throw new InvalidReservationTransitionException(reservation.status, target);
     }
 
-    const updated = await this.reservationsRepository.update(id, { status: target });
+    // The check above reads the status and the write below changes it — between the two, a
+    // second request (a double-tap, an outbox replay) can pass the same check. The write
+    // carries the expected status so the database decides the winner: the loser matches no
+    // row and is told so, instead of both sides proceeding and check-out queueing two
+    // housekeeping tasks for one stay.
+    const updated = await this.reservationsRepository.updateStatusFrom(
+      id,
+      reservation.status,
+      target,
+    );
+
+    if (!updated) {
+      const current = await this.findOneOrThrow(id);
+      throw new InvalidReservationTransitionException(current.status, target);
+    }
 
     if (target === ReservationStatus.CheckedOut) {
       await this.housekeepingService.createForReservation(updated.id, updated.villaId);

@@ -59,9 +59,19 @@ export class ReservationsRepository {
     });
   }
 
-  findByIdempotencyKey(idempotencyKey: string): Promise<ReservationWithRelations | null> {
-    return this.prisma.reservation.findFirst({
-      where: { idempotencyKey, deletedAt: null },
+  /**
+   * Deliberately not filtered on `deletedAt`: the unique index behind the key covers every
+   * row, deleted ones included, so hiding a soft-deleted match here would only send the
+   * caller on to an insert the database is going to reject anyway. A retry of a request
+   * whose reservation was since cancelled should see that reservation, not a constraint
+   * error.
+   */
+  findByIdempotencyKey(
+    idempotencyKey: string,
+    client: ReservationsClient = this.prisma,
+  ): Promise<ReservationWithRelations | null> {
+    return client.reservation.findFirst({
+      where: { idempotencyKey },
       include: RESERVATION_INCLUDE,
     });
   }
@@ -136,6 +146,32 @@ export class ReservationsRepository {
 
   update(id: string, data: Prisma.ReservationUncheckedUpdateInput): Promise<ReservationWithRelations> {
     return this.prisma.reservation.update({ where: { id }, data, include: RESERVATION_INCLUDE });
+  }
+
+  /**
+   * Moves the status only if the row is still on `from`, and reports whether it did.
+   *
+   * `updateMany` rather than `update` because the status has to be part of the WHERE, and
+   * Prisma's `update` only matches on unique fields. Returning null instead of the row is
+   * what lets the caller tell "I moved it" from "someone else moved it first" — the two are
+   * indistinguishable once the write has landed.
+   *
+   * `updatedAt` is set here rather than left to the `@updatedAt` attribute. The optimistic
+   * concurrency check in `ReservationsService.update` compares against that column, so a
+   * transition that failed to move it would quietly hand out a stale token — too load-bearing
+   * to rest on which Prisma write paths populate the attribute.
+   */
+  async updateStatusFrom(
+    id: string,
+    from: ReservationStatus,
+    to: ReservationStatus,
+  ): Promise<ReservationWithRelations | null> {
+    const { count } = await this.prisma.reservation.updateMany({
+      where: { id, status: from, deletedAt: null },
+      data: { status: to, updatedAt: new Date() },
+    });
+
+    return count === 0 ? null : this.findById(id);
   }
 
   /**

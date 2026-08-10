@@ -140,7 +140,7 @@
           <td data-label="Rez. No">{{ reservation.reservationNumber }}</td>
           <td data-label="Müşteri">{{ reservation.customer.firstName }} {{ reservation.customer.lastName }}</td>
           <td data-label="Giriş - Çıkış">
-            {{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}
+            {{ reservation.checkIn | date: 'dd.MM.yyyy' : 'UTC' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' : 'UTC' }}
           </td>
           <td data-label="Misafir">{{ reservation.guestCount }}</td>
           <td data-label="Durum">
