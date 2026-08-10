@@ -64,6 +64,8 @@
     "RESERVATION_STALE_WRITE": "Someone else changed this reservation after you opened it",
     "RESERVATION_INVALID_DATE_RANGE": "Check-out must be after check-in",
     "RESERVATION_GUEST_COUNT_EXCEEDS_CAPACITY": "The guest count exceeds the floor capacity",
+    "RESERVATION_DELETE_IN_STAY": "A reservation cannot be deleted while the guest is checked in",
+    "RESERVATION_DELETE_HAS_PAYMENTS": "A reservation with recorded payments cannot be deleted — cancel it instead",
     "HOUSEKEEPING_TASK_NOT_FOUND": "Housekeeping task not found",
     "HOUSEKEEPING_INVALID_TRANSITION": "The housekeeping task cannot move to that status",
     "MAINTENANCE_RECORD_NOT_FOUND": "Maintenance record not found",

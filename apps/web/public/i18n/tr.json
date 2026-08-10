@@ -64,6 +64,8 @@
     "RESERVATION_STALE_WRITE": "Bu rezervasyon siz açtıktan sonra başkası tarafından değiştirildi",
     "RESERVATION_INVALID_DATE_RANGE": "Çıkış tarihi giriş tarihinden sonra olmalı",
     "RESERVATION_GUEST_COUNT_EXCEEDS_CAPACITY": "Misafir sayısı kat kapasitesini aşıyor",
+    "RESERVATION_DELETE_IN_STAY": "Misafir içerideyken rezervasyon silinemez",
+    "RESERVATION_DELETE_HAS_PAYMENTS": "Ödeme kaydı olan rezervasyon silinemez; bunun yerine iptal edin",
     "HOUSEKEEPING_TASK_NOT_FOUND": "Temizlik görevi bulunamadı",
     "HOUSEKEEPING_INVALID_TRANSITION": "Temizlik görevi bu duruma geçirilemez",
     "MAINTENANCE_RECORD_NOT_FOUND": "Bakım kaydı bulunamadı",

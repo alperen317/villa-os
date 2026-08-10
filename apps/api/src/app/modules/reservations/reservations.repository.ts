@@ -24,6 +24,13 @@ export type ReservationWithRelations = Prisma.ReservationGetPayload<{
 /** Either the plain client or one bound to an open transaction. */
 export type ReservationsClient = PrismaService | Prisma.TransactionClient;
 
+/** A unit already taken during a window — the shape availability search reasons over. */
+export interface BookedUnit {
+  villaId: string;
+  floorId: string;
+  floor: { isEntireVilla: boolean };
+}
+
 @Injectable()
 export class ReservationsRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -149,6 +156,20 @@ export class ReservationsRepository {
   }
 
   /**
+   * Note this leaves `idempotencyKey` in place. The key's unique index spans deleted rows
+   * too, and `findByIdempotencyKey` deliberately looks past `deletedAt` for that reason: a
+   * client replaying a create whose reservation was since deleted should be handed that
+   * reservation, not a constraint error from a row it cannot see.
+   */
+  softDelete(id: string): Promise<ReservationWithRelations> {
+    return this.prisma.reservation.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+      include: RESERVATION_INCLUDE,
+    });
+  }
+
+  /**
    * Moves the status only if the row is still on `from`, and reports whether it did.
    *
    * `updateMany` rather than `update` because the status has to be part of the WHERE, and
@@ -172,6 +193,43 @@ export class ReservationsRepository {
     });
 
     return count === 0 ? null : this.findById(id);
+  }
+
+  /**
+   * Queried straight off the payments table rather than through PaymentsService, which
+   * already depends on this module — going the other way would close the cycle.
+   */
+  async hasPayments(reservationId: string): Promise<boolean> {
+    return (await this.prisma.payment.count({ where: { reservationId } })) > 0;
+  }
+
+  /**
+   * Every unit taken during the window across a set of villas, in one query.
+   *
+   * `findConflicting` answers the same question for a single unit, which is right when there
+   * *is* a single unit — but availability search asks it of every rentable floor at once, and
+   * asking one query per floor means one query per floor in the system when no villa is
+   * chosen. The caller applies the FR-401/FR-402 rules over this set instead.
+   *
+   * Filtered on `reservation.villaId` rather than `floor.villaId` so the (villaId, checkIn)
+   * index carries the scan; a reservation's floor always belongs to its villa, which `create`
+   * enforces through `FloorsService.findOneOrThrow`.
+   */
+  findOverlappingUnits(
+    villaIds: string[],
+    checkIn: Date,
+    checkOut: Date,
+  ): Promise<BookedUnit[]> {
+    return this.prisma.reservation.findMany({
+      where: {
+        villaId: { in: villaIds },
+        deletedAt: null,
+        status: { not: 'Cancelled' },
+        checkIn: { lt: checkOut },
+        checkOut: { gt: checkIn },
+      },
+      select: { villaId: true, floorId: true, floor: { select: { isEntireVilla: true } } },
+    });
   }
 
   /**

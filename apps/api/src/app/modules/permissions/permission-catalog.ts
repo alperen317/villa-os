@@ -36,6 +36,12 @@ export const PERMISSION_CATALOG: PermissionDefinition[] = [
     defaults: { Operations: true },
   },
   {
+    key: 'reservations.delete',
+    module: 'Rezervasyonlar',
+    label: 'Rezervasyon sil',
+    defaults: {},
+  },
+  {
     key: 'customers.read',
     module: 'Müşteriler',
     label: 'Müşterileri görüntüle',

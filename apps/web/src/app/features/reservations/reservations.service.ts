@@ -63,6 +63,16 @@ export class ReservationsService {
     return firstValueFrom(this.http.get<Reservation>(`${API_BASE_URL}/reservations/${id}`));
   }
 
+  /**
+   * For a booking entered by mistake. A stay that fell through goes through `cancel`, which
+   * keeps it in the record; the API refuses to delete one that is checked in or that payments
+   * are attributed to. Not routed through the outbox — deleting something the server may
+   * never have seen has no sensible offline meaning.
+   */
+  remove(id: string): Promise<void> {
+    return firstValueFrom(this.http.delete<void>(`${API_BASE_URL}/reservations/${id}`));
+  }
+
   async create(input: CreateReservationInput, summary: string): Promise<ReservationWriteResult> {
     if (this.shouldQueue()) {
       const item = await this.syncQueueStore.enqueueCreate(input, summary);

@@ -1,4 +1,6 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { AppException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { randomBytes } from 'node:crypto';
 import { CustomersService } from '../customers/customers.service';
 import { HousekeepingService } from '../housekeeping/housekeeping.service';
@@ -204,6 +206,39 @@ export class ReservationsService {
     return updated;
   }
 
+  /**
+   * Soft-deletes a reservation — for a booking entered by mistake, not for one that fell
+   * through; a guest who cancels goes through the Cancelled transition, which keeps the stay
+   * in the record and in the reports.
+   *
+   * Two things are refused rather than hidden. A CheckedIn stay is a guest currently in the
+   * unit, and deleting it drops the row out of every conflict check, so the unit would read
+   * as free while it is occupied. A reservation with payments against it is the only link
+   * those payments have to a villa, a customer and a date — removing it from every query
+   * that filters `deletedAt` would leave the money recorded but unattributable.
+   */
+  async remove(id: string): Promise<void> {
+    const reservation = await this.findOneOrThrow(id);
+
+    if (reservation.status === ReservationStatus.CheckedIn) {
+      throw new AppException(
+        HttpStatus.CONFLICT,
+        ErrorCode.RESERVATION_DELETE_IN_STAY,
+        'A reservation cannot be deleted while the guest is checked in',
+      );
+    }
+
+    if (await this.reservationsRepository.hasPayments(id)) {
+      throw new AppException(
+        HttpStatus.CONFLICT,
+        ErrorCode.RESERVATION_DELETE_HAS_PAYMENTS,
+        'A reservation with recorded payments cannot be deleted',
+      );
+    }
+
+    await this.reservationsRepository.softDelete(id);
+  }
+
   async findAvailableFloors(query: AvailabilityQueryDto): Promise<FloorWithVilla[]> {
     const checkIn = new Date(query.checkIn);
     const checkOut = new Date(query.checkOut);
@@ -213,21 +248,34 @@ export class ReservationsService {
     }
 
     const candidates = await this.floorsService.findRentableFloors(query.villaId);
+    if (candidates.length === 0) {
+      return [];
+    }
 
-    const availability = await Promise.all(
-      candidates.map(async (floor) => {
-        const conflict = await this.reservationsRepository.findConflicting({
-          villaId: floor.villaId,
-          floorId: floor.id,
-          isEntireVillaFloor: floor.isEntireVilla,
-          checkIn,
-          checkOut,
-        });
-        return conflict ? null : floor;
-      }),
+    // One query for every candidate, rather than a conflict check per floor: `villaId` is
+    // optional, so an unscoped search would otherwise issue one query per rentable floor in
+    // the system. The FR-401/FR-402 rules are applied over the result here instead — the same
+    // ones `findConflicting` expresses in SQL for the single-unit case.
+    const villaIds = [...new Set(candidates.map((floor) => floor.villaId))];
+    const booked = await this.reservationsRepository.findOverlappingUnits(
+      villaIds,
+      checkIn,
+      checkOut,
     );
 
-    return availability.filter((floor): floor is FloorWithVilla => floor !== null);
+    const bookedFloorIds = new Set(booked.map((unit) => unit.floorId));
+    const villasWithAnyBooking = new Set(booked.map((unit) => unit.villaId));
+    const villasBookedWhole = new Set(
+      booked.filter((unit) => unit.floor.isEntireVilla).map((unit) => unit.villaId),
+    );
+
+    return candidates.filter((floor) =>
+      floor.isEntireVilla
+        ? // Letting the whole villa needs every floor of it free.
+          !villasWithAnyBooking.has(floor.villaId)
+        : // A single floor needs itself free, and the villa not let out whole.
+          !bookedFloorIds.has(floor.id) && !villasBookedWhole.has(floor.villaId),
+    );
   }
 
   private calculateNights(checkIn: Date, checkOut: Date): number {

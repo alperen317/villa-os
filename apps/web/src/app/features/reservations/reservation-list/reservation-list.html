@@ -207,6 +207,19 @@
                   </ul>
                 </nz-dropdown-menu>
               }
+              @if (canDelete()) {
+                <button
+                  nz-button
+                  nzType="text"
+                  nzDanger
+                  aria-label="Rezervasyonu sil"
+                  nz-popconfirm
+                  nzPopconfirmTitle="Bu rezervasyonu silmek istediğine emin misin? Misafir vazgeçtiyse silmek yerine iptal et."
+                  (nzOnConfirm)="remove(reservation)"
+                >
+                  <nz-icon nzType="delete" />
+                </button>
+              }
             </td>
           </tr>
         }

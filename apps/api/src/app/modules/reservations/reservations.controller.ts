@@ -1,4 +1,18 @@
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Query, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { RequirePermission } from '../permissions/decorators/require-permission.decorator';
@@ -97,5 +111,13 @@ export class ReservationsController {
   @ApiOperation({ summary: 'Pending/Confirmed -> Cancelled' })
   cancel(@Param('id', ParseUUIDPipe) id: string): Promise<ReservationWithRelations> {
     return this.reservationsService.transition(id, ReservationStatus.Cancelled);
+  }
+
+  @Delete(':id')
+  @RequirePermission('reservations.delete')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Soft-delete a reservation entered by mistake (use cancel otherwise)' })
+  async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    await this.reservationsService.remove(id);
   }
 }

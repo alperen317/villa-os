@@ -1,4 +1,6 @@
+import { BadRequestException, HttpException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { CustomersService } from '../customers/customers.service';
 import { HousekeepingService } from '../housekeeping/housekeeping.service';
 import { FloorsService } from '../villas/floors.service';
@@ -36,6 +38,28 @@ function reservation(overrides: Partial<ReservationWithRelations> = {}): Reserva
 /** Stand-in for the Prisma transaction client handed to work inside the villa lock. */
 const TRANSACTION_CLIENT = { transaction: 'villa-lock' };
 
+/**
+ * DomainException carries its `code` in the response body rather than on the error object,
+ * so asserting on the class alone would pass for any of the codes a method can raise.
+ */
+async function codeOfRejection(work: Promise<unknown>): Promise<unknown> {
+  try {
+    await work;
+  } catch (error) {
+    return ((error as HttpException).getResponse() as { code: string }).code;
+  }
+
+  throw new Error('Expected the call to reject, but it resolved');
+}
+
+function rentableFloor(id: string, villaId: string, isEntireVilla = false) {
+  return { id, villaId, isEntireVilla, name: id, rentable: true } as never;
+}
+
+function bookedUnit(villaId: string, floorId: string, isEntireVilla = false) {
+  return { villaId, floorId, floor: { isEntireVilla } };
+}
+
 describe('ReservationsService', () => {
   let service: ReservationsService;
   let reservationsRepository: jest.Mocked<ReservationsRepository>;
@@ -54,6 +78,9 @@ describe('ReservationsService', () => {
             findById: jest.fn(),
             update: jest.fn(),
             updateStatusFrom: jest.fn(),
+            findOverlappingUnits: jest.fn(),
+            softDelete: jest.fn(),
+            hasPayments: jest.fn(),
             create: jest.fn(),
             findConflicting: jest.fn(),
             findByIdempotencyKey: jest.fn(),
@@ -66,7 +93,7 @@ describe('ReservationsService', () => {
           },
         },
         { provide: VillasService, useValue: { findOneOrThrow: jest.fn() } },
-        { provide: FloorsService, useValue: { findOneOrThrow: jest.fn() } },
+        { provide: FloorsService, useValue: { findOneOrThrow: jest.fn(), findRentableFloors: jest.fn() } },
         { provide: CustomersService, useValue: { findOneOrThrow: jest.fn() } },
         { provide: HousekeepingService, useValue: { createForReservation: jest.fn() } },
       ],
@@ -288,6 +315,130 @@ describe('ReservationsService', () => {
 
       await expect(service.update('reservation-1', { guestCount: 5 } as never)).rejects.toThrow();
       expect(reservationsRepository.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('remove', () => {
+    it('soft-deletes a reservation that is neither in stay nor carrying payments', async () => {
+      reservationsRepository.findById.mockResolvedValue(
+        reservation({ status: ReservationStatus.Pending }),
+      );
+      reservationsRepository.hasPayments.mockResolvedValue(false);
+
+      await service.remove('reservation-1');
+
+      expect(reservationsRepository.softDelete).toHaveBeenCalledWith('reservation-1');
+    });
+
+    it('refuses to delete a stay the guest is currently in', async () => {
+      reservationsRepository.findById.mockResolvedValue(
+        reservation({ status: ReservationStatus.CheckedIn }),
+      );
+
+      expect(await codeOfRejection(service.remove('reservation-1'))).toBe(
+        ErrorCode.RESERVATION_DELETE_IN_STAY,
+      );
+      expect(reservationsRepository.softDelete).not.toHaveBeenCalled();
+    });
+
+    it('refuses to delete a reservation the payments are attributed to', async () => {
+      reservationsRepository.findById.mockResolvedValue(
+        reservation({ status: ReservationStatus.Completed }),
+      );
+      reservationsRepository.hasPayments.mockResolvedValue(true);
+
+      expect(await codeOfRejection(service.remove('reservation-1'))).toBe(
+        ErrorCode.RESERVATION_DELETE_HAS_PAYMENTS,
+      );
+      expect(reservationsRepository.softDelete).not.toHaveBeenCalled();
+    });
+
+    it('rejects an unknown reservation', async () => {
+      reservationsRepository.findById.mockResolvedValue(null);
+
+      await expect(service.remove('reservation-1')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('findAvailableFloors', () => {
+    const window = { checkIn: '2026-03-01', checkOut: '2026-03-05' } as never;
+
+    it('asks for every candidate villa in one query rather than one per floor', async () => {
+      floorsService.findRentableFloors.mockResolvedValue([
+        rentableFloor('floor-1', 'villa-1'),
+        rentableFloor('floor-2', 'villa-1'),
+        rentableFloor('floor-3', 'villa-2'),
+      ]);
+      reservationsRepository.findOverlappingUnits.mockResolvedValue([]);
+
+      const result = await service.findAvailableFloors(window);
+
+      expect(reservationsRepository.findOverlappingUnits).toHaveBeenCalledTimes(1);
+      expect(reservationsRepository.findOverlappingUnits).toHaveBeenCalledWith(
+        ['villa-1', 'villa-2'],
+        new Date('2026-03-01'),
+        new Date('2026-03-05'),
+      );
+      expect(result).toHaveLength(3);
+    });
+
+    it('drops a floor that is booked itself', async () => {
+      floorsService.findRentableFloors.mockResolvedValue([
+        rentableFloor('floor-1', 'villa-1'),
+        rentableFloor('floor-2', 'villa-1'),
+      ]);
+      reservationsRepository.findOverlappingUnits.mockResolvedValue([
+        bookedUnit('villa-1', 'floor-1'),
+      ]);
+
+      const result = await service.findAvailableFloors(window);
+
+      expect(result.map((floor) => floor.id)).toEqual(['floor-2']);
+    });
+
+    it('drops every floor of a villa that is let out whole (FR-401)', async () => {
+      floorsService.findRentableFloors.mockResolvedValue([
+        rentableFloor('villa-1-whole', 'villa-1', true),
+        rentableFloor('floor-1', 'villa-1'),
+        rentableFloor('floor-9', 'villa-2'),
+      ]);
+      reservationsRepository.findOverlappingUnits.mockResolvedValue([
+        bookedUnit('villa-1', 'villa-1-whole', true),
+      ]);
+
+      const result = await service.findAvailableFloors(window);
+
+      expect(result.map((floor) => floor.id)).toEqual(['floor-9']);
+    });
+
+    it('drops the entire-villa unit when any single floor of that villa is booked (FR-402)', async () => {
+      floorsService.findRentableFloors.mockResolvedValue([
+        rentableFloor('villa-1-whole', 'villa-1', true),
+        rentableFloor('floor-1', 'villa-1'),
+        rentableFloor('floor-2', 'villa-1'),
+      ]);
+      reservationsRepository.findOverlappingUnits.mockResolvedValue([
+        bookedUnit('villa-1', 'floor-1'),
+      ]);
+
+      const result = await service.findAvailableFloors(window);
+
+      expect(result.map((floor) => floor.id)).toEqual(['floor-2']);
+    });
+
+    it('skips the query entirely when nothing is rentable', async () => {
+      floorsService.findRentableFloors.mockResolvedValue([]);
+
+      const result = await service.findAvailableFloors(window);
+
+      expect(result).toEqual([]);
+      expect(reservationsRepository.findOverlappingUnits).not.toHaveBeenCalled();
+    });
+
+    it('rejects a window that ends before it starts', async () => {
+      await expect(
+        service.findAvailableFloors({ checkIn: '2026-03-05', checkOut: '2026-03-01' } as never),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 

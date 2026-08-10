@@ -13,6 +13,7 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { NzSegmentedModule } from 'ng-zorro-antd/segmented';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
@@ -69,6 +70,7 @@ const CALENDAR_PAGE_SIZE = 100;
     NzInputModule,
     NzInputNumberModule,
     NzModalModule,
+    NzPopconfirmModule,
     NzSegmentedModule,
     NzSelectModule,
     NzSkeletonModule,
@@ -168,6 +170,12 @@ export class ReservationList implements OnInit {
     const role = this.authService.currentUser()?.role;
     return role ? PAYMENT_MANAGER_ROLES.has(role) : false;
   });
+
+  /** `reservations.delete` ships granted to no configurable role, so only the Administrator
+   *  bypass reaches it — showing the button to anyone else would only produce a 403. */
+  protected readonly canDelete = computed(
+    () => this.authService.currentUser()?.role === 'Administrator',
+  );
 
   protected readonly paymentForm = this.formBuilder.nonNullable.group({
     amount: [0, [Validators.required, Validators.min(0.01)]],
@@ -807,6 +815,21 @@ export class ReservationList implements OnInit {
         await this.loadCalendarData();
       }
     } catch (error) {
+      this.message.error(this.extractErrorMessage(error));
+    }
+  }
+
+  async remove(reservation: Reservation): Promise<void> {
+    try {
+      await this.reservationsService.remove(reservation.id);
+      this.message.success('Rezervasyon silindi');
+      await this.loadPage();
+      if (this.viewMode() === 'calendar') {
+        await this.loadCalendarData();
+      }
+    } catch (error) {
+      // The API refuses an in-stay or paid reservation with a reason worth reading, so the
+      // server's message is surfaced rather than a generic "silinemedi".
       this.message.error(this.extractErrorMessage(error));
     }
   }
