@@ -4,7 +4,7 @@ import { CreateHousekeepingTaskDto } from './dto/create-housekeeping-task.dto';
 import { InvalidHousekeepingTransitionException } from './exceptions/invalid-housekeeping-transition.exception';
 import { HousekeepingRepository, HousekeepingTaskWithRelations } from './housekeeping.repository';
 import { ListHousekeepingTasksQueryDto } from './dto/list-housekeeping-tasks-query.dto';
-import { HousekeepingStatus } from '../../../generated/prisma/client';
+import { HousekeepingStatus, Prisma } from '../../../generated/prisma/client';
 import { AppException } from '../../common/errors/domain.exception';
 import { ErrorCode } from '../../common/errors/error-codes';
 
@@ -71,6 +71,13 @@ export class HousekeepingService {
     return task;
   }
 
+  /**
+   * A queue two people are working from at once, on phones, is the normal case here — so the
+   * gap between reading the status and writing it is a gap two taps genuinely land in. Both
+   * transitions carry the status they expect into the WHERE, which makes the database the
+   * one that decides: the second tap matches no row and is told the task already moved,
+   * rather than silently overwriting whoever claimed it first.
+   */
   async start(id: string, currentUserId: string): Promise<HousekeepingTaskWithRelations> {
     const task = await this.findOneOrThrow(id);
 
@@ -78,7 +85,7 @@ export class HousekeepingService {
       throw new InvalidHousekeepingTransitionException(task.status, HousekeepingStatus.InProgress);
     }
 
-    return this.housekeepingRepository.update(id, {
+    return this.applyTransition(id, HousekeepingStatus.Pending, HousekeepingStatus.InProgress, {
       status: HousekeepingStatus.InProgress,
       startedAt: new Date(),
       assignedUserId: task.assignedUserId ?? currentUserId,
@@ -92,9 +99,26 @@ export class HousekeepingService {
       throw new InvalidHousekeepingTransitionException(task.status, HousekeepingStatus.Completed);
     }
 
-    return this.housekeepingRepository.update(id, {
+    return this.applyTransition(id, HousekeepingStatus.InProgress, HousekeepingStatus.Completed, {
       status: HousekeepingStatus.Completed,
       completedAt: new Date(),
     });
+  }
+
+  private async applyTransition(
+    id: string,
+    from: HousekeepingStatus,
+    to: HousekeepingStatus,
+    data: Prisma.HousekeepingTaskUncheckedUpdateInput,
+  ): Promise<HousekeepingTaskWithRelations> {
+    const updated = await this.housekeepingRepository.updateFromStatus(id, from, data);
+
+    if (!updated) {
+      // Report the status it actually holds now, not the one this request read.
+      const current = await this.findOneOrThrow(id);
+      throw new InvalidHousekeepingTransitionException(current.status, to);
+    }
+
+    return updated;
   }
 }

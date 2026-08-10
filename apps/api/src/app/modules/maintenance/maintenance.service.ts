@@ -5,7 +5,7 @@ import { ListAllMaintenanceRecordsQueryDto } from './dto/list-all-maintenance-re
 import { ListMaintenanceRecordsQueryDto } from './dto/list-maintenance-records-query.dto';
 import { InvalidMaintenanceTransitionException } from './exceptions/invalid-maintenance-transition.exception';
 import { MaintenanceRepository, MaintenanceRecordWithVilla } from './maintenance.repository';
-import { MaintenanceRecord, MaintenanceStatus } from '../../../generated/prisma/client';
+import { MaintenanceRecord, MaintenanceStatus, Prisma } from '../../../generated/prisma/client';
 import { AppException } from '../../common/errors/domain.exception';
 import { ErrorCode } from '../../common/errors/error-codes';
 
@@ -71,6 +71,12 @@ export class MaintenanceService {
     return record;
   }
 
+  /**
+   * The status is read here and written a statement later, and two people working the same
+   * villa's record list can both land in that gap. Carrying the expected status into the
+   * WHERE lets the database settle it: the second request matches no row and is told the
+   * record already moved, instead of overwriting completedAt with its own timestamp.
+   */
   async start(villaId: string, id: string): Promise<MaintenanceRecord> {
     const record = await this.findOneOrThrow(villaId, id);
 
@@ -78,7 +84,9 @@ export class MaintenanceService {
       throw new InvalidMaintenanceTransitionException(record.status, MaintenanceStatus.InProgress);
     }
 
-    return this.maintenanceRepository.update(id, { status: MaintenanceStatus.InProgress });
+    return this.applyTransition(villaId, id, MaintenanceStatus.Open, MaintenanceStatus.InProgress, {
+      status: MaintenanceStatus.InProgress,
+    });
   }
 
   async complete(villaId: string, id: string): Promise<MaintenanceRecord> {
@@ -88,9 +96,30 @@ export class MaintenanceService {
       throw new InvalidMaintenanceTransitionException(record.status, MaintenanceStatus.Completed);
     }
 
-    return this.maintenanceRepository.update(id, {
-      status: MaintenanceStatus.Completed,
-      completedAt: new Date(),
-    });
+    return this.applyTransition(
+      villaId,
+      id,
+      MaintenanceStatus.InProgress,
+      MaintenanceStatus.Completed,
+      { status: MaintenanceStatus.Completed, completedAt: new Date() },
+    );
+  }
+
+  private async applyTransition(
+    villaId: string,
+    id: string,
+    from: MaintenanceStatus,
+    to: MaintenanceStatus,
+    data: Prisma.MaintenanceRecordUncheckedUpdateInput,
+  ): Promise<MaintenanceRecord> {
+    const updated = await this.maintenanceRepository.updateFromStatus(id, from, data);
+
+    if (!updated) {
+      // Report the status it actually holds now, not the one this request read.
+      const current = await this.findOneOrThrow(villaId, id);
+      throw new InvalidMaintenanceTransitionException(current.status, to);
+    }
+
+    return updated;
   }
 }

@@ -37,7 +37,13 @@ describe('HousekeepingService', () => {
         HousekeepingService,
         {
           provide: HousekeepingRepository,
-          useValue: { create: jest.fn(), findById: jest.fn(), findMany: jest.fn(), update: jest.fn() },
+          useValue: {
+            create: jest.fn(),
+            findById: jest.fn(),
+            findMany: jest.fn(),
+            update: jest.fn(),
+            updateFromStatus: jest.fn(),
+          },
         },
         { provide: VillasService, useValue: { findOneOrThrow: jest.fn() } },
       ],
@@ -121,24 +127,26 @@ describe('HousekeepingService', () => {
   describe('start', () => {
     it('moves a Pending task to InProgress and self-assigns when unassigned', async () => {
       repository.findById.mockResolvedValue(task());
-      repository.update.mockResolvedValue(task({ status: HousekeepingStatus.InProgress }));
+      repository.updateFromStatus.mockResolvedValue(task({ status: HousekeepingStatus.InProgress }));
 
       await service.start('task-1', 'user-1');
 
-      expect(repository.update).toHaveBeenCalledWith(
+      expect(repository.updateFromStatus).toHaveBeenCalledWith(
         'task-1',
+        HousekeepingStatus.Pending,
         expect.objectContaining({ status: HousekeepingStatus.InProgress, assignedUserId: 'user-1' }),
       );
     });
 
     it('keeps the existing assignee when the task is already assigned', async () => {
       repository.findById.mockResolvedValue(task({ assignedUserId: 'user-original' }));
-      repository.update.mockResolvedValue(task({ status: HousekeepingStatus.InProgress }));
+      repository.updateFromStatus.mockResolvedValue(task({ status: HousekeepingStatus.InProgress }));
 
       await service.start('task-1', 'user-2');
 
-      expect(repository.update).toHaveBeenCalledWith(
+      expect(repository.updateFromStatus).toHaveBeenCalledWith(
         'task-1',
+        HousekeepingStatus.Pending,
         expect.objectContaining({ assignedUserId: 'user-original' }),
       );
     });
@@ -149,18 +157,30 @@ describe('HousekeepingService', () => {
       await expect(service.start('task-1', 'user-1')).rejects.toThrow(
         InvalidHousekeepingTransitionException,
       );
+      expect(repository.updateFromStatus).not.toHaveBeenCalled();
+    });
+
+    it('rejects when another worker claimed the task between the read and the write', async () => {
+      repository.findById.mockResolvedValue(task({ status: HousekeepingStatus.Pending }));
+      // No row was still Pending by the time the write ran.
+      repository.updateFromStatus.mockResolvedValue(null);
+
+      await expect(service.start('task-1', 'user-1')).rejects.toThrow(
+        InvalidHousekeepingTransitionException,
+      );
     });
   });
 
   describe('complete', () => {
     it('moves an InProgress task to Completed', async () => {
       repository.findById.mockResolvedValue(task({ status: HousekeepingStatus.InProgress }));
-      repository.update.mockResolvedValue(task({ status: HousekeepingStatus.Completed }));
+      repository.updateFromStatus.mockResolvedValue(task({ status: HousekeepingStatus.Completed }));
 
       await service.complete('task-1');
 
-      expect(repository.update).toHaveBeenCalledWith(
+      expect(repository.updateFromStatus).toHaveBeenCalledWith(
         'task-1',
+        HousekeepingStatus.InProgress,
         expect.objectContaining({ status: HousekeepingStatus.Completed }),
       );
     });
@@ -169,6 +189,14 @@ describe('HousekeepingService', () => {
       repository.findById.mockResolvedValue(task({ status: HousekeepingStatus.Pending }));
 
       await expect(service.complete('task-1')).rejects.toThrow(InvalidHousekeepingTransitionException);
+    });
+
+    it('rejects when the task was completed by someone else first, without overwriting completedAt', async () => {
+      repository.findById.mockResolvedValue(task({ status: HousekeepingStatus.InProgress }));
+      repository.updateFromStatus.mockResolvedValue(null);
+
+      await expect(service.complete('task-1')).rejects.toThrow(InvalidHousekeepingTransitionException);
+      expect(repository.update).not.toHaveBeenCalled();
     });
   });
 });

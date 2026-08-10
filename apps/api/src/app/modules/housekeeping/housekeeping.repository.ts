@@ -61,4 +61,24 @@ export class HousekeepingRepository {
       include: HOUSEKEEPING_TASK_INCLUDE,
     });
   }
+
+  /**
+   * Applies the update only if the task is still on `from`, and reports whether it did.
+   *
+   * `updateMany` rather than `update` because the status has to be part of the WHERE and
+   * Prisma's `update` only matches on unique fields. Null means somebody else moved the task
+   * first — a distinction the caller cannot recover once the write has landed.
+   */
+  async updateFromStatus(
+    id: string,
+    from: HousekeepingStatus,
+    data: Prisma.HousekeepingTaskUncheckedUpdateInput,
+  ): Promise<HousekeepingTaskWithRelations | null> {
+    const { count } = await this.prisma.housekeepingTask.updateMany({
+      where: { id, status: from },
+      data,
+    });
+
+    return count === 0 ? null : this.findById(id);
+  }
 }

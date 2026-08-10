@@ -61,4 +61,24 @@ export class MaintenanceRepository {
   ): Promise<MaintenanceRecord> {
     return this.prisma.maintenanceRecord.update({ where: { id }, data });
   }
+
+  /**
+   * Applies the update only if the record is still on `from`, and reports whether it did.
+   *
+   * `updateMany` rather than `update` because the status has to be part of the WHERE and
+   * Prisma's `update` only matches on unique fields. Null means somebody else moved the
+   * record first — a distinction the caller cannot recover once the write has landed.
+   */
+  async updateFromStatus(
+    id: string,
+    from: MaintenanceStatus,
+    data: Prisma.MaintenanceRecordUncheckedUpdateInput,
+  ): Promise<MaintenanceRecord | null> {
+    const { count } = await this.prisma.maintenanceRecord.updateMany({
+      where: { id, status: from },
+      data,
+    });
+
+    return count === 0 ? null : this.findById(id);
+  }
 }
