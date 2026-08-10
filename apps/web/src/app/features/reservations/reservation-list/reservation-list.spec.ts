@@ -42,13 +42,17 @@ describe('ReservationList', () => {
     get: jest.Mock;
     remove: jest.Mock;
   };
+  let currentUser: ReturnType<typeof signal<{ role: string } | null>>;
+  let message: { success: jest.Mock; error: jest.Mock };
 
   beforeEach(() => {
     reservationsService = {
       list: jest.fn().mockResolvedValue({ data: [], total: 0 }),
       get: jest.fn(),
-      remove: jest.fn(),
+      remove: jest.fn().mockResolvedValue(undefined),
     };
+    currentUser = signal<{ role: string } | null>(null);
+    message = { success: jest.fn(), error: jest.fn() };
 
     TestBed.configureTestingModule({
       providers: [
@@ -69,7 +73,7 @@ describe('ReservationList', () => {
           provide: PaymentsService,
           useValue: { getSummary: jest.fn(), create: jest.fn() },
         },
-        { provide: AuthService, useValue: { currentUser: signal(null) } },
+        { provide: AuthService, useValue: { currentUser } },
         { provide: ViewportService, useValue: { isMobile: signal(true) } },
         {
           provide: SyncQueueStore,
@@ -80,10 +84,7 @@ describe('ReservationList', () => {
             clearResolveTarget: jest.fn(),
           },
         },
-        {
-          provide: NzMessageService,
-          useValue: { success: jest.fn(), error: jest.fn() },
-        },
+        { provide: NzMessageService, useValue: message },
         { provide: Router, useValue: { navigate: jest.fn() } },
         {
           provide: ActivatedRoute,
@@ -193,6 +194,57 @@ describe('ReservationList', () => {
       await stale;
 
       expect(component['calendarReservations']().map((item) => item.id)).toEqual(['newer']);
+    });
+  });
+
+  describe('delete', () => {
+    it.each([
+      ['Administrator', true],
+      ['Operations', false],
+      ['Accounting', false],
+      ['Housekeeping', false],
+    ])('offers deletion to %s: %s', (role, allowed) => {
+      // reservations.delete is granted to no configurable role, so anyone but the admin
+      // would only ever get a 403 out of the button.
+      currentUser.set({ role });
+
+      expect(component['canDelete']()).toBe(allowed);
+    });
+
+    it('is hidden from a signed-out session', () => {
+      currentUser.set(null);
+
+      expect(component['canDelete']()).toBe(false);
+    });
+
+    it('re-reads the list after deleting, so the row disappears', async () => {
+      await component.remove(reservation({ id: 'reservation-9' }));
+
+      expect(reservationsService.remove).toHaveBeenCalledWith('reservation-9');
+      expect(reservationsService.list).toHaveBeenCalled();
+      expect(message.success).toHaveBeenCalled();
+    });
+
+    it('also refreshes the calendar when that is the open view', async () => {
+      component.setViewMode('calendar');
+      reservationsService.list.mockClear();
+
+      await component.remove(reservation());
+
+      // Two reads: the list page and the calendar window.
+      expect(reservationsService.list.mock.calls.length).toBeGreaterThan(1);
+    });
+
+    it("surfaces the API's reason rather than a generic failure", async () => {
+      // The refusals are worth reading — the stay is in progress, or payments hang off it.
+      reservationsService.remove.mockRejectedValue({
+        error: { message: 'Ödeme kaydı olan rezervasyon silinemez' },
+      });
+
+      await component.remove(reservation());
+
+      expect(message.error).toHaveBeenCalledWith('Ödeme kaydı olan rezervasyon silinemez');
+      expect(message.success).not.toHaveBeenCalled();
     });
   });
 
