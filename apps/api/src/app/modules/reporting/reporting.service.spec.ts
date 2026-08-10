@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
 import {
+  ReportExpense,
   ReportPayment,
   ReportReservation,
   ReportVilla,
@@ -40,6 +41,20 @@ function payment(overrides: Partial<ReportPayment> = {}): ReportPayment {
   };
 }
 
+function expense(overrides: Partial<ReportExpense> = {}): ReportExpense {
+  return {
+    id: 'expense-1',
+    amount: 1200,
+    category: 'Utilities' as never,
+    expenseDate: new Date('2026-08-02T00:00:00.000Z'),
+    description: 'Elektrik faturası',
+    supplier: null,
+    villaId: 'villa-1',
+    villaName: 'Bodrum Villa',
+    ...overrides,
+  };
+}
+
 describe('ReportingService', () => {
   let service: ReportingService;
   let repository: jest.Mocked<ReportingRepository>;
@@ -54,6 +69,7 @@ describe('ReportingService', () => {
             listActiveVillas: jest.fn(),
             findReservationsOverlapping: jest.fn(),
             findPaymentsInRange: jest.fn(),
+            findExpensesInRange: jest.fn().mockResolvedValue([]),
           },
         },
       ],
@@ -185,6 +201,123 @@ describe('ReportingService', () => {
       expect(report.totalRevenue).toBe(0);
       expect(report.paymentCount).toBe(0);
       expect(report.byMethod).toEqual([]);
+    });
+
+    it('nets the same window off against expenses', async () => {
+      repository.findPaymentsInRange.mockResolvedValue([payment({ amount: 9000 })]);
+      repository.findExpensesInRange.mockResolvedValue([
+        expense({ amount: 1200 }),
+        expense({ id: 'e2', amount: 800 }),
+      ]);
+
+      const report = await service.getRevenueReport({
+        from: '2026-08-01',
+        to: '2026-08-06',
+      } as never);
+
+      expect(report.totalExpenses).toBe(2000);
+      expect(report.netProfit).toBe(7000);
+    });
+
+    it('reports a loss rather than clamping it at zero', async () => {
+      // A quiet month with a new boiler in it is a real outcome, and rounding it up to
+      // break-even would hide exactly the month worth looking at.
+      repository.findPaymentsInRange.mockResolvedValue([payment({ amount: 1000 })]);
+      repository.findExpensesInRange.mockResolvedValue([expense({ amount: 4500 })]);
+
+      const report = await service.getRevenueReport({
+        from: '2026-08-01',
+        to: '2026-08-06',
+      } as never);
+
+      expect(report.netProfit).toBe(-3500);
+    });
+
+    it('keeps the net exact where floating point would drift', async () => {
+      repository.findPaymentsInRange.mockResolvedValue([
+        payment({ id: 'p1', amount: 0.1 }),
+        payment({ id: 'p2', amount: 0.2 }),
+      ]);
+      repository.findExpensesInRange.mockResolvedValue([expense({ amount: 0.3 })]);
+
+      const report = await service.getRevenueReport({
+        from: '2026-08-01',
+        to: '2026-08-06',
+      } as never);
+
+      expect(report.netProfit).toBe(0);
+    });
+  });
+
+  describe('getExpensesReport (FR-1005)', () => {
+    it('groups by category and sorts the heaviest first', async () => {
+      repository.findExpensesInRange.mockResolvedValue([
+        expense({ id: 'e1', category: 'Utilities' as never, amount: 1200 }),
+        expense({ id: 'e2', category: 'Staff' as never, amount: 5000 }),
+        expense({ id: 'e3', category: 'Utilities' as never, amount: 800 }),
+      ]);
+
+      const report = await service.getExpensesReport({
+        from: '2026-08-01',
+        to: '2026-08-06',
+      } as never);
+
+      expect(report.totalExpenses).toBe(7000);
+      expect(report.expenseCount).toBe(3);
+      expect(report.byCategory).toEqual([
+        { category: 'Staff', amount: 5000, count: 1 },
+        { category: 'Utilities', amount: 2000, count: 2 },
+      ]);
+    });
+
+    it('separates the costs no villa carries, so per-villa totals are readable', async () => {
+      // These are excluded the moment the report is filtered to one villa; naming the
+      // figure is what stops the two views looking like an arithmetic error.
+      repository.findExpensesInRange.mockResolvedValue([
+        expense({ id: 'e1', villaId: 'villa-1', villaName: 'Bodrum Villa', amount: 1200 }),
+        expense({ id: 'e2', villaId: null, villaName: null, amount: 3000 }),
+      ]);
+
+      const report = await service.getExpensesReport({
+        from: '2026-08-01',
+        to: '2026-08-06',
+      } as never);
+
+      expect(report.unallocatedExpenses).toBe(3000);
+      expect(report.byVilla).toEqual([
+        { villaId: null, villaName: null, amount: 3000 },
+        { villaId: 'villa-1', villaName: 'Bodrum Villa', amount: 1200 },
+      ]);
+    });
+
+    it('files each cost under the day it is dated, and leaves the other days at zero', async () => {
+      repository.findExpensesInRange.mockResolvedValue([
+        expense({ id: 'e1', expenseDate: new Date('2026-08-02T00:00:00.000Z'), amount: 1200 }),
+        expense({ id: 'e2', expenseDate: new Date('2026-08-02T00:00:00.000Z'), amount: 800 }),
+      ]);
+
+      const report = await service.getExpensesReport({
+        from: '2026-08-01',
+        to: '2026-08-06',
+      } as never);
+
+      expect(report.daily).toHaveLength(5);
+      expect(report.daily.find((point) => point.date === '2026-08-02')?.amount).toBe(2000);
+      expect(report.daily.find((point) => point.date === '2026-08-03')?.amount).toBe(0);
+    });
+
+    it('returns an empty report rather than throwing when nothing was spent', async () => {
+      repository.findExpensesInRange.mockResolvedValue([]);
+
+      const report = await service.getExpensesReport({
+        from: '2026-08-01',
+        to: '2026-08-06',
+      } as never);
+
+      expect(report.totalExpenses).toBe(0);
+      expect(report.unallocatedExpenses).toBe(0);
+      expect(report.byCategory).toEqual([]);
+      expect(report.byVilla).toEqual([]);
     });
   });
 

@@ -3,6 +3,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RequirePermission } from '../permissions/decorators/require-permission.decorator';
 import {
   CustomersReport,
+  ExpensesReport,
   OccupancyReport,
   ReportingService,
   ReservationsReport,
@@ -27,6 +28,13 @@ export class ReportingController {
   @ApiOperation({ summary: 'Revenue report for a date range (FR-1002)' })
   getRevenue(@Query() query: ReportQueryDto): Promise<RevenueReport> {
     return this.reportingService.getRevenueReport(query);
+  }
+
+  @Get('expenses')
+  @RequirePermission('reports.read')
+  @ApiOperation({ summary: 'Expense report for a date range (FR-1005)' })
+  getExpenses(@Query() query: ReportQueryDto): Promise<ExpensesReport> {
+    return this.reportingService.getExpensesReport(query);
   }
 
   @Get('reservations')

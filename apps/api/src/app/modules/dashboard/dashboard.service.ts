@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { subtractMoney } from '../../common/money';
 import { DashboardRepository } from './dashboard.repository';
 
 export interface DashboardSummary {
@@ -9,6 +10,9 @@ export interface DashboardSummary {
   totalActiveVillas: number;
   occupancyRate: number;
   revenueThisMonth: number;
+  expensesThisMonth: number;
+  /** Revenue minus expenses for the same month; negative is a real answer. */
+  netThisMonth: number;
   openCleaningTasks: number;
   openMaintenanceTasks: number;
 }
@@ -29,6 +33,7 @@ export class DashboardService {
       occupiedVillas,
       totalActiveVillas,
       revenueThisMonth,
+      expensesThisMonth,
       openCleaningTasks,
       openMaintenanceTasks,
     ] = await Promise.all([
@@ -38,6 +43,7 @@ export class DashboardService {
       this.dashboardRepository.countOccupiedVillas(),
       this.dashboardRepository.countActiveVillas(),
       this.dashboardRepository.sumRevenueThisMonth(monthStart, monthEnd),
+      this.dashboardRepository.sumExpensesThisMonth(monthStart, monthEnd),
       this.dashboardRepository.countOpenHousekeepingTasks(),
       this.dashboardRepository.countOpenMaintenanceRecords(),
     ]);
@@ -50,6 +56,8 @@ export class DashboardService {
       totalActiveVillas,
       occupancyRate: this.calculateOccupancyRate(occupiedVillas, totalActiveVillas),
       revenueThisMonth,
+      expensesThisMonth,
+      netThisMonth: subtractMoney(revenueThisMonth, expensesThisMonth),
       openCleaningTasks,
       openMaintenanceTasks,
     };

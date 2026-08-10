@@ -1,8 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { addMoney, sumMoney } from '../../common/money';
+import { addMoney, subtractMoney, sumMoney } from '../../common/money';
 import { ReportingRepository } from './reporting.repository';
 import { ReportQueryDto } from './dto/report-query.dto';
-import { PaymentMethod, ReservationStatus } from '../../../generated/prisma/client';
+import {
+  ExpenseCategory,
+  PaymentMethod,
+  ReservationStatus,
+} from '../../../generated/prisma/client';
 
 export interface OccupancyReportVilla {
   villaId: string;
@@ -53,9 +57,55 @@ export interface RevenueReport {
   to: string;
   totalRevenue: number;
   paymentCount: number;
+  /** Expenses over the same window, so the two sides are always read together. */
+  totalExpenses: number;
+  netProfit: number;
   daily: RevenueReportDailyPoint[];
   byMethod: RevenueReportByMethod[];
   payments: RevenueReportPaymentRow[];
+}
+
+export interface ExpensesReportByCategory {
+  category: ExpenseCategory;
+  amount: number;
+  count: number;
+}
+
+export interface ExpensesReportDailyPoint {
+  date: string;
+  amount: number;
+}
+
+export interface ExpensesReportByVilla {
+  villaId: string | null;
+  villaName: string | null;
+  amount: number;
+}
+
+export interface ExpensesReportRow {
+  id: string;
+  expenseDate: string;
+  category: ExpenseCategory;
+  description: string;
+  supplier: string | null;
+  villaName: string | null;
+  amount: number;
+}
+
+export interface ExpensesReport {
+  from: string;
+  to: string;
+  totalExpenses: number;
+  expenseCount: number;
+  /**
+   * The part of `totalExpenses` carried by no single villa. Filtering the report by villa
+   * excludes these entirely, which is why per-villa totals do not add up to the whole.
+   */
+  unallocatedExpenses: number;
+  byCategory: ExpensesReportByCategory[];
+  byVilla: ExpensesReportByVilla[];
+  daily: ExpensesReportDailyPoint[];
+  expenses: ExpensesReportRow[];
 }
 
 export interface ReservationsReportByStatus {
@@ -199,7 +249,10 @@ export class ReportingService {
     const from = toDateOnly(query.from);
     const to = toDateOnly(query.to);
 
-    const payments = await this.reportingRepository.findPaymentsInRange(from, to, query.villaId);
+    const [payments, expenses] = await Promise.all([
+      this.reportingRepository.findPaymentsInRange(from, to, query.villaId),
+      this.reportingRepository.findExpensesInRange(from, to, query.villaId),
+    ]);
 
     const dailyMap = new Map<string, number>();
     const methodMap = new Map<PaymentMethod, number>();
@@ -226,12 +279,17 @@ export class ReportingService {
     );
 
     const totalRevenue = sumMoney(payments.map((payment) => payment.amount));
+    const totalExpenses = sumMoney(expenses.map((expense) => expense.amount));
 
     return {
       from: query.from,
       to: query.to,
       totalRevenue,
       paymentCount: payments.length,
+      totalExpenses,
+      // Can be negative — a quiet month with a new boiler in it, which is a fact worth
+      // showing rather than clamping to zero.
+      netProfit: subtractMoney(totalRevenue, totalExpenses),
       daily,
       byMethod,
       payments: payments.map((payment) => ({
@@ -241,6 +299,72 @@ export class ReportingService {
         paymentMethod: payment.paymentMethod,
         reservationNumber: payment.reservationNumber,
         villaName: payment.villaName,
+      })),
+    };
+  }
+
+  async getExpensesReport(query: ReportQueryDto): Promise<ExpensesReport> {
+    const from = toDateOnly(query.from);
+    const to = toDateOnly(query.to);
+
+    const expenses = await this.reportingRepository.findExpensesInRange(from, to, query.villaId);
+
+    const categoryAmounts = new Map<ExpenseCategory, number>();
+    const categoryCounts = new Map<ExpenseCategory, number>();
+    const dailyMap = new Map<string, number>();
+    const villaAmounts = new Map<string | null, { name: string | null; amount: number }>();
+
+    for (const expense of expenses) {
+      categoryAmounts.set(
+        expense.category,
+        addMoney(categoryAmounts.get(expense.category) ?? 0, expense.amount),
+      );
+      categoryCounts.set(expense.category, (categoryCounts.get(expense.category) ?? 0) + 1);
+
+      const isoDate = toIsoDate(toDateOnly(expense.expenseDate.toISOString()));
+      dailyMap.set(isoDate, addMoney(dailyMap.get(isoDate) ?? 0, expense.amount));
+
+      const villa = villaAmounts.get(expense.villaId) ?? { name: expense.villaName, amount: 0 };
+      villa.amount = addMoney(villa.amount, expense.amount);
+      villaAmounts.set(expense.villaId, villa);
+    }
+
+    const byCategory: ExpensesReportByCategory[] = Array.from(categoryAmounts.entries())
+      .map(([category, amount]) => ({
+        category,
+        amount,
+        count: categoryCounts.get(category) ?? 0,
+      }))
+      .sort((a, b) => b.amount - a.amount);
+
+    const byVilla: ExpensesReportByVilla[] = Array.from(villaAmounts.entries())
+      .map(([villaId, villa]) => ({ villaId, villaName: villa.name, amount: villa.amount }))
+      .sort((a, b) => b.amount - a.amount);
+
+    const daily: ExpensesReportDailyPoint[] = enumerateDates(from, to).map((date) => {
+      const isoDate = toIsoDate(date);
+      return { date: isoDate, amount: dailyMap.get(isoDate) ?? 0 };
+    });
+
+    return {
+      from: query.from,
+      to: query.to,
+      totalExpenses: sumMoney(expenses.map((expense) => expense.amount)),
+      expenseCount: expenses.length,
+      unallocatedExpenses: sumMoney(
+        expenses.filter((expense) => expense.villaId === null).map((expense) => expense.amount),
+      ),
+      byCategory,
+      byVilla,
+      daily,
+      expenses: expenses.map((expense) => ({
+        id: expense.id,
+        expenseDate: toIsoDate(expense.expenseDate),
+        category: expense.category,
+        description: expense.description,
+        supplier: expense.supplier,
+        villaName: expense.villaName,
+        amount: expense.amount,
       })),
     };
   }

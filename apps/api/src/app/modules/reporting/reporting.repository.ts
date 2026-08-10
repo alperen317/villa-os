@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infra/prisma/prisma.service';
-import { PaymentMethod, ReservationStatus } from '../../../generated/prisma/client';
+import {
+  ExpenseCategory,
+  PaymentMethod,
+  ReservationStatus,
+} from '../../../generated/prisma/client';
 
 export interface ReportVilla {
   id: string;
@@ -28,6 +32,18 @@ export interface ReportPayment {
   paymentDate: Date;
   reservationNumber: string;
   villaName: string;
+}
+
+export interface ReportExpense {
+  id: string;
+  amount: number;
+  category: ExpenseCategory;
+  expenseDate: Date;
+  description: string;
+  supplier: string | null;
+  /** Null for a cost carried by the business rather than by one property. */
+  villaId: string | null;
+  villaName: string | null;
 }
 
 @Injectable()
@@ -109,6 +125,44 @@ export class ReportingRepository {
       paymentDate: payment.paymentDate,
       reservationNumber: payment.reservation.reservationNumber,
       villaName: payment.reservation.villa.name,
+    }));
+  }
+
+  /**
+   * Narrowing to a villa deliberately drops the unallocated costs: an overhead like
+   * accountancy belongs to the business, and charging it to whichever villa happens to be
+   * on screen would be an invention. The consequence — per-villa figures not adding up to
+   * the unfiltered one — is surfaced by the report rather than hidden.
+   */
+  async findExpensesInRange(from: Date, to: Date, villaId?: string): Promise<ReportExpense[]> {
+    const expenses = await this.prisma.expense.findMany({
+      where: {
+        deletedAt: null,
+        expenseDate: { gte: from, lt: to },
+        ...(villaId ? { villaId } : {}),
+      },
+      select: {
+        id: true,
+        amount: true,
+        category: true,
+        expenseDate: true,
+        description: true,
+        supplier: true,
+        villaId: true,
+        villa: { select: { name: true } },
+      },
+      orderBy: { expenseDate: 'desc' },
+    });
+
+    return expenses.map((expense) => ({
+      id: expense.id,
+      amount: Number(expense.amount),
+      category: expense.category,
+      expenseDate: expense.expenseDate,
+      description: expense.description,
+      supplier: expense.supplier,
+      villaId: expense.villaId,
+      villaName: expense.villa?.name ?? null,
     }));
   }
 }

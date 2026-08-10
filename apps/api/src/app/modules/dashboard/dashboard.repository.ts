@@ -53,6 +53,19 @@ export class DashboardRepository {
     return Number(result._sum.amount ?? 0);
   }
 
+  /**
+   * `expenseDate` is a date column, so the month bounds compare cleanly against it; the
+   * soft-delete filter is what keeps a corrected entry out of the figure.
+   */
+  async sumExpensesThisMonth(monthStart: Date, monthEnd: Date): Promise<number> {
+    const result = await this.prisma.expense.aggregate({
+      where: { deletedAt: null, expenseDate: { gte: monthStart, lt: monthEnd } },
+      _sum: { amount: true },
+    });
+
+    return Number(result._sum.amount ?? 0);
+  }
+
   countOpenHousekeepingTasks(): Promise<number> {
     return this.prisma.housekeepingTask.count({ where: { status: { not: 'Completed' } } });
   }
