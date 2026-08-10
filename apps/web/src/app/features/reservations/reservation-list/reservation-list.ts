@@ -47,6 +47,10 @@ import { ReservationAction, ReservationsService } from '../reservations.service'
 
 const PAYMENT_MANAGER_ROLES = new Set(['Administrator', 'Accounting']);
 
+/** The API's hard ceiling on `limit` (see PaginationQueryDto) — the fewest round trips the
+ *  calendar can drain a month in. */
+const CALENDAR_PAGE_SIZE = 100;
+
 @Component({
   selector: 'app-reservation-list',
   standalone: true,
@@ -105,6 +109,11 @@ export class ReservationList implements OnInit {
 
   protected readonly calendarReservations = signal<Reservation[]>([]);
   protected readonly calendarLoading = signal(false);
+  private calendarRequestId = 0;
+
+  /** The month the grid is showing. Header navigation moves this; the day panel deliberately
+   *  does not follow it (see onCalendarSelect), so the two are tracked separately. */
+  protected readonly activeCalendarDate = signal(new Date());
 
   /** On mobile the calendar renders in card mode, where a day cell only fits a dot per event
    *  kind. The selected day's arrivals and departures are listed below the grid instead, so
@@ -258,19 +267,57 @@ export class ReservationList implements OnInit {
     }
   }
 
+  /**
+   * The mobile day panel reads this set as the whole truth for a day — "no arrivals or
+   * departures" is an answer, not a clipped view — so it has to be complete. The API caps
+   * `limit` at 100, which an unbounded fetch can silently exceed, so the window is narrowed
+   * to the visible month and the remaining pages are drained before the signal is published.
+   */
   async loadCalendarData(): Promise<void> {
+    // Paging the month is a single tap and each month is now several round trips, so an
+    // older run can finish last; only the newest one gets to publish.
+    const requestId = ++this.calendarRequestId;
+
     this.calendarLoading.set(true);
     try {
-      const result = await this.reservationsService.list({
-        page: 1,
-        limit: 100,
+      const [dateFrom, dateTo] = this.calendarRangeAsIso();
+      const filters = {
+        limit: CALENDAR_PAGE_SIZE,
         villaId: this.filterVillaId() ?? undefined,
         status: this.filterStatus() ?? undefined,
-      });
-      this.calendarReservations.set(result.data);
+        dateFrom,
+        dateTo,
+      };
+
+      const first = await this.reservationsService.list({ ...filters, page: 1 });
+      const reservations = [...first.data];
+      const pageCount = Math.ceil(first.total / CALENDAR_PAGE_SIZE);
+
+      for (let page = 2; page <= pageCount && requestId === this.calendarRequestId; page++) {
+        const next = await this.reservationsService.list({ ...filters, page });
+        if (next.data.length === 0) break;
+        reservations.push(...next.data);
+      }
+
+      if (requestId !== this.calendarRequestId) return;
+      this.calendarReservations.set(reservations);
     } finally {
-      this.calendarLoading.set(false);
+      if (requestId === this.calendarRequestId) {
+        this.calendarLoading.set(false);
+      }
     }
+  }
+
+  /**
+   * The grid also renders the days either side of the month to fill its first and last week,
+   * and the list filter matches on stay *overlap*, so the window is padded by a week at each
+   * end — otherwise those visible days come back empty.
+   */
+  private calendarRangeAsIso(): [string, string] {
+    const active = this.activeCalendarDate();
+    const from = new Date(active.getFullYear(), active.getMonth(), 1);
+    const to = new Date(active.getFullYear(), active.getMonth() + 1, 0);
+    return [this.toIsoDate(this.addDays(from, -7)), this.toIsoDate(this.addDays(to, 7))];
   }
 
   private dateRangeAsIso(): [string | undefined, string | undefined] {
@@ -394,19 +441,42 @@ export class ReservationList implements OnInit {
   checkInsForDate(date: Date): Reservation[] {
     const day = this.stripTime(date);
     return this.calendarReservations().filter(
-      (reservation) => this.stripTime(new Date(reservation.checkIn)) === day,
+      (reservation) => this.stripTime(this.toLocalDate(reservation.checkIn)) === day,
     );
   }
 
   checkOutsForDate(date: Date): Reservation[] {
     const day = this.stripTime(date);
     return this.calendarReservations().filter(
-      (reservation) => this.stripTime(new Date(reservation.checkOut)) === day,
+      (reservation) => this.stripTime(this.toLocalDate(reservation.checkOut)) === day,
     );
   }
 
+  /**
+   * ng-zorro funnels a day tap and a header month/year change into the same `nzSelectChange`
+   * — `onDateSelect`, `onYearSelect` and `onMonthSelect` all call one `updateDate` — and
+   * `nzPanelChange` only fires on the month/year *mode* toggle, so no output on its own means
+   * "the user picked a day". Header navigation is the only one of the two that keeps the
+   * day-of-month while moving the month or year, which separates them well enough: paging the
+   * month must not silently rewrite the day panel underneath the grid. (Tapping a trailing
+   * cell that happens to share the selected day-of-month reads as navigation — the panel
+   * holds its date instead of following, which is the safe way to be wrong here.)
+   */
   onCalendarSelect(date: Date): void {
-    this.selectedCalendarDate.set(date);
+    const previous = this.activeCalendarDate();
+    this.activeCalendarDate.set(date);
+
+    const movedMonth =
+      date.getMonth() !== previous.getMonth() || date.getFullYear() !== previous.getFullYear();
+
+    if (!(movedMonth && date.getDate() === previous.getDate())) {
+      this.selectedCalendarDate.set(date);
+    }
+
+    // The fetch window follows the visible month, so a new month needs its own data.
+    if (movedMonth) {
+      this.loadCalendarData();
+    }
   }
 
   openDetail(reservation: Reservation): void {
@@ -519,7 +589,7 @@ export class ReservationList implements OnInit {
     this.form.patchValue({
       villaId: payload.villaId,
       customerId: payload.customerId,
-      dateRange: [new Date(payload.checkIn), new Date(payload.checkOut)],
+      dateRange: [this.toLocalDate(payload.checkIn), this.toLocalDate(payload.checkOut)],
       guestCount: payload.guestCount,
       notes: payload.notes ?? '',
     });
@@ -743,6 +813,19 @@ export class ReservationList implements OnInit {
 
   private stripTime(date: Date): number {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  }
+
+  /**
+   * checkIn/checkOut are calendar dates in the database (`@db.Date`) but travel as an
+   * instant — midnight UTC. `new Date(...)` on that gives a moment, and every comparison on
+   * this page reads it back with local getters, which lands on the day before anywhere west
+   * of UTC: an arrival on the 10th would file itself under the 9th. Turkey is UTC+3 so it
+   * reads correctly today; taking the date part as written and rebuilding it locally is what
+   * makes that true by construction rather than by luck.
+   */
+  private toLocalDate(isoDate: string): Date {
+    const [year, month, day] = isoDate.slice(0, 10).split('-').map(Number);
+    return new Date(year, month - 1, day);
   }
 
   private buildReservationSummary(villaId: string, floorId: string, customerId: string): string {

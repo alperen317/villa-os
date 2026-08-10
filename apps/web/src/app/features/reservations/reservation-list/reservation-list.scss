@@ -222,18 +222,6 @@
     width: 100%;
   }
 
-  .date-presets {
-    justify-content: stretch;
-  }
-
-  // `flex: 1` would set flex-basis to 0, and wrapping is decided from the basis — so every
-  // preset stays on one line, clamped at min-content, and overflows the row. `auto` keeps
-  // the label's own width as the basis, so they wrap onto as many lines as they need and
-  // then stretch to fill each one.
-  .date-presets button {
-    flex: 1 1 auto;
-  }
-
   .availability-form {
     flex-direction: column;
     align-items: stretch;

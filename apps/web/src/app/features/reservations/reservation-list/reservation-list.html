@@ -157,7 +157,7 @@
               </a>
             </td>
             <td data-label="Giriş - Çıkış">
-              {{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}
+              {{ reservation.checkIn | date: 'dd.MM.yyyy' : 'UTC' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' : 'UTC' }}
             </td>
             <td data-label="Misafir">{{ reservation.guestCount }}</td>
             <td data-label="Tutar">{{ reservation.totalPrice }} ₺</td>
@@ -231,7 +231,7 @@
          card mode (dots per day) and the detail moves to the day panel underneath. -->
     <nz-calendar
       [nzFullscreen]="!viewport.isMobile()"
-      [nzValue]="selectedCalendarDate()"
+      [nzValue]="activeCalendarDate()"
       (nzSelectChange)="onCalendarSelect($event)"
     >
       <ng-template nzDateCell let-date>
@@ -519,7 +519,7 @@
               </a>
             </nz-descriptions-item>
             <nz-descriptions-item nzTitle="Giriş - Çıkış">
-              {{ reservation.checkIn | date: 'dd.MM.yyyy' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' }}
+              {{ reservation.checkIn | date: 'dd.MM.yyyy' : 'UTC' }} - {{ reservation.checkOut | date: 'dd.MM.yyyy' : 'UTC' }}
             </nz-descriptions-item>
             <nz-descriptions-item nzTitle="Misafir">{{ reservation.guestCount }}</nz-descriptions-item>
             <nz-descriptions-item nzTitle="Tutar">{{ reservation.totalPrice }} ₺</nz-descriptions-item>

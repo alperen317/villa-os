@@ -180,6 +180,16 @@ body {
   transform: translateX(2px);
 }
 
+// The row tint and the chevron slide are the only cues that a row navigates, and a touch
+// pointer fires neither — so settle the chevron in its hovered colour at rest. Keyed on
+// pointer capability, not viewport width: a touch laptop above the breakpoint still keeps
+// the desktop table, and still needs the affordance. Same reasoning as .ref-link-icon below.
+@media (hover: none) {
+  .td-chevron {
+    color: var(--color-accent);
+  }
+}
+
 // A link inside a row whose primary subject is something else (e.g. a
 // villa name referenced from a maintenance record row). Bolder weight plus a
 // chevron that reveals on hover/focus signals "this navigates away" without
@@ -420,6 +430,19 @@ a:hover {
     font-size: 19px;
   }
 
+  // Preset filter rows (reservations, reports) stretch to fill the width they wrap onto.
+  // `flex: 1` would set flex-basis to 0, and wrapping is decided from the basis — so every
+  // preset would stay on one line, clamped at min-content, and overflow the row. `auto`
+  // keeps each label's own width as the basis, so they wrap onto as many lines as they need
+  // and then stretch to fill each one.
+  .date-presets {
+    justify-content: stretch;
+  }
+
+  .date-presets button {
+    flex: 1 1 auto;
+  }
+
   // Ant modals ship a fixed pixel nzWidth (520/600px) that overflows a phone
   // viewport; clamp it instead of touching every nz-modal call site.
   .ant-modal {
@@ -512,9 +535,9 @@ a:hover {
     content: none;
   }
 
-  // Desktop announces "this row navigates" purely through hover — the row tint and the
-  // chevron slide — and touch fires neither, so a stacked card would carry no affordance
-  // at all. Keep the chevron and pair it with its data-label as an explicit link cue.
+  // The chevron survives the stack instead of collapsing into an unlabelled empty cell:
+  // pinned right and paired with its data-label, it reads as the card's link cue. (Its
+  // resting colour on touch is handled by the `hover: none` rule up top.)
   .responsive-table .ant-table-content td.td-chevron {
     justify-content: flex-end;
     gap: var(--space-1);

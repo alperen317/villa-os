@@ -20,6 +20,10 @@ export class ViewportService {
   readonly isMobile = this.mobile.asReadonly();
 
   constructor() {
+    // No window/matchMedia means no viewport to measure — a unit test's jsdom, not a browser
+    // (the app builds browser-only; there is no server or prerender target). Holding the
+    // desktop default is the deliberate choice: it renders the fuller layout, and there is no
+    // server-rendered markup for it to disagree with. Covered by the spec.
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
       return;
     }
